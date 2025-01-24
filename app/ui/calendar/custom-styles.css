@@ -1,0 +1,41 @@
+.hotel {
+    display: flex;
+    flex-direction: column-reverse;
+    width: 80%;
+    margin: 0 auto;
+    border: 1px solid #ddd;
+    background-color: #f4f4f4;
+  }
+  
+  .floor {
+    border: 1px solid #ccc;
+    background-color: #e8e8e8;
+    padding: 10px;
+    margin: 10px 0;
+    min-height: 100px;
+  }
+  
+  .floor-title {
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+  
+  .employee-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+  }
+  
+  .employee-card {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+    width: 120px;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    cursor: grab;
+  }
+  
