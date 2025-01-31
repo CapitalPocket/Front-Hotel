@@ -6,6 +6,12 @@ import interactionPlugin from '@fullcalendar/interaction';
 import axios from 'axios';
 import Select from 'react-select';
 
+// Mapeo de hoteles
+export const hotelMapping: { [key: string]: string } = {
+  '1': 'Heron I',
+  '2': 'Heron II'
+};
+
 interface EmployeeScheduleProps {
   park: string;
 }
@@ -17,6 +23,7 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [startTime, setStartTime] = useState<string>('09:00');
   const [endTime, setEndTime] = useState<string>('17:00');
+  const [selectedHotels, setSelectedHotels] = useState<any[]>([]); // Estado para los hoteles seleccionados
 
   // Función para obtener el nombre completo del día de la semana en español
   const getDayOfWeek = (date: string): string => {
@@ -66,6 +73,11 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
     console.log('Empleados seleccionados:', selectedOptions); // Verifica los empleados seleccionados
   };
 
+  // Función para manejar la selección de hoteles
+  const handleHotelSelect = (selectedOptions: any) => {
+    setSelectedHotels(selectedOptions); // Actualiza el estado con los hoteles seleccionados
+  };
+
   const handleSaveSchedule = async () => {
     try {
       // Verifica si hay empleados seleccionados antes de proceder
@@ -84,6 +96,7 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
       const dataToSend = {
         employeeId: employeeIds,
         workDates: selectedDays,  // Fechas seleccionadas en el calendario
+        hotelIds: selectedHotels.map((hotel: any) => hotel.value), // Enviar los IDs de los hoteles seleccionados
       };
 
       console.log('Datos a enviar:', dataToSend); // Verifica los datos antes de enviarlos
@@ -126,7 +139,7 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
   // Función para aplicar una clase especial a los días seleccionados
   const dayNumberClass = (day: string) => {
     if (selectedDays.includes(day)) {
-      return 'w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center';
+      return 'w-6 h-6 bg-gray-500 text-white rounded-full flex items-center justify-center';
     }
     return '';
   };
@@ -150,15 +163,36 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
         />
       </div>
 
+      {/* Selector de hoteles */}
+      <div className="mb-6">
+        <label className="mr-4 text-lg font-semibold">Seleccionar Propiedades:</label>
+        <Select
+          isMulti
+          options={[
+            { value: '1', label: 'Heron I' },
+            { value: '2', label: 'Heron II' },
+          ]}
+          onChange={handleHotelSelect}
+          value={selectedHotels}
+          placeholder="Seleccionar hoteles..."
+          className="w-full"
+        />
+      </div>
+
+      {/* Mostrar los hoteles seleccionados */}
+      <div className="mb-6">
+        <h3 className="text-lg font-semibold">Hoteles Seleccionados: {selectedHotels.map((hotel) => hotelMapping[hotel.value]).join(', ')}</h3>
+      </div>
+
       {/* Selector de horas */}
       <div className="mb-6 flex space-x-4">
-        <div>
-          <label className="mr-4 text-lg font-semibold">Hora de inicio:</label>
+        <div className="flex items-center space-x-4">
+          <label className="text-lg font-semibold">Hora de inicio:</label>
           <input
             type="time"
             value={startTime}
             onChange={(e) => setStartTime(e.target.value)}
-            className="border-2 border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="border-2 border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-gray-500"
           />
         </div>
 
@@ -168,7 +202,7 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
             type="time"
             value={endTime}
             onChange={(e) => setEndTime(e.target.value)}
-            className="border-2 border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="border-2 border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-gray-500"
           />
         </div>
       </div>

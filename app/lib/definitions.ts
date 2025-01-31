@@ -1,31 +1,3 @@
-export type Ticket = {
-  idticket: number;
-  namepark: string;
-  ticket_code: string;
-  type_pay: string;
-  type_money: string;
-  name: string;
-  lastname: string;
-  email_person: string;
-  phone_number: string;
-  identity_type: string;
-  identity_number: string;
-  date_ticket: string;
-  status: string;
-  type_ticket_adults: string;
-  count_adult: number;
-  type_ticket_kids: string;
-  count_kid: number;
-  invoice_electronic: number;
-  created_at: string;
-  ticket_info: TicketInfo[];
-  price_ticket: number;
-  id_operation:number;
-};
-export type TicketInfo = {
-  type: string;
-  count: number;
-};
 export type LoginResponse = { user?: User; message: string };
 
 export type User = {
@@ -60,10 +32,8 @@ export type UserProfile = {
   phone_number: string;
   password: string;
   rol: string;
-  created_at: string;
-  updated_at: string;
-  idpark: number;
-  changepassword: number;
+  start_time: string;
+  end_time: string;
   hourly_wage: number;
   statusprofile: 'Habilitado' | 'Deshabilitado' | 'Eliminado';  // solo "Enable" o "Disable"
 };
@@ -89,3 +59,9 @@ export type CustomerField = {
   id: string;
   name: string;
 };
+
+export type Shedule = {                                          
+  start_time: string;
+  end_time: string;
+  range_hours: string;
+}

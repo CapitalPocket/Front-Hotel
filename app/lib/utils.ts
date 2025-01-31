@@ -62,3 +62,4 @@ export const hotelMapping: { [key: string]: string } = {
   '1': 'Heron I',
   '2': 'Heron II'
 };
+

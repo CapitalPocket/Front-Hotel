@@ -5,7 +5,7 @@ import {
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { lusitana } from '@/app/ui/fonts';
-import { fetchCardData,fetchCardDataCandidatos } from '@/app/lib/data';
+
 
 const iconMap = {
   
@@ -15,28 +15,6 @@ const iconMap = {
   Enviados: InboxIcon,
 };
 
-export default async function CardWrapper({grupo}: {grupo: string;}) {
-  const {
-    totalCandidatos,
-    candidatosEnProceso,
-    candidatosEnviados,
-    candidatosNoPasaron,
-  } = await fetchCardDataCandidatos(grupo);
-
-  return (
-    <>
-     
-      <Card title="Candidatos Total" value={totalCandidatos} type="Total" />
-      <Card title="En proceso" value={candidatosEnProceso} type="proceso" />
-      <Card title="Enviados " value={candidatosEnviados} type="Enviados" />
-      <Card
-        title="No pasaron"
-        value={candidatosNoPasaron}
-        type="no_pasaron"
-      />
-    </>
-  );
-}
 
 export function Card({
   title,

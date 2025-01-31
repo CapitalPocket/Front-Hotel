@@ -145,14 +145,14 @@ const HotelView: React.FC<HotelViewProps> = ({ park }) => {
                     
                   </div>
                   {/* Número de habitación */}
-                  <div className="room-number text-center text-sm font-bold bg-black text-white py-1 w-full overflow-hidden text-ellipsis whitespace-nowrap">
+                  <div className="room-number text-center text-sm font-bold border-neutral-200 bg-gray-100 border text-gray-700 py-1 w-full overflow-hidden text-ellipsis whitespace-nowrap">
                       Hab. {room}
                     </div>
 
                     {/* Categorías A y B */}
                     <div className="categories flex w-full">
                     <button
-                      className={`w-1/2 text-xs font-bold py-1 text-center ${employeeA ? 'bg-red-500 text-white' : 'bg-green-500 text-white'} rounded-bl-lg`}
+                      className={`w-1/2 text-xs font-bold py-1 text-center ${employeeA ? 'border-red-600 bg-red-100 border text-red-600' : 'border-green-600 bg-green-100 border text-green-600'} rounded-bl-lg`}
                       onClick={() => handleCategoryClick(room, 'A')}
                     >
                       A
@@ -160,7 +160,7 @@ const HotelView: React.FC<HotelViewProps> = ({ park }) => {
 
                       <button
 
-                      className={`w-1/2 text-xs font-bold py-1 text-center ${employeeB ? 'bg-red-500 text-white' : 'bg-green-500 text-white'} rounded-br-lg`}
+                      className={`w-1/2 text-xs font-bold py-1 text-center ${employeeB ? 'border-red-600 bg-red-100 border text-red-600' : 'border-green-600 bg-green-100 border text-green-600'} rounded-br-lg`}
                       onClick={() => handleCategoryClick(room, 'B')}
                       >
                       B

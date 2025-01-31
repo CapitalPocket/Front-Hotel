@@ -38,7 +38,7 @@ export function UpdateInvoice({ id, page }: { id: string; page: number }) {
   );
 }
 
-export function Enable({ id }: { id: string }) {
+export function Enable({ id_employee }: { id_employee: string }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const handleDeleteClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -48,7 +48,7 @@ export function Enable({ id }: { id: string }) {
 
   const handleConfirmDelete = () => {
     const payload = {
-      id: id, 
+      id: id_employee, 
       updates: {
         statusprofile: "Habilitado", 
       },
@@ -101,7 +101,7 @@ export function Enable({ id }: { id: string }) {
   );
 }
 
-export function Desabled({ id }: { id: string }) {
+export function Desabled({ id_employee }: { id_employee: string }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const handleDeleteClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -111,7 +111,7 @@ export function Desabled({ id }: { id: string }) {
 
   const handleConfirmDelete = () => {
     const payload = {
-      id: id, 
+      id: id_employee, 
       updates: {
         statusprofile: "Deshabilitado", 
       },
@@ -165,7 +165,7 @@ export function Desabled({ id }: { id: string }) {
 }
 
 
-export function DeleteInvoice({ id }: { id: string }) {
+export function DeleteInvoice({ id_employee }: { id_employee: string }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const handleDeleteClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -175,7 +175,7 @@ export function DeleteInvoice({ id }: { id: string }) {
 
   const handleConfirmDelete = () => {
     const payload = {
-      id: id, 
+      id: id_employee, 
       updates: {
         statusprofile: "Eliminado", 
       },

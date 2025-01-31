@@ -52,13 +52,13 @@ export const links = [
     icon: Cog8ToothIcon,
     roles: ['administrador', 'marketing'],
   },
-  /*
+ 
   {
-    name: 'Pasaportes',
+    name: 'Pagos Empleados',
     href: '/dashboard/portfolio',
     icon: CurrencyDollarIcon,
     roles: ['administrador', 'marketing'],
-  },*/
+  },
   {
     name: 'Empleados',
     href: '/dashboard/candidatos',
