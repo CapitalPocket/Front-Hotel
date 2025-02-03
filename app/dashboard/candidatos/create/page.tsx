@@ -17,7 +17,7 @@ export default async function Page() {
       <Breadcrumbs
         breadcrumbs={breadcrumbs}
       />
-      <Form breadcrumbs={breadcrumbs} />
+      <Form />
     </main>
   );
 }

@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { hotelMapping } from "@/app/lib/utils";
 
+// Define the PortfolioProps interface
 interface PortfolioProps {
   park: string;
 }
+
 
 const Portfolio: React.FC<PortfolioProps> = ({ park }) => {
   const [employees, setEmployees] = useState<any[]>([]);
@@ -69,6 +72,9 @@ const Portfolio: React.FC<PortfolioProps> = ({ park }) => {
     return acc + totalSalary;
   }, 0);
 
+  // Determinar el nombre del hotel según current_hotel_id
+  const hotelName = hotelMapping[park] || 'Hotel Desconocido';
+
   return (
     <div className="p-6">
       <div className="mb-4 flex justify-between items-center">
@@ -85,9 +91,8 @@ const Portfolio: React.FC<PortfolioProps> = ({ park }) => {
       </div>
       
       <div className="overflow-x-auto w-full max-w-full">
-  <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
-    <thead className="bg-gray-800 text-white">
-          
+        <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
+          <thead className="bg-gray-800 text-white">
             <tr>
               <th className="py-2 px-4 w-1/6">Nombre</th>
               <th className="py-2 px-4 w-1/6">Rol</th>

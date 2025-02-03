@@ -5,12 +5,7 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import axios from 'axios';
 import Select from 'react-select';
-
-// Mapeo de hoteles
-export const hotelMapping: { [key: string]: string } = {
-  '1': 'Heron I',
-  '2': 'Heron II'
-};
+import { hotelMapping } from '@/app/lib/utils';
 
 interface EmployeeScheduleProps {
   park: string;
@@ -23,38 +18,50 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [startTime, setStartTime] = useState<string>('09:00');
   const [endTime, setEndTime] = useState<string>('17:00');
-  const [selectedHotels, setSelectedHotels] = useState<any[]>([]); // Estado para los hoteles seleccionados
+  const [selectedHotels, setSelectedHotels] = useState<any[]>([]); 
 
-  // Función para obtener el nombre completo del día de la semana en español
-  const getDayOfWeek = (date: string): string => {
-    const daysInSpanish = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
-    const dayOfWeek = new Date(date).getDay(); // 0 es domingo, 1 es lunes, etc.
-    return daysInSpanish[dayOfWeek];
-  };
+  
 
-  // Función para obtener los datos de los empleados
   const fetchData = async () => {
     try {
       const employeeResponse = await axios.get(
         'https://9b0lctjk-80.use.devtunnels.ms/api/hotel/getAllEmployees'
       );
-
+    
       if (Array.isArray(employeeResponse.data)) {
         const employeeData = employeeResponse.data.map((emp) => ({
           id_employee: emp.id_employee,
           name: emp.name,
         }));
         setEmployees(employeeData);
-
-        // Crear eventos iniciales con los horarios de los empleados
-        const employeeEvents = employeeResponse.data.map((emp) => ({
-          id: emp.id_employee,
-          title: emp.name,
-          start: `2025-01-24T${emp.start_time}`,
-          end: `2025-01-24T${emp.end_time}`,
-        }));
-
-        setEvents(employeeEvents);
+    
+        const allEvents: any[] = [];
+    
+        for (const emp of employeeData) {
+          const scheduleResponse = await axios.get(
+            `https://9b0lctjk-80.use.devtunnels.ms/api/hotel/getAllWorkShedule/${emp.id_employee}`
+          );
+    
+          if (Array.isArray(scheduleResponse.data)) {
+            const employeeEvents = scheduleResponse.data.map((schedule: any) => {
+              const workDate = new Date(schedule.work_date); // Convertir el campo work_date a una fecha
+              const startTime = schedule.start_time; // Hora de inicio
+              const endTime = schedule.end_time; // Hora de finalización
+    
+              return {
+                id: `${emp.id_employee}-${schedule.id_workdays}`, // Único ID para el evento
+                title: `${emp.name} - ${startTime} a ${endTime}`, // Título con nombre del empleado y horario
+                start: `${workDate.toISOString().split('T')[0]}T${startTime}`, // Fecha y hora de inicio
+                end: `${workDate.toISOString().split('T')[0]}T${endTime}`, // Fecha y hora de finalización
+                color: "#20b2aa", // Color de evento
+              };
+            });
+    
+            allEvents.push(...employeeEvents);
+          }
+        }
+    
+        setEvents(allEvents);
       } else {
         console.error('La respuesta de empleados no es un array.');
       }
@@ -62,26 +69,22 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
       console.error('Error al obtener datos:', error);
     }
   };
-
+  
   useEffect(() => {
     fetchData();
   }, []);
 
-  // Función para manejar la selección de empleados
   const handleEmployeeSelect = (selectedOptions: any) => {
     setSelectedEmployees(selectedOptions);
-    console.log('Empleados seleccionados:', selectedOptions); // Verifica los empleados seleccionados
   };
 
-  // Función para manejar la selección de hoteles
   const handleHotelSelect = (selectedOptions: any) => {
-    setSelectedHotels(selectedOptions); // Actualiza el estado con los hoteles seleccionados
+    setSelectedHotels(selectedOptions);
   };
 
   const handleSaveSchedule = async () => {
     try {
-      // Verifica si hay empleados seleccionados antes de proceder
-      const employeeIds = selectedEmployees.map((emp: any) => emp.value); // Asegúrate que sea el 'value' del empleado
+      const employeeIds = selectedEmployees.map((emp: any) => emp.value);
       if (employeeIds.length === 0) {
         alert('Por favor, selecciona al menos un empleado.');
         return;
@@ -92,14 +95,25 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
         return;
       }
 
-      // Solo enviar las fechas seleccionadas
+      for (const id_employee of employeeIds) {
+        const updateData = {
+          start_time: startTime,
+          end_time: endTime,
+        };
+
+        await axios.put(
+          `https://9b0lctjk-80.use.devtunnels.ms/api/hotel/updateEmployeeSchedule/${id_employee}`,
+          updateData
+        );
+      }
+
       const dataToSend = {
         employeeId: employeeIds,
-        workDates: selectedDays,  // Fechas seleccionadas en el calendario
-        hotelIds: selectedHotels.map((hotel: any) => hotel.value), // Enviar los IDs de los hoteles seleccionados
+        workDates: selectedDays,
+        hotelIds: selectedHotels.map((hotel: any) => hotel.value),
       };
 
-      console.log('Datos a enviar:', dataToSend); // Verifica los datos antes de enviarlos
+      console.log('Datos a enviar:', dataToSend);
 
       const response = await axios.post(
         'https://9b0lctjk-80.use.devtunnels.ms/api/hotel/postWorkDays',
@@ -123,12 +137,8 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
     }
   };
 
-  // Función para manejar el clic en un día del calendario
   const handleDayClick = (arg: any) => {
     const clickedDate = arg.dateStr;
-    const clickedDayOfWeek = getDayOfWeek(clickedDate); // Obtener el nombre completo del día en español
-    console.log('Día seleccionado:', clickedDayOfWeek); // Verifica el día
-
     if (selectedDays.includes(clickedDate)) {
       setSelectedDays((prevDays) => prevDays.filter((day) => day !== clickedDate));
     } else {
@@ -136,7 +146,6 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
     }
   };
 
-  // Función para aplicar una clase especial a los días seleccionados
   const dayNumberClass = (day: string) => {
     if (selectedDays.includes(day)) {
       return 'w-6 h-6 bg-gray-500 text-white rounded-full flex items-center justify-center';
@@ -148,43 +157,42 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
     <div className="p-6">
       <h2 className="mb-6 text-2xl font-bold text-gray-800">Gestión de Horarios de Empleados</h2>
 
-      {/* Selector de empleados */}
-      <div className="mb-6">
-        <label className="mr-4 text-lg font-semibold">Seleccionar Empleados:</label>
-        <Select
-          isMulti
-          options={employees.map((emp) => ({
-            value: emp.id_employee,
-            label: emp.name,
-          }))}
-          onChange={handleEmployeeSelect}
-          placeholder="Buscar empleados..."
-          className="w-full"
-        />
-      </div>
+     {/* Contenedor de selectores en fila */}
+        <div className="mb-6 flex space-x-4">
+          {/* Selector de empleados */}
+          <div className="w-1/2">
+            <label className="block text-lg font-semibold mb-2">Seleccionar Empleados:</label>
+            <Select
+              isMulti
+              options={employees.map((emp) => ({
+                value: emp.id_employee,
+                label: emp.name,
+              }))}
+              onChange={handleEmployeeSelect}
+              placeholder="Buscar empleados..."
+              className="w-full"
+            />
+          </div>
 
-      {/* Selector de hoteles */}
-      <div className="mb-6">
-        <label className="mr-4 text-lg font-semibold">Seleccionar Propiedades:</label>
-        <Select
-          isMulti
-          options={[
-            { value: '1', label: 'Heron I' },
-            { value: '2', label: 'Heron II' },
-          ]}
-          onChange={handleHotelSelect}
-          value={selectedHotels}
-          placeholder="Seleccionar hoteles..."
-          className="w-full"
-        />
-      </div>
-
-      {/* Mostrar los hoteles seleccionados */}
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold">Hoteles Seleccionados: {selectedHotels.map((hotel) => hotelMapping[hotel.value]).join(', ')}</h3>
-      </div>
+          {/* Selector de hoteles */}
+          <div className="w-1/2">
+            <label className="block text-lg font-semibold mb-2">Seleccionar Propiedades:</label>
+            <Select
+              isMulti
+              options={[
+                { value: '1', label: 'Heron I' },
+                { value: '2', label: 'Heron II' },
+              ]}
+              onChange={handleHotelSelect}
+              value={selectedHotels}
+              placeholder="Seleccionar hoteles..."
+              className="w-full"
+            />
+          </div>
+        </div>
 
       {/* Selector de horas */}
+     
       <div className="mb-6 flex space-x-4">
         <div className="flex items-center space-x-4">
           <label className="text-lg font-semibold">Hora de inicio:</label>
@@ -207,6 +215,7 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
         </div>
       </div>
 
+
       {/* Botón para guardar horario */}
       <div className="mb-6">
         <button
@@ -216,9 +225,8 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
           Guardar Horarios
         </button>
       </div>
-
       {/* Calendario */}
-      <div className="h-[60vh] overflow-auto">
+      <div className="h-[80vh] max-h-[550px] overflow-auto">
         <FullCalendar
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
           initialView="dayGridMonth"

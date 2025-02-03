@@ -1,270 +1,274 @@
 'use client';
-import { CustomerField, CandidatosTable } from '@/app/lib/definitions';
-import { Breadcrumb } from '@/app/ui/candidatos/breadcrumbs';
-import Link from 'next/link';
-import {
-  AtSymbolIcon,
-  BuildingOffice2Icon,
-  CalendarDaysIcon,
-  CheckIcon,
-  ClipboardDocumentCheckIcon,
-  ClockIcon,
-  CurrencyDollarIcon,
-  DevicePhoneMobileIcon,
-  IdentificationIcon,
-  UserCircleIcon,
-  UserIcon,
-  XMarkIcon,
-} from '@heroicons/react/24/outline';
-import { Button } from '@/app/ui/button';
-import { createCandidato } from '@/app/lib/actions';
-import { useFormState } from 'react-dom';
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-export default function Form({
-  candidato,
-  breadcrumbs,
-}: {
-  candidato?: CandidatosTable[];
+import { Button } from '@/app/ui/button'; // Ajusta esta importación según tu estructura
 
-  breadcrumbs: Breadcrumb[];
-}) {
-  const initialState = { message: null, errors: {}, fecha_envio: null };
-  const [state, dispatch] = useFormState(createCandidato, initialState);
-  const [estadoProceso, setEstadoProceso] = useState<string>('');
-  const [selectedRole, setSelectedRole] = useState<string>('');
-  const [selectedPark, setSelectedPark] = useState<string>('');
+export default function EmployeeForm() {
+  const initialState = {
+    current_hotel_id: '',
+    name: '',
+    phone_number: '',
+    hourly_wage: '',
+    start_time: '',
+    end_time: '',
+    lunch_start_time: '',
+    lunch_end_time: '',
+    social_number: '',
+    role: '',
+    statusprofile: 'Habilitado', // Por defecto en "Habilitado"
+    birthdate: '', // Añadir propiedad birthdate
+    address: '', // Añadir propiedad address
+  };
 
-  const handleRoleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedRole(event.target.value);
+  const [formData, setFormData] = useState(initialState);
+
+  // Manejo de cambio en los inputs
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
   };
-  const handleParkChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedPark(event.target.value);
-  };
-  const notify = (state: any) => {
-    if (state.message === 'Faltan campos.') {
-      toast.error(state.message, {
-        position: 'top-center',
-        autoClose: 3000, // Increase autoClose for errors
-        hideProgressBar: true,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
+
+  // Función para manejar la creación del empleado
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const response = await fetch('https://9b0lctjk-80.use.devtunnels.ms/api/hotel/createEmployee', { // Ajusta la URL de la API según corresponda
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
       });
-    } else {
-      toast.success(state.message, {
-        position: 'top-center',
-        autoClose: 5000,
-        hideProgressBar: true,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
-    }
-  };
 
-  useEffect(() => {
-    if (state?.message) {
-      notify(state);
-
-      if (state?.message == 'Usuario creado con exito') {
-        setTimeout(() => {
-          window.location.reload();
-        }, 2000);
+      const data = await response.json();
+      if (data.success) {
+        toast.success('Empleado creado con éxito!', {
+          position: 'top-center',
+          autoClose: 3000,
+          hideProgressBar: true,
+        });
+        setFormData(initialState); // Resetear formulario
+      } else {
+        toast.error(data.message || 'Error al crear empleado', {
+          position: 'top-center',
+          autoClose: 3000,
+          hideProgressBar: true,
+        });
       }
+    } catch (error) {
+      toast.error('Error de servidor', {
+        position: 'top-center',
+        autoClose: 3000,
+        hideProgressBar: true,
+      });
     }
-  }, [state]);
-
-  useEffect(() => {
-    if (selectedRole === 'administrador' || selectedRole === 'marketing') {
-      setSelectedPark('3'); // 3 representa "Todos los parques"
-    } else {
-      setSelectedPark('');
-    }
-  }, [selectedRole]);
+  };
+  
 
   return (
-    <div className='md:w-[50%] w-[100%] mx-auto h-screen flex flex-col justify-center'>
+    <div className="md:w-[80%] w-[100%] mx-auto mt-20">
       <ToastContainer />
-      <form action={dispatch}>
-        <div className="rounded-md bg-gray-50 p-4 md:p-6">
-          {/* Candidato Nombre */}
-          <div className="mb-4">
-            <label htmlFor="nombre" className="mb-2 block text-sm font-medium">
-              Nombre completo
-            </label>
-            <div className="relative mt-2 rounded-md">
-              <div className="relative">
-                <input
-                  id="nombre"
-                  name="nombre"
-                  type="text"
-                  placeholder="Nombre apellido"
-                  className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
-                  aria-describedby="amount-error"
-                />
-                <IdentificationIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500" />
-              </div>
-              <div id="amount-error" aria-live="polite" aria-atomic="true">
-                {state.errors?.nombre &&
-                  state.errors.nombre.map((error: string) => (
-                    <p className="mt-2 text-sm text-red-500" key={error}>
-                      {error}
-                    </p>
-                  ))}
-              </div>
-            </div>
-          </div>
+      
+      <h1 className="text-2xl font-semibold text-center mb-6">Registro de Empleado</h1>
 
-          {/* Candidato Cargo <div className="mb-4">
-            <label
-              htmlFor="nombreUser"
-              className="mb-2 block text-sm font-medium"
-            >
-              Nombre de Usuario
-            </label>
-            <div className="relative mt-2 rounded-md">
-              <div className="relative">
-                <input
-                  id="nombreUser"
-                  name="nombreUser"
-                  type="text"
-                  min={3}
-                  placeholder="Usuario"
-                  className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
-                  aria-describedby="amount-error"
-                />
-                <ClipboardDocumentCheckIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500" />
-              </div>
-              <div id="amount-error" aria-live="polite" aria-atomic="true">
-                {state.errors?.nombreUser &&
-                  state.errors.nombreUser.map((error: string) => (
-                    <p className="mt-2 text-sm text-red-500" key={error}>
-                      {error}
-                    </p>
-                  ))}
-              </div>
-            </div>
-          </div>*/}
+      <form onSubmit={handleSubmit}>
+        <div className="rounded-md bg-gray-50 p-4 md:p-6 shadow-md">
           
-          {/* Candidato Password */}
-          <div className="mb-4">
-            <label
-              htmlFor="password"
-              className="mb-2 block text-sm font-medium"
-            >
-              Contraseña
-            </label>
-            <div className="relative mt-2 rounded-md">
-              <div className="relative">
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  min={3}
-                  placeholder="*******"
-                  className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
-                  aria-describedby="amount-error"
-                />
-                <ClipboardDocumentCheckIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500" />
-              </div>
-              <div id="amount-error" aria-live="polite" aria-atomic="true">
-                {state.errors?.password &&
-                  state.errors.password.map((error: string) => (
-                    <p className="mt-2 text-sm text-red-500" key={error}>
-                      {error}
-                    </p>
-                  ))}
-              </div>
+          <div className="mb-4 flex space-x-4">
+            {/* Nombre */}
+            <div className="w-1/2">
+              <label htmlFor="name" className="mb-2 block text-sm font-medium">Nombre completo</label>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="Nombre apellido"
+                className="block w-full rounded-md border border-gray-200 py-2 text-sm placeholder:text-gray-500"
+              />
             </div>
-          </div>
-          {/* Candidato tipo de identificacion */}
-          <div className="mb-4">
-            <label htmlFor="rol" className="mb-2 block text-sm font-medium">
-              Rol del Perfil
-            </label>
-            <div className="relative">
-              <select
-                id="rol"
-                name="rol"
-                className="peer block w-full cursor-pointer rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
-                defaultValue=""
-                aria-describedby="customer-error"
-                onChange={handleRoleChange}
-              >
-                <option value="" disabled>
-                  Seleccione Rol del Usuario
-                </option>
-                <option key={'taquillero'} value={'taquillero'}>
-                  Housekeeper
-                </option>
-                <option key={'supervisor'} value={'supervisor'}>
-                  Supervisor
-                </option>
-                
-              </select>
-              <UserIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500" />
-            </div>
-            <div id="customer-error" aria-live="polite" aria-atomic="true">
-              {state.errors?.rol &&
-                state.errors.rol.map((error: string) => (
-                  <p className="mt-2 text-sm text-red-500" key={error}>
-                    {error}
-                  </p>
-                ))}
-            </div>
-          </div>
-          {/* Lista de parques (solo para "taquillero" o "supervisor") */}
-          {(selectedRole === 'taquillero' ||
-            selectedRole === 'supervisor' ||
-            selectedRole === 'administrador' ||
-            selectedRole === 'marketing') && (
-            <div className="mb-4">
-              <label htmlFor="park" className="mb-2 block text-sm font-medium">
-                Seleccione el parque
-              </label>
-              <div className="relative">
-                <select
-                  id="park"
-                  name="park"
-                  className="peer block w-full cursor-pointer rounded-md border border-gray-200 py-2 pl-10 text-sm"
-                  value={selectedPark}
-                  onChange={handleParkChange}
-                >
-                  <option value="" disabled>
-                    Seleccione el Parque
-                  </option>
-                  <option value="1">Parque Norte</option>
-                  <option value="2">Aero Parque Juan Pablo ll</option>
-                  <option value="3">Todos los parques</option>
-                </select>
-                <BuildingOffice2Icon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500" />
-              </div>
-              <div id="customer-error" aria-live="polite" aria-atomic="true">
-                {state.errors?.park &&
-                  state.errors?.park.map((error: string) => (
-                    <p className="mt-2 text-sm text-red-500" key={error}>
-                      {error}
-                    </p>
-                  ))}
-              </div>
-            </div>
-          )}
-        </div>
-        <div className="mt-6 flex justify-end gap-4">
-          <Link
-            href={breadcrumbs[0].href}
-            className="flex h-10 items-center rounded-lg bg-gray-100 px-4 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-200"
-          >
-            Cancel
-          </Link>
 
-          <Button type="submit" onClick={notify}>
-            Guardar
-          </Button>
+            {/* Teléfono */}
+            <div className="w-1/2">
+              <label htmlFor="phone_number" className="mb-2 block text-sm font-medium">Número de teléfono</label>
+              <input
+                id="phone_number"
+                name="phone_number"
+                type="text"
+                value={formData.phone_number}
+                onChange={handleChange}
+                placeholder="Número teléfono"
+                className="block w-full rounded-md border border-gray-200 py-2 text-sm placeholder:text-gray-500"
+              />
+            </div>
+          </div>
+
+          {/* Salario y Número social */}
+          <div className="mb-4 flex space-x-4">
+            <div className="w-1/2">
+              <label htmlFor="hourly_wage" className="mb-2 block text-sm font-medium">Salario por hora</label>
+              <input
+                id="hourly_wage"
+                name="hourly_wage"
+                type="number"
+                step="0.01"
+                value={formData.hourly_wage}
+                onChange={handleChange}
+                placeholder="Salario por hora"
+                className="block w-full rounded-md border border-gray-200 py-2 text-sm placeholder:text-gray-500"
+              />
+            </div>
+
+            <div className="w-1/2">
+              <label htmlFor="social_number" className="mb-2 block text-sm font-medium">Número social</label>
+              <input
+                id="social_number"
+                name="social_number"
+                type="text"
+                value={formData.social_number}
+                onChange={handleChange}
+                placeholder="Número social"
+                className="block w-full rounded-md border border-gray-200 py-2 text-sm placeholder:text-gray-500"
+              />
+            </div>
+          </div>
+
+          {/* Fecha de nacimiento y Dirección */}
+          <div className="mb-4 flex space-x-4">
+            <div className="w-1/2">
+              <label htmlFor="birthdate" className="mb-2 block text-sm font-medium">Fecha de nacimiento</label>
+              <input
+                id="birthdate"
+                name="birthdate"
+                type="date"
+                value={formData.birthdate}
+                onChange={handleChange}
+                className="block w-full rounded-md border border-gray-200 py-2 text-sm"
+              />
+            </div>
+
+            <div className="w-1/2">
+              <label htmlFor="address" className="mb-2 block text-sm font-medium">Dirección</label>
+              <input
+                id="address"
+                name="address"
+                type="text"
+                value={formData.address}
+                onChange={handleChange}
+                placeholder="Dirección completa"
+                className="block w-full rounded-md border border-gray-200 py-2 text-sm placeholder:text-gray-500"
+              />
+            </div>
+          </div>
+ {/* Horarios de trabajo */}
+ <div className="mb-6 flex space-x-4">
+            <div className="flex flex-col w-full">
+              <label htmlFor="start_time" className="mb-2 block text-sm font-medium">Hora de inicio</label>
+              <input
+                id="start_time"
+                name="start_time"
+                type="time"
+                value={formData.start_time}
+                onChange={handleChange}
+                className="border-2 border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-gray-500 w-full"
+              />
+            </div>
+
+            <div className="flex flex-col w-full">
+              <label htmlFor="end_time" className="mb-2 block text-sm font-medium">Hora de finalización</label>
+              <input
+                id="end_time"
+                name="end_time"
+                type="time"
+                value={formData.end_time}
+                onChange={handleChange}
+                className="border-2 border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-gray-500 w-full"
+              />
+            </div>
+          </div>
+
+          {/* Horarios de comida */}
+          <div className="mb-6 flex space-x-4">
+            <div className="flex flex-col w-full">
+              <label htmlFor="lunch_start_time" className="mb-2 block text-sm font-medium">Inicio de comida</label>
+              <input
+                id="lunch_start_time"
+                name="lunch_start_time"
+                type="time"
+                value={formData.lunch_start_time}
+                onChange={handleChange}
+                className="border-2 border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-gray-500 w-full"
+              />
+            </div>
+
+            <div className="flex flex-col w-full">
+              <label htmlFor="lunch_end_time" className="mb-2 block text-sm font-medium">Fin de comida</label>
+              <input
+                id="lunch_end_time"
+                name="lunch_end_time"
+                type="time"
+                value={formData.lunch_end_time}
+                onChange={handleChange}
+                className="border-2 border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-gray-500 w-full"
+              />
+            </div>
+          </div>
+          {/* Rol y Estado del perfil */}
+          <div className="mb-4 flex space-x-4">
+            <div className="w-1/2">
+              <label htmlFor="role" className="mb-2 block text-sm font-medium">Rol del empleado</label>
+              <select
+                id="role"
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                className="block w-full rounded-md border border-gray-200 py-2 text-sm"
+              >
+                <option value="" disabled>Seleccione un rol</option>
+                <option value="housekeeper">Housekeeper</option>
+                <option value="supervisor">Supervisor</option>
+                <option value="administrador">Administrador</option>
+              </select>
+            </div>
+
+            <div className="w-1/2">
+              <label htmlFor="statusprofile" className="mb-2 block text-sm font-medium">Estado del perfil</label>
+              <select
+                id="statusprofile"
+                name="statusprofile"
+                value={formData.statusprofile}
+                onChange={handleChange}
+                className="block w-full rounded-md border border-gray-200 py-2 text-sm"
+              >
+                <option value="Habilitado">Habilitado</option>
+                <option value="Deshabilitado">Deshabilitado</option>
+                <option value="Eliminado">Eliminado</option>
+              </select>
+            </div>
+          </div>
+          <div className="w-1/2">
+            <label htmlFor="current_hotel_id" className="mb-2 block text-sm font-medium">Propiedad</label>
+            <select
+              id="current_hotel_id"
+              name="current_hotel_id"
+              value={formData.current_hotel_id}
+              onChange={handleChange}
+              className="block w-full rounded-md border border-gray-200 py-2 text-sm"
+            >
+              <option value="1">Heron I</option>
+              <option value="2">Heron II</option>
+            </select>
+          </div>
+
+
+          {/* Botones */}
+          <div className="mt-6 flex justify-end gap-4">
+            <Button type="reset">Cancelar</Button>
+            <Button type="submit">Guardar</Button>
+          </div>
         </div>
       </form>
     </div>
