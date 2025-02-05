@@ -65,3 +65,4 @@ export type Shedule = {
   end_time: string;
   range_hours: string;
 }
+

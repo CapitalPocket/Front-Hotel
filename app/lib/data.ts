@@ -150,60 +150,88 @@ export async function fetchFilteredUsersPage(
 }
 
 
-export async function fetchEmployeeSchedules(query: string,
-  status: string = 'Habilitado',) {
-  try {
-    // Paso 1: Consumir la API para obtener todos los empleados
-    const employeesApiUrl = 'https://9b0lctjk-80.use.devtunnels.ms/api/hotel/getAllEmployees';
-    const response = await axios.get(employeesApiUrl);
 
-    if (response.data.message) {
-      console.warn(response.data.message);
-      return;
+
+export async function fetchEmployeeSchedules(query: string, status: string = 'Habilitado') {
+  try {
+    // 1️⃣ Obtener empleados
+    const employeesApiUrl = `${process.env.NEXT_PUBLIC_BACK_LINK}/api/hotel/getAllEmployees`;
+    const response = await axios.get(employeesApiUrl);
+    
+    if (!response.data || !Array.isArray(response.data)) {
+      console.warn("La respuesta de empleados no es válida.");
+      return [];
     }
 
-    const employees = response.data;
+    const employees = response.data.filter((emp: any) => emp.statusprofile === status);
 
-    // Paso 2: Obtener los horarios de cada empleado y extraer start_time y end_time
-    const allSchedules = await Promise.all(
-      employees.map(async (employee: any) => {
-        const employeeId = employee.id_employee;
+    // 2️⃣ Obtener los horarios de cada empleado
+    const scheduleRequests = employees.map(async (employee: any) => {
+      const employeeId = employee.id_employee;
+      const schedulesApiUrl = `${process.env.NEXT_PUBLIC_BACK_LINK}/api/hotel/getAllShedule/${employeeId}`;
+
+      try {
+        const scheduleResponse = await axios.get(schedulesApiUrl);
         
-        const schedulesApiUrl = `https://9b0lctjk-80.use.devtunnels.ms/api/hotel/getAllShedule/${employeeId}`;
-        try {
-          const scheduleResponse = await axios.get(schedulesApiUrl);
-          
-          if (scheduleResponse.data.message) {
-            console.warn(scheduleResponse.data.message);
-            return []; // Si no hay horarios, retornar un array vacío
-          }
-
-          // Extraer los valores de start_time y end_time
-          const employeeSchedules = scheduleResponse.data.map((schedule: any) => ({
-            employeeId: employeeId,
-            start_time: schedule.start_time,
-            end_time: schedule.end_time,
-            range_hours: schedule.range_hours
-          }));
-
-          return employeeSchedules;
-        } catch (error) {
-          console.error(`Error fetching schedules for employee ${employeeId}:`, error);
-          return []; // Si hay error, retornar un array vacío
+        if (!scheduleResponse.data || !Array.isArray(scheduleResponse.data)) {
+          console.warn(`No schedules found for employee ${employeeId}`);
+          return [];
         }
-      })
-    );
 
-    // Aplanar los resultados y devolverlos
-    const flattenedSchedules = allSchedules.flat();
+        return scheduleResponse.data.map((schedule: any) => ({
+          employeeId,
+          start_time: schedule.start_time,
+          end_time: schedule.end_time,
+          range_hours: schedule.range_hours,
+        }));
+      } catch (error) {
+        console.error(`Error fetching schedules for employee ${employeeId}:`, error);
+        return [];
+      }
+    });
 
-    console.log("All Employee Schedules:", flattenedSchedules);
+    // 3️⃣ Esperar todas las solicitudes y aplanar resultados
+    const allSchedules = (await Promise.all(scheduleRequests)).flat();
+
+    console.log("All Employee Schedules:", allSchedules);
     
-    return flattenedSchedules;
+    return allSchedules;
 
   } catch (error) {
     console.error('Error fetching employees or schedules:', error);
     throw new Error('Failed to fetch employee schedules');
   }
+ 
+  
 }
+export async function updateEmployeeDetails(
+  employee_id: string,
+  employeeData: {
+    hourly_wage: number;
+    start_time: string;
+    end_time: string;
+    lunch_start_time: string;
+    lunch_end_time: string;
+    role: string;
+    statusprofile: string;
+    birthdate: string;
+    address: string;
+    social_number: string;
+  }
+) {
+  try {
+    const apiUrl = `https://9b0lctjk-80.use.devtunnels.ms/api/hotel/updateEmployeeDetails/${employee_id}`;
+    const response = await axios.patch(apiUrl, employeeData);
 
+    // Manejar la respuesta exitosa
+    console.log('Employee details updated successfully', response.data);
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error('Axios Error:', error.response?.data || error.message);
+      throw new Error(`Failed to update employee details: ${error.message}`);
+    }
+    console.error('Error:', error);
+    throw new Error('Failed to update employee details.');
+  }
+}

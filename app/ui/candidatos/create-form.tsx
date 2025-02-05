@@ -228,9 +228,24 @@ export default function EmployeeForm() {
                 className="block w-full rounded-md border border-gray-200 py-2 text-sm"
               >
                 <option value="" disabled>Seleccione un rol</option>
-                <option value="housekeeper">Housekeeper</option>
-                <option value="supervisor">Supervisor</option>
-                <option value="administrador">Administrador</option>
+              
+                <option value="Housekeeper">Housekeeper</option>
+                <option value="Houseman">Houseman</option>
+                <option value="Maintenance Tech">Maintenance Tech</option>
+                <option value="Painter">Painter</option>
+                <option value="Remodeling Official">Remodeling Official</option>
+                <option value="HK Supervisor">HK Supervisor</option>
+                <option value="MT Supervisor">MT Supervisor</option>
+                <option value="Remo Supervisor">Remo Supervisor</option>
+                <option value="Quality Control">Quality Control</option>
+                <option value="Building Manager">Building Manager</option>
+                <option value="Room control">Room control</option>
+                <option value="Front desk">Front desk</option>
+                <option value="Lost & Found/Inventory">Lost & Found/Inventory</option>
+                <option value="Assistant Manager">Assistant Manager</option>
+                <option value="Operations Manager">Operations Manager</option>
+                <option value="General Manager">General Manager</option>
+                <option value="Resort Manager">Resort Manager</option>
               </select>
             </div>
 

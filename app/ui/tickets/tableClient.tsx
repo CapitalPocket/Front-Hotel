@@ -187,10 +187,10 @@ export default function InvoicesTableClient({
             </table>
           </div>
         </div>
-      </div>
+      </div>*/
 
       {/* Modal */}
-      <Modal
+      /*<Modal
         isOpen={isModalOpen}
         onClose={closeModal}
         status={selectedTicket?.status || ''}
@@ -198,9 +198,9 @@ export default function InvoicesTableClient({
         onValidate={handleValidateTicket}
       >
         <h2 className="text-lg font-bold">Detalles del Ticket</h2>
-        <div className="mt-4">
+        <div className="mt-4">*/
           {/* Datos del cliente */}
-          <h3 className="text-md font-semibold">Datos del Cliente</h3>
+          /*<h3 className="text-md font-semibold">Datos del Cliente</h3>
           <ul className="mt-2 text-sm text-gray-700">
             <li>
               <strong>Nombre:</strong>{' '}
@@ -221,9 +221,9 @@ export default function InvoicesTableClient({
             <li>
               <strong>Teléfono:</strong> {selectedTicket?.phone_number}
             </li>
-          </ul>
+          </ul>*/
           {/* Detalles del ticket */}
-          <h3 className="text-md mt-4 font-semibold">Detalles del Ticket</h3>
+          /*<h3 className="text-md mt-4 font-semibold">Detalles del Ticket</h3>
           <ul className="mt-2 text-sm text-gray-700">
             <li>
               <strong>ID del Ticket:</strong> {selectedTicket?.ticket_code}
@@ -239,9 +239,9 @@ export default function InvoicesTableClient({
               <strong>Estado: </strong>{' '}
               <TicketStatus status={selectedTicket?.status || ''} />
             </li>
-          </ul>
+          </ul>*/
           {/* Resumen */}
-          <h3 className="text-md mt-4 font-semibold">Resumen</h3>
+          /*<h3 className="text-md mt-4 font-semibold">Resumen</h3>
           <ul className="mt-2 text-sm text-gray-700">
             {selectedTicket?.ticket_info?.map((info, index) => (
               <li key={index}>

@@ -5,7 +5,7 @@ import { CreateInvoice } from '@/app/ui/tickets/buttons';
 import { lusitana } from '@/app/ui/fonts';
 import { InvoicesTableSkeleton } from '@/app/ui/skeletons';
 import { Suspense } from 'react';
-import { fetchTicketsCount } from '@/app/lib/data';
+//import { fetchTicketsCount } from '@/app/lib/data';
 import { Metadata } from 'next';
 import { auth } from '@/auth';
 
@@ -43,4 +43,10 @@ export default async function Page({
       </div>
     </div>
   );
+}
+
+async function fetchTicketsCount(query: string, user: string | { idUser?: string; park?: string; role?: string; changePass?: string; }): Promise<number> {
+  // Implement the function to fetch the total number of tickets based on the query and user
+  // For now, let's return a mock value
+  return 10; // Replace this with actual implementation
 }

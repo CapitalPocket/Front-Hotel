@@ -22,7 +22,7 @@ export const links = [
     icon: HomeIcon,
     roles: ['administrador', 'supervisor', 'marketing', 'taquillero'],
   },
-  {
+{
     name: 'Tickets',
     href: '/dashboard/tickets',
     roles: ['administrador', 'taquillero', 'supervisor'],

@@ -2,7 +2,7 @@ import Image from 'next/image';
 import TicketStatus from '@/app/ui/tickets/status';
 import { formatDateToLocal } from '@/app/lib/utils';
 import { fetchFilteredInvoices } from '@/app/lib/data';
-import { Ticket } from '@/app/lib/definitions';
+// import { Ticket } from '@/app/lib/definitions';
 import { ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 
 export default async function TableInvoices({
