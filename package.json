@@ -15,6 +15,7 @@
     "@fullcalendar/react": "^6.1.15",
     "@fullcalendar/timegrid": "^6.1.15",
     "@heroicons/react": "^2.0.18",
+    "@mantine/dates": "^7.16.2",
     "@tailwindcss/forms": "^0.5.7",
     "@types/node": "20.5.7",
     "@types/react-datepicker": "^7.0.0",

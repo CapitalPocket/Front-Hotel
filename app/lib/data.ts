@@ -234,4 +234,55 @@ export async function updateEmployeeDetails(
     console.error('Error:', error);
     throw new Error('Failed to update employee details.');
   }
+
+  
+}
+
+export async function fetchEmployeeWorkSchedule(
+  query: string,
+  currentPage: number
+) {
+  const offset = (currentPage - 1) * ITEMS_PER_PAGE;
+
+  try {
+    // Construir la URL de la API
+    const apiUrl = `https://9b0lctjk-80.use.devtunnels.ms/api/hotel/getEmployeeWorkSchedule`;
+    
+    // Hacer la petición a la API
+    const { data: schedules } = await axios.get(apiUrl);
+
+    // Filtrar resultados según la consulta de búsqueda
+    const filteredSchedules = schedules.filter((schedule: any) => {
+      const searchString = query.toLowerCase();
+      return (
+        schedule.work_date?.toLowerCase().includes(searchString) ||
+        schedule.start_time?.toLowerCase().includes(searchString) ||
+        schedule.end_time?.toLowerCase().includes(searchString)
+      );
+    });
+
+    // Formatear la respuesta para que incluya la información requerida
+    const formattedSchedules = filteredSchedules.map((schedule: any) => ({
+      employee_id: schedule.employee_id,
+      employee_name: schedule.employee_name,
+      work_date: new Date(schedule.work_date).toISOString(), // Si la fecha no está en formato ISO
+      start_time: new Date(schedule.start_time).toLocaleString(), // Asegúrate de que el formato sea adecuado
+      end_time: new Date(schedule.end_time).toLocaleString(), // Asegúrate de que el formato sea adecuado
+    }));
+
+    // Aplicar paginación a los resultados formateados
+    const paginatedSchedules = formattedSchedules.slice(
+      offset,
+      offset + ITEMS_PER_PAGE
+    );
+
+    return paginatedSchedules;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error('Axios Error:', error.response?.data || error.message);
+      throw new Error(`Failed to fetch schedules: ${error.message}`);
+    }
+    console.error('Error:', error);
+    throw new Error('Failed to fetch schedules.');
+  }
 }

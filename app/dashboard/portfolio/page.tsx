@@ -20,14 +20,14 @@ const Page = () => {
         >
           Heron I
         </button>
-        <button
+        {/*<button
           onClick={() => setPark('AP')}
           className={`flex-1 h-12 bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded transition duration-300 ${
             park === 'AP' ? 'ring-2 ring-gray-300' : ''
           }`}
         >
           Heron II
-        </button>
+        </button>*/}
       </div>
 
       <div className="flex-grow w-full max-w-7xl mx-auto mt-10 px-4">

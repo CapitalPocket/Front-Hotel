@@ -66,3 +66,21 @@ export type Shedule = {
   range_hours: string;
 }
 
+interface Employee {
+  employeeName: string;
+  hotelName: string;
+  currentRoom: string; // Incluye la categoría como "101A" o "101B"
+}
+
+interface RoomStatus {
+  id_room: number;
+  hotel_id: number;
+  room_number: string;
+  category: 'A' | 'B';
+  status: string; // El estado de la habitación, por ejemplo, "V/C" o "Ocupado"
+  created_at: string; // Fecha de creación del estado de la habitación
+}
+
+interface HotelViewProps {
+  park: string; // Recibimos el nombre del hotel
+}

@@ -98,7 +98,7 @@ export default function EmployeeModal({
               name="role"
               value={formData.role}
               onChange={handleSelectChange}
-               className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+              className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
             >
               <option value="">Seleccione un rol</option>
               <option value="Housekeeper">Housekeeper</option>

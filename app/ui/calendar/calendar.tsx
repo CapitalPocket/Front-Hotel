@@ -13,12 +13,13 @@ interface RoomStatus {
   room_number: string;
   category: 'A' | 'B';
   status: string; // El estado de la habitación, por ejemplo, "V/C" o "Ocupado"
+  created_at: string; // Fecha de creación del estado de la habitación
 }
 
 interface HotelViewProps {
   park: string; // Recibimos el nombre del hotel
 }
-
+  
 const floors = [
   { floor: 7, rooms: [701, 702, 703, 704, 705, 706] },
   { floor: 6, rooms: [601, 602, 603, 604, 605, 606] },
@@ -60,11 +61,26 @@ const HotelView: React.FC<HotelViewProps> = ({ park }) => {
           'https://9b0lctjk-80.use.devtunnels.ms/api/hotel/getAllRoomStatus',
           { params: { hotel_id: park } }
         );
-        setRoomStatuses(response.data || []);
+    
+        const allStatuses: RoomStatus[] = response.data || [];
+    
+        // Filtrar el estado más reciente por cada habitación y categoría
+        const latestRoomStatuses = Object.values(
+          allStatuses.reduce((acc, room) => {
+            const key = `${room.room_number}-${room.category}`;
+            if (!acc[key] || new Date(room.created_at) > new Date(acc[key].created_at)) {
+              acc[key] = room;
+            }
+            return acc;
+          }, {} as Record<string, RoomStatus>)
+        );
+    
+        setRoomStatuses(latestRoomStatuses);
       } catch (error) {
         console.error('Error al obtener el estado de las habitaciones:', error);
       }
     };
+    
 
     fetchEmployees();
     fetchRoomStatuses();
@@ -93,8 +109,11 @@ const HotelView: React.FC<HotelViewProps> = ({ park }) => {
 
               const active = activeCategory[room]; // Categoría activa para esta habitación
 
-              const roomStatus = roomStatuses.find(
-                (status) => status.room_number === room.toString()
+              const roomStatusA = roomStatuses.find(
+                (status) => status.room_number === room.toString() && status.category === 'A'
+              );
+              const roomStatusB = roomStatuses.find(
+                (status) => status.room_number === room.toString() && status.category === 'B'
               );
 
               return (
@@ -103,10 +122,14 @@ const HotelView: React.FC<HotelViewProps> = ({ park }) => {
                   className="room relative w-32 h-56 border rounded-lg flex flex-col items-center bg-gray-50 shadow-sm"
                 >
                   {/* Parte superior: Estado de la habitación */}
-                  <div className="room-status bg-gray-200 w-full py-1 text-center font-medium text-sm">
-                    {roomStatus ? roomStatus.status : 'Cargando...'}
+                  <div className="room-status flex w-full">
+                    <div className="w-1/2 bg-gray-200 py-1 text-center font-medium text-sm border-r border-white">
+                      {roomStatusA ? roomStatusA.status : '...'}
+                    </div>
+                    <div className="w-1/2 bg-gray-200 py-1 text-center font-medium text-sm">
+                      {roomStatusB ? roomStatusB.status : '...'}
+                    </div>
                   </div>
-
                   {/* Contenido de la tarjeta (empleados, número de habitación, categorías) */}
                   <div className="flex flex-col items-center justify-between p-2 w-full flex-1">
                     {/* Empleados */}

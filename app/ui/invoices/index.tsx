@@ -5,7 +5,7 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import axios from 'axios';
 import Select from 'react-select';
-import { hotelMapping } from '@/app/lib/utils';
+import{fetchEmployeeWorkSchedule} from '../../lib/data';
 
 interface EmployeeScheduleProps {
   park: string;
@@ -27,40 +27,45 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
       const employeeResponse = await axios.get(
         'https://9b0lctjk-80.use.devtunnels.ms/api/hotel/getAllEmployees'
       );
-    
+  
       if (Array.isArray(employeeResponse.data)) {
         const employeeData = employeeResponse.data.map((emp) => ({
           id_employee: emp.id_employee,
           name: emp.name,
         }));
         setEmployees(employeeData);
-    
+  
         const allEvents: any[] = [];
-    
+  
         for (const emp of employeeData) {
           const scheduleResponse = await axios.get(
             `https://9b0lctjk-80.use.devtunnels.ms/api/hotel/getAllWorkShedule/${emp.id_employee}`
           );
-    
+  
           if (Array.isArray(scheduleResponse.data)) {
             const employeeEvents = scheduleResponse.data.map((schedule: any) => {
-              const workDate = new Date(schedule.work_date); // Convertir el campo work_date a una fecha
-              const startTime = schedule.start_time; // Hora de inicio
-              const endTime = schedule.end_time; // Hora de finalización
-    
+              const workDate = new Date(schedule.work_date); // work_date en formato ISO
+              const startTime = new Date(`${workDate.toISOString().split('T')[0]}T${schedule.start_time.split(' ')[1]}`);
+              const endTime = new Date(`${workDate.toISOString().split('T')[0]}T${schedule.end_time.split(' ')[1]}`);
+  
               return {
-                id: `${emp.id_employee}-${schedule.id_workdays}`, // Único ID para el evento
-                title: `${emp.name} - ${startTime} a ${endTime}`, // Título con nombre del empleado y horario
-                start: `${workDate.toISOString().split('T')[0]}T${startTime}`, // Fecha y hora de inicio
-                end: `${workDate.toISOString().split('T')[0]}T${endTime}`, // Fecha y hora de finalización
-                color: "#20b2aa", // Color de evento
+                id: `${emp.id_employee}-${schedule.id_workdays}`,
+                title: `${emp.name} - ${schedule.start_time} a ${schedule.end_time}`, 
+                start: startTime.toISOString(),
+                end: endTime.toISOString(),
+                color: "#20b2aa",
+                extendedProps: {
+                  employee_name: emp.name,
+                  start_time: schedule.start_time,
+                  end_time: schedule.end_time,
+                }
               };
             });
-    
+  
             allEvents.push(...employeeEvents);
           }
         }
-    
+  
         setEvents(allEvents);
       } else {
         console.error('La respuesta de empleados no es un array.');
@@ -153,6 +158,8 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
     return '';
   };
 
+  
+
   return (
     <div className="p-6">
       <h2 className="mb-6 text-2xl font-bold text-gray-800">Gestión de Horarios de Empleados</h2>
@@ -225,39 +232,61 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
           Guardar Horarios
         </button>
       </div>
-      {/* Calendario */}
       <div className="h-[80vh] max-h-[550px] overflow-auto">
-        <FullCalendar
-          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-          initialView="dayGridMonth"
-          headerToolbar={{
-            left: 'prev,next',
-            center: 'title',
-            right: '',
-          }}
-          editable={true}
-          selectable={true}
-          events={events}
-          eventColor="#20b2aa"
-          height="100%"
-          dayMaxEventRows={true}
-          buttonText={{
-            month: 'Mes',
-            week: 'Semana',
-            day: 'Día',
-          }}
-          locale="es"
-          firstDay={1}
-          dateClick={handleDayClick}
-          dayCellContent={(info) => {
-            const day = info.date.toISOString().split('T')[0]; // Obtener la fecha en formato YYYY-MM-DD
-            return (
-              <div className={dayNumberClass(day)}>
-                {info.dayNumberText}
-              </div>
-            );
-          }}
-        />
+      <FullCalendar
+        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+        initialView="dayGridMonth"
+        headerToolbar={{
+          left: 'prev,next',
+          center: 'title',
+          right: '',
+        }}
+        editable={true}
+        selectable={true}
+        events={events} // Los eventos cargados
+        eventColor="#20b2aa"
+        height="100%"
+        dayMaxEventRows={true}
+        buttonText={{
+          month: 'Mes',
+          week: 'Semana',
+          day: 'Día',
+        }}
+        locale="es"
+        firstDay={1}
+        dateClick={handleDayClick}
+        dayCellContent={(info) => {
+          const day = info.date.toISOString().split('T')[0];
+          const dayEvents = events.filter((event) => event.start.includes(day)); // Filtrar eventos para el día
+        
+          return (
+            <div className={dayNumberClass(day)}>
+              {info.dayNumberText}
+              {dayEvents.map((event) => (
+                <div key={event.id} className="mt-1 text-sm">
+                  <strong>{event.extendedProps.employee_name}</strong>
+                  <div>{`${event.extendedProps.start_time} - ${event.extendedProps.end_time}`}</div>
+                </div>
+              ))}
+            </div>
+          );
+        }}
+        
+        eventContent={(eventInfo) => {
+          const { event } = eventInfo;
+          const { employee_name, start_time, end_time } = event.extendedProps;
+          
+          return (
+            <div>
+              <strong>{employee_name}</strong>
+              <div>{`Inicio: ${start_time}`}</div>
+              <div>{`Fin: ${end_time}`}</div>
+            </div>
+          );
+        }}
+        
+        
+      />
       </div>
     </div>
   );
