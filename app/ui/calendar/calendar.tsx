@@ -19,6 +19,26 @@ interface RoomStatus {
 interface HotelViewProps {
   park: string; // Recibimos el nombre del hotel
 }
+const statusColors = {
+  'V/C': '#4CAF50',  // 🟢 Verde (Vacant and Clean)
+  'O': '#FF9800',    // 🟠 Naranja (Occupied)
+  'V/D': '#F44336',  // 🔴 Rojo (Vacant and Dirty)
+  'OOO': '#9E9E9E',  // ⚪ Gris (Out of Service)
+  'CLEAN/IN': '#2196F3',  // 🔵 Azul (Cleaning Start)
+  'P/S': '#673AB7',  // 🟣 Morado (Cleaning Out)
+  'DEV': '#FFEB3B',  // 🟡 Amarillo (Devolution)
+  'RM': '#795548',   // 🟤 Café (Removed)
+  'S/O': '#009688',  // 🟢 Verde-azulado (Stay Over)
+  'E/CH': '#03A9F4', // 🔷 Azul claro (Early Check Out)
+  'MT/IN': '#8BC34A', // 🟢 Verde lima (Maintenance In)
+  'MT/OUT': '#CDDC39', // 🟡 Verde lima más claro (Maintenance Out)
+  'DEP': '#FF5722',  // 🟥 Rojo oscuro (Linen Remove)
+  'CALL': '#607D8B', // 🟦 Gris azulado (Call for Guest Need)
+  'REMO PROJECT': '#E91E63', // 💖 Rosa (Remodeling Project)
+  'F/S': '#3F51B5',  // 🔷 Azul índigo (Full Service)
+  'N/A': '#808080'   // ⚫ Gris oscuro (Default)
+};
+
   
 const floors = [
   { floor: 7, rooms: [701, 702, 703, 704, 705, 706] },
@@ -93,6 +113,18 @@ const HotelView: React.FC<HotelViewProps> = ({ park }) => {
     }));
   };
 
+  const getRoomStatusCounts = (floors: { floor: number; rooms: number[] }[], rooms: RoomStatus[]): Record<string, number> => {
+    return rooms
+      .filter(room => floors.some(floor => room.room_number.startsWith(`${floor.floor}`)))
+      .reduce((acc: Record<string, number>, room: RoomStatus) => {
+        const estado = room.status;
+        const alias = statusColors[estado as keyof typeof statusColors] || "N/A";
+        acc[alias] = (acc[alias] || 0) + 1;
+        return acc;
+      }, {});
+  };
+  
+
   return (
     <div ref={hotelViewRef} className="hotel-container space-y-4 px-4">
       {floors.map(({ floor, rooms }) => (
@@ -130,6 +162,7 @@ const HotelView: React.FC<HotelViewProps> = ({ park }) => {
                       {roomStatusB ? roomStatusB.status : '...'}
                     </div>
                   </div>
+                  
                   {/* Contenido de la tarjeta (empleados, número de habitación, categorías) */}
                   <div className="flex flex-col items-center justify-between p-2 w-full flex-1">
                     {/* Empleados */}
@@ -191,9 +224,15 @@ const HotelView: React.FC<HotelViewProps> = ({ park }) => {
 
 
                     </div>
+                    
                 </div>
+                
               );
+
+              
             })}
+
+
           </div>
         </div>
       ))}
