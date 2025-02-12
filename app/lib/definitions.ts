@@ -84,3 +84,17 @@ interface RoomStatus {
 interface HotelViewProps {
   park: string; // Recibimos el nombre del hotel
 }
+
+export type DateRangePickerProps = {
+
+  startDate: Date;
+
+  endDate: Date;
+
+  id: string;
+
+  name: string;
+
+  className: string;
+
+}
