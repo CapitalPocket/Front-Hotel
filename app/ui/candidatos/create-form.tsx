@@ -36,7 +36,7 @@ export default function EmployeeForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch('https://9b0lctjk-80.use.devtunnels.ms/api/hotel/createEmployee', { // Ajusta la URL de la API según corresponda
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACK_LINK}/api/hotel/createEmployee`, { // Ajusta la URL de la API según corresponda
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -273,6 +273,7 @@ export default function EmployeeForm() {
               onChange={handleChange}
               className="block w-full rounded-md border border-gray-200 py-2 text-sm"
             >
+              <option value="" disabled>Seleccionar Hotel</option>
               <option value="1">Heron I</option>
               <option value="2">Heron II</option>
             </select>

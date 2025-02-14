@@ -66,7 +66,7 @@ const HotelView: React.FC<HotelViewProps> = ({ park }) => {
     const fetchEmployees = async () => {
       try {
         const response = await axios.get(
-          'https://9b0lctjk-80.use.devtunnels.ms/api/hotel/getemployeGetRoom',
+          `${process.env.NEXT_PUBLIC_BACK_LINK}/api/hotel/getemployeGetRoom`,
           { params: { park } }
         );
         setEmployees(response.data.employees || []);
@@ -78,7 +78,7 @@ const HotelView: React.FC<HotelViewProps> = ({ park }) => {
     const fetchRoomStatuses = async () => {
       try {
         const response = await axios.get(
-          'https://9b0lctjk-80.use.devtunnels.ms/api/hotel/getAllRoomStatus',
+          `${process.env.NEXT_PUBLIC_BACK_LINK}/api/hotel/getAllRoomStatus`,
           { params: { hotel_id: park } }
         );
     

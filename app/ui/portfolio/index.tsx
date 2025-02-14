@@ -28,7 +28,8 @@ const Portfolio: React.FC<PortfolioProps> = ({ park }) => {
 
   const fetchEmployees = async () => {
     try {
-      const response = await axios.get("https://9b0lctjk-80.use.devtunnels.ms/api/hotel/getAllEmployees");
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACK_LINK}/api/hotel/getAllEmployees`);
       return response.data;
     } catch (err) {
       console.error("❌ Error obteniendo empleados:", err);
