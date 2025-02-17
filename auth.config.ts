@@ -1,6 +1,6 @@
 import type { NextAuthConfig } from 'next-auth';
 
-type Role = 'administrador' | 'supervisor' | 'marketing' | 'taquillero';
+type Role = 'administrador' ;
 export const authConfig = {
   pages: {
     signIn: '/login',
@@ -46,24 +46,7 @@ export const authConfig = {
           '/dashboard/redenciones',
           '/dashboard/generar-excel',
         ],
-        taquillero: [
-          '/dashboard', 
-          '/dashboard/tickets'
-        ],
-        supervisor: [
-          '/dashboard',
-          '/dashboard/tickets',
-          '/dashboard/redenciones',
-        ],
-        marketing: [
-          '/dashboard',
-          '/dashboard/graphs-sales',
-          '/dashboard/graphs-interactions',
-          '/dashboard/invoices',
-          '/dashboard/parks',
-          '/dashboard/portfolio',
-          '/dashboard/generar-excel',
-        ],
+        
       };
       
       if (isOnDashboard) {

@@ -12,6 +12,7 @@ export default function EmployeeModal({
   onClose: () => void;
 }) {
   const [formData, setFormData] = useState({
+    current_hotel_id: '',
     hourly_wage: '',
     start_time: '',
     end_time: '',
@@ -39,6 +40,7 @@ export default function EmployeeModal({
   useEffect(() => {
     if (employee) {
       setFormData({
+        current_hotel_id: employee.current_hotel_id || '',
         hourly_wage: employee.hourly_wage || '',
         start_time: employee.start_time || '',
         end_time: employee.end_time || '',
@@ -78,6 +80,7 @@ export default function EmployeeModal({
       await updateEmployeeDetails(employee.id_employee, {
         ...formData,
         hourly_wage: parseFloat(formData.hourly_wage),
+        current_hotel_id: parseInt(formData.current_hotel_id, 10),
       });
       onClose(); // Cerrar el modal después de la actualización
     } catch (error) {
@@ -199,6 +202,7 @@ export default function EmployeeModal({
         </div>
   
         {/* Fecha de nacimiento (con DatePicker) */}
+        <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col space-y-2">
           <label className="text-sm font-medium">Fecha de nacimiento</label>
           <DatePicker
@@ -216,7 +220,21 @@ export default function EmployeeModal({
             dateFormat="yyyy-MM-dd"
           />
         </div>
-  
+        <div className="flex flex-col space-y-2">
+            <label className="text-sm font-medium">Propiedad</label>
+            <select
+              name="current_hotel_id"
+              value={formData.current_hotel_id}
+              onChange={handleSelectChange}
+              className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+            >
+              <option value="">Seleccione un estado</option>
+              <option value="1">Heron I </option>
+              <option value="2">Heron II </option>
+              {/* Agrega más opciones según sea necesario */}
+            </select>
+          </div>
+        </div>
         {/* Dirección */}
         <div className="flex flex-col space-y-2">
           <label className="text-sm font-medium">Dirección</label>

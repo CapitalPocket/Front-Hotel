@@ -207,6 +207,7 @@ export async function fetchEmployeeSchedules(query: string, status: string = 'Ha
 export async function updateEmployeeDetails(
   employee_id: string,
   employeeData: {
+    current_hotel_id: number;
     hourly_wage: number;
     start_time: string;
     end_time: string;
