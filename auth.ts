@@ -6,13 +6,13 @@ import type { ApiResponse, LoginResponse } from '@/app/lib/definitions';
 import axios from 'axios';
 
 async function getUser(
-  email: string,
+  name: string,
   password: string,
 ): Promise<LoginResponse | undefined> {
   try {
     const response = await axios.post<ApiResponse>(
-      `${process.env.NEXT_PUBLIC_BACK_LINK}/api/taquilla/loginUser`,
-      { email, password },
+      `${process.env.NEXT_PUBLIC_BACK_LINK}/api/hotel/loginUser`,
+      { name, password },
     );
 
     const apiResponse = response.data;
@@ -24,10 +24,8 @@ async function getUser(
         user: {
           idUser: user.id_user.toString(),
           name: user.name,
-          email: user.email,
           password: user.password,
-          rol: user.rol,
-          park: user.idpark,
+          role: user.rol,
           changePass: user.changepassword,
           statusprofile: user.statusprofile,
         },
@@ -48,12 +46,12 @@ export const { auth, signIn, signOut } = NextAuth({
     Credentials({
       async authorize(credentials) {
         const parsedCredentials = z
-          .object({ email: z.string().min(3), password: z.string().min(6) })
+          .object({ name: z.string().min(3), password: z.string().min(6) })
           .safeParse(credentials);
 
         if (parsedCredentials.success) {
-          const { email, password } = parsedCredentials.data;
-          const response = await getUser(email, password);
+          const { name, password } = parsedCredentials.data;
+          const response = await getUser(name, password);
 
           if (!response?.user) return null;
 
@@ -66,9 +64,7 @@ export const { auth, signIn, signOut } = NextAuth({
           return {
             idUser: response.user.idUser,
             name: response.user.name,
-            email: response.user.email,
-            role: response.user?.rol,
-            park: response.user?.park,
+            role: response.user?.role,
             changePass: response.user?.changePass,
           };
         }

@@ -3,10 +3,8 @@ export type LoginResponse = { user?: User; message: string };
 export type User = {
   idUser: string;
   name: string;
-  email: string;
   password: string;
-  rol: string;
-  park: string;
+  role: string;
   changePass?: string;
   statusprofile?: string;
 };
