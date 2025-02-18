@@ -1,23 +1,21 @@
 export type LoginResponse = { user?: User; message: string };
 
 export type User = {
-  idUser: string;
-  name: string;
-  password: string;
+  id_employee: string;
+  name: string; 
   role: string;
-  changePass?: string;
+  phone_number: string;
   statusprofile?: string;
 };
 
 export type ApiResponse = {
 
   user?: {
-    id_user: string;
+    id_employee: string;
     name: string;
-    email: string;
     password: string;
-    rol: string;
-    idpark: string;
+    role: string;
+    phone_number: string;
     changepassword?: string;
     statusprofile?: string;
   }; 

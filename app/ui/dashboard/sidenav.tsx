@@ -22,7 +22,6 @@ export default function SideNav(user: any) {
             {user?.user?.name}
           </p>
           <p className="text-xs opacity-80 capitalize">{user?.user?.role}</p>
-          <p className="text-xs opacity-80 capitalize">{user?.user?.park > 2 ? '' : user?.user?.park == 1 ? 'Parque Norte' : 'Aeroparque'}</p>
         </div>
       </div>
       <div className="flex grow flex-row justify-between space-x-2 md:flex-col md:space-x-0 md:space-y-2">

@@ -27,7 +27,7 @@ declare module 'next-auth' {
     };
   }
   interface User {
-    idUser?: string;
+    id_employee?: string;
     park?: string;
     role?: string;
     changePass?: string;

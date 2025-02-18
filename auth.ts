@@ -6,27 +6,27 @@ import type { ApiResponse, LoginResponse } from '@/app/lib/definitions';
 import axios from 'axios';
 
 async function getUser(
-  name: string,
+  phone_number: string,
   password: string,
 ): Promise<LoginResponse | undefined> {
   try {
     const response = await axios.post<ApiResponse>(
-      `${process.env.NEXT_PUBLIC_BACK_LINK}/api/hotel/loginUser`,
-      { name, password },
+      `https://9b0lctjk-80.use.devtunnels.ms/api/hotel/loginUser`,
+      { phone_number, password },
     );
 
     const apiResponse = response.data;
     const { message } = apiResponse;
-
+    
     if (apiResponse.user) {
+      
       const user = apiResponse.user;
       return {
         user: {
-          idUser: user.id_user.toString(),
+          id_employee: user.id_employee.toString(),
           name: user.name,
-          password: user.password,
-          role: user.rol,
-          changePass: user.changepassword,
+          phone_number: user.phone_number,
+          role: user.role,
           statusprofile: user.statusprofile,
         },
         message,
@@ -46,12 +46,12 @@ export const { auth, signIn, signOut } = NextAuth({
     Credentials({
       async authorize(credentials) {
         const parsedCredentials = z
-          .object({ name: z.string().min(3), password: z.string().min(6) })
+          .object({ phone_number: z.string().min(3), password: z.string().min(6) })
           .safeParse(credentials);
 
         if (parsedCredentials.success) {
-          const { name, password } = parsedCredentials.data;
-          const response = await getUser(name, password);
+          const { phone_number, password } = parsedCredentials.data;
+          const response = await getUser(phone_number, password);
 
           if (!response?.user) return null;
 
@@ -62,10 +62,10 @@ export const { auth, signIn, signOut } = NextAuth({
             throw new Error('User is disabled.');
           }
           return {
-            idUser: response.user.idUser,
+            id_employee: response.user.id_employee,
             name: response.user.name,
+            phone_number: response.user.phone_number,
             role: response.user?.role,
-            changePass: response.user?.changePass,
           };
         }
         return null;

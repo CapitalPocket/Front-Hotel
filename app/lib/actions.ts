@@ -47,6 +47,7 @@ const FormSchemaa = z.object({
   name: z.string().nonempty({ message: 'Nombre es Requerido.' }),
   password: z.string().nonempty({ message: 'password es Requerido.' }),
   role: z.string().min(1, { message: 'Rol del usurio es requerido.' }),
+  phone_number: z.string().nonempty({ message: 'Número de teléfono es Requerido.' }),
   
 });
 
@@ -70,6 +71,7 @@ export async function createCandidato(prevState: Statee, formData: FormData) {
     nombreUser: formObject.nombreUser,
     password: formObject.password,
     rol: formObject.rol,
+    phone_number: formObject.phone_number,
     park: formObject.park,
   });
 
@@ -79,14 +81,15 @@ export async function createCandidato(prevState: Statee, formData: FormData) {
       message: 'Faltan campos.',
     };
   }
-  const { name, nombreUser, password, role } = validatedFields.data;
+  const { name, password, role, phone_number} = validatedFields.data;
 
   try {
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_BACK_LINK}/api/hotel/getAllEmployees`,
       {
         name: name,
-        email: nombreUser,
+      
+        phone_number: phone_number,
         password: password,
         rol: role,
         

@@ -1,4 +1,8 @@
-import type { NextAuthConfig } from 'next-auth';
+import type { NextAuthConfig, User as NextAuthUser } from 'next-auth';
+
+interface User extends NextAuthUser {
+  phone_number?: string;
+}
 
 type Role = 'administrador' ;
 export const authConfig = {
@@ -8,9 +12,10 @@ export const authConfig = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.idUser = user.idUser;
+        token.id_employee = user.id_employee;
         token.role = user.role;
         token.park = user.park;
+        token.phone_number = (user as User).phone_number;
         token.changePass = user.changePass;
       }
       return token;
