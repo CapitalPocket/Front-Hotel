@@ -123,7 +123,7 @@ export async function fetchFilteredUsersPage(
   try {
     
     const effectiveStatus = status || 'Habilitado';
-    const apiUrl = `/api/hotel/getAllEmployees`;
+    const apiUrl = `${process.env.NEXT_PUBLIC_BACK_LINK}/api/hotel/getAllEmployees`;
     const response = await axios.get(apiUrl);
     if (response.data.message) {
       console.warn(response.data.message); 
