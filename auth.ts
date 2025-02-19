@@ -11,7 +11,7 @@ async function getUser(
 ): Promise<LoginResponse | undefined> {
   try {
     const response = await axios.post<ApiResponse>(
-      `${process.env.NEXT_PUBLIC_BACK_LINK}/api/hotel/loginUser`,
+      `/api/hotel/loginUser`,
       { phone_number, password },
     );
 
