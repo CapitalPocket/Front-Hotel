@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
+import Image from "next/image";
 
 interface Employee {
   employeeName: string;
@@ -170,11 +171,7 @@ const HotelView: React.FC<HotelViewProps> = ({ park }) => {
                       {active === 'A' && employeeA && (
                         <div className="employee-category flex flex-col items-center mb-2">
                           <div className="icon mb-1">
-                            <img
-                              src="/customers/usuario.png"
-                              alt="Empleado A"
-                              className="w-10 h-10 rounded-full border border-gray-150"
-                            />
+                            <Image src="/customers/usuario.png" alt="Empleado A" className="w-10 h-10 rounded-full border border-gray-150" />
                           </div>
                           <p className="text-xs font-medium">{employeeA.employeeName}</p>
                         </div>
@@ -183,11 +180,7 @@ const HotelView: React.FC<HotelViewProps> = ({ park }) => {
                       {active === 'B' && employeeB && (
                         <div className="employee-category flex flex-col items-center">
                           <div className="icon mb-1">
-                            <img
-                              src="/customers/usuario.png"
-                              alt="Empleado B"
-                              className="w-10 h-10 rounded-full border border-gray-150"
-                            />
+                            <Image src="/customers/usuario.png" alt="Empleado B" className="w-10 h-10 rounded-full border border-gray-150" />
                           </div>
                           <p className="text-xs font-medium">{employeeB.employeeName}</p>
                         </div>

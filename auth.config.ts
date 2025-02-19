@@ -40,7 +40,7 @@ export const authConfig = {
       const rolePermissions: Record<Role, string[]> = {
         administrador: [
           '/dashboard',
-          '/dashboard/tickets',
+          /*'/dashboard/tickets',*/
           '/dashboard/graphs-sales',
           '/dashboard/graphs-interactions',
           '/dashboard/invoices',
@@ -49,24 +49,24 @@ export const authConfig = {
           '/dashboard/candidatos',
           '/dashboard/candidatos/create',
           '/dashboard/redenciones',
-          '/dashboard/generar-excel',
+          /*'/dashboard/generar-excel',*/
         ],
         
       };
       
       if (isOnDashboard) {
         const pathSegments = nextUrl.pathname.split('/');
-        const isGenerarExcelRoute = pathSegments[2] === 'generar-excel';
+        //const isGenerarExcelRoute = pathSegments[2] === 'generar-excel';
 
         // Si la ruta es "generar-excel" con parámetros dinámicos
-        if (isGenerarExcelRoute) {
+        /*if (isGenerarExcelRoute) {
           const allowedRoutes = userRole && rolePermissions[userRole] ? rolePermissions[userRole] : [];
           if (allowedRoutes.some(route => route.includes('generar-excel'))) {
             return true; // Acceso permitido
           } else {
             return Response.redirect(new URL('/login', nextUrl)); // Redirigir si no tiene permiso
           }
-        }
+        }*/
         if (isLoggedIn) {
           const allowedRoutes = userRole && rolePermissions[userRole] ? rolePermissions[userRole] : [];
           // Verificar si el usuario tiene permiso para acceder a la ruta actual
