@@ -221,7 +221,7 @@ export async function updateEmployeeDetails(
   }
 ) {
   try {
-    const apiUrl = `https://9b0lctjk-80.use.devtunnels.ms/api/hotel/updateEmployeeDetails/${employee_id}`;
+    const apiUrl = `${process.env.NEXT_PUBLIC_BACK_LINK}/api/hotel/updateEmployeeDetails/${employee_id}`;
     const response = await axios.patch(apiUrl, employeeData);
 
     // Manejar la respuesta exitosa
@@ -247,7 +247,7 @@ export async function fetchEmployeeWorkSchedule(
 
   try {
     // Construir la URL de la API
-    const apiUrl = `https://9b0lctjk-80.use.devtunnels.ms/api/hotel/getEmployeeWorkSchedule`;
+    const apiUrl = `${process.env.NEXT_PUBLIC_BACK_LINK}/api/hotel/getEmployeeWorkSchedule`;
     
     // Hacer la petición a la API
     const { data: schedules } = await axios.get(apiUrl);

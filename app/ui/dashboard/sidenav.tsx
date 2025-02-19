@@ -7,7 +7,7 @@ export default function SideNav(user: any) {
 
   return (
     <div className="flex h-full flex-col px-3 py-4 md:px-2">
-      <div className="mb-4 flex transform items-center justify-start rounded-lg bg-gradient-to-r from-gray-300 to-gray-500 p-4 shadow-lg transition-all duration-300 ease-in-out ">
+      <div className="mb-4 flex transform items-center justify-start rounded-lg bg-gradient-to-r from-gray-400 to-gray-800 p-4 shadow-lg transition-all duration-300 ease-in-out ">
         <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gray-50">
           <Image
             src={'/customers/usuario.png'}
@@ -17,11 +17,12 @@ export default function SideNav(user: any) {
             alt={`profile picture`}
           />
         </div>
-        <div className="ml-4 text-white">
+        <div className="ml-4 text-gray-50">
           <p className="text-xl font-semibold tracking-wide capitalize">
             {user?.user?.name}
           </p>
           <p className="text-xs opacity-80 capitalize">{user?.user?.role}</p>
+      
         </div>
       </div>
       <div className="flex grow flex-row justify-between space-x-2 md:flex-col md:space-x-0 md:space-y-2">
