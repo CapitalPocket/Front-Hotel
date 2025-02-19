@@ -155,7 +155,7 @@ export async function fetchFilteredUsersPage(
 export async function fetchEmployeeSchedules(query: string, status: string = 'Habilitado') {
   try {
     // 1️⃣ Obtener empleados
-    const employeesApiUrl = `${process.env.NEXT_PUBLIC_BACK_LINK}/api/hotel/getAllEmployees`;
+    const employeesApiUrl = `/hotel/getAllEmployees`;
     const response = await axios.get(employeesApiUrl);
     
     if (!response.data || !Array.isArray(response.data)) {
