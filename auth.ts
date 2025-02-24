@@ -11,7 +11,7 @@ async function getUser(
 ): Promise<LoginResponse | undefined> {
   try {
     const response = await axios.post<ApiResponse>(
-      `${process.env.NEXT_PUBLIC_BACK_LINK}/api/hotel/loginUser`,
+       `${process.env.NEXT_PUBLIC_BACK_LINK}/api/hotel/loginUser`,
       { phone_number, password },
     );
 
@@ -41,6 +41,7 @@ async function getUser(
 
 export const { auth, signIn, signOut } = NextAuth({
   ...authConfig,
+  
   secret: process.env.NEXTAUTH_SECRET || 'some-random-secret-key',
   providers: [
     Credentials({
@@ -66,6 +67,7 @@ export const { auth, signIn, signOut } = NextAuth({
             name: response.user.name,
             phone_number: response.user.phone_number,
             role: response.user?.role,
+            statusprofile: response.user.statusprofile,
           };
         }
         return null;

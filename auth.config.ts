@@ -1,7 +1,8 @@
 import type { NextAuthConfig, User as NextAuthUser } from 'next-auth';
-
+import type { Response } from 'express';
 interface User extends NextAuthUser {
   phone_number?: string;
+  statusprofile?: string;
 }
 
 type Role = 'administrador' ;
@@ -14,9 +15,10 @@ export const authConfig = {
       if (user) {
         token.id_employee = user.id_employee;
         token.role = user.role;
-        token.park = user.park;
+        token.name = user.name;
         token.phone_number = (user as User).phone_number;
-        token.changePass = user.changePass;
+        token.statusprofile = (user as User).statusprofile;
+        
       }
       return token;
     },
@@ -24,9 +26,11 @@ export const authConfig = {
     async session({ session, token }) {
       if (session.user && typeof token.role === 'string') {
         (session.user as any).role = token.role;
-        (session.user as any).park = token.park;
-        (session.user as any).idUser = token.idUser;
-        (session.user as any).changePass = token.changePass;
+        (session.user as any).id_employee = token.id_employee;
+        (session.user as any).name = token.name;  
+        (session.user as any).phone_number = token.phone_number;
+        (session.user as any).statusprofile = token.status
+
       }
       return session;
     },
@@ -82,7 +86,8 @@ export const authConfig = {
         }
       } else if (isLoggedIn) {
         // Si está logueado, redirigir al dashboard si intenta acceder a rutas no protegidas
-        return Response.redirect(new URL('/dashboard', nextUrl));
+        return Response.redirect(new URL('/login', nextUrl));
+
       }
       return true;
     },
