@@ -73,6 +73,7 @@ const Marketing = () => {
           );
         })}
     </div>
+
   );
 };
 

@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     template: '%s | Administracion',
     default: 'Hotel Dashboard',
   },
-  description: 'Sistema de Administracion de Hoteles',
+  description: 'Sistema de Hoteles',
 };
 
 export default function RootLayout({

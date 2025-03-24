@@ -5,10 +5,12 @@ import Image from 'next/image';
 
 export default function SideNav(user: any) {
   return (
+
     <div className="flex h-full flex-col px-4 py-6 bg-gray-900 shadow-xl  md:px-3">
       {/* Perfil de Usuario */}
       <div className="mb-6 flex flex-col items-center p-4  bg-gray-800 shadow-md">
         <div className="relative w-20 h-20">
+
           <Image
             src={'/customers/usuario.png'}
             className="rounded-full border-2 border-gray-400 shadow-md"
@@ -17,10 +19,12 @@ export default function SideNav(user: any) {
             alt="profile picture"
           />
         </div>
+
         <div className="mt-3 text-center text-white">
           <p className="text-lg font-semibold">{user?.user?.name}</p>
           <p className="text-sm text-gray-400 capitalize">{user?.user?.role}</p>
           
+
         </div>
       </div>
 
