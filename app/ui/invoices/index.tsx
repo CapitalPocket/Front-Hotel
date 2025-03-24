@@ -162,7 +162,9 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
 
   return (
     <div className="p-6">
-      <h2 className="mb-6 text-2xl font-bold text-gray-800">Gestión de Horarios de Empleados</h2>
+       <h2 className="mb-6 text-3xl font-bold text-gray-700 text-center">
+        Gestión de Horarios
+      </h2>
 
      {/* Contenedor de selectores en fila */}
         <div className="mb-6 flex space-x-4">
@@ -200,74 +202,63 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
 
       {/* Selector de horas */}
      
-      <div className="mb-6 flex space-x-4">
-        <div className="flex items-center space-x-4">
-          <label className="text-lg font-semibold">Hora de inicio:</label>
+      <div className="grid grid-cols-2 gap-8 mb-8">
+        <div>
+          <label className="block text-xl font-semibold">Hora de inicio:</label>
           <input
             type="time"
             value={startTime}
             onChange={(e) => setStartTime(e.target.value)}
-            className="border-2 border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-gray-500"
+            className="w-full border-2 border-gray-300 rounded-lg p-3 text-lg"
           />
         </div>
-
         <div>
-          <label className="mr-4 text-lg font-semibold">Hora de finalización:</label>
+          <label className="block text-xl font-semibold">Hora de finalización:</label>
           <input
             type="time"
             value={endTime}
             onChange={(e) => setEndTime(e.target.value)}
-            className="border-2 border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-gray-500"
+            className="w-full border-2 border-gray-300 rounded-lg p-3 text-lg"
           />
         </div>
       </div>
 
 
-      {/* Botón para guardar horario */}
-      <div className="mb-6">
-        <button
-          onClick={handleSaveSchedule}
-          className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
-        >
-          Guardar Horarios
-        </button>
-      </div>
-      <div className="h-[80vh] max-h-[550px] overflow-auto">
+
+      <button
+        onClick={handleSaveSchedule}
+        className="w-full bg-gray-600 hover:bg-gray-800 text-white font-bold py-3 text-xl rounded-lg"
+      >
+        Guardar Horarios
+      </button>
+      
+      <div className="mt-8 h-[85vh] max-h-[700px] overflow-auto border border-gray-300 rounded-lg p-6 shadow-lg bg-white">
       <FullCalendar
-        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-        initialView="dayGridMonth"
-        headerToolbar={{
-          left: 'prev,next',
-          center: 'title',
-          right: '',
-        }}
-        editable={true}
-        selectable={true}
-        events={events} // Los eventos cargados
-        eventColor="#20b2aa"
-        height="100%"
-        dayMaxEventRows={true}
-        buttonText={{
-          month: 'Mes',
-          week: 'Semana',
-          day: 'Día',
-        }}
-        locale="es"
-        firstDay={1}
-        dateClick={handleDayClick}
-        dayCellContent={(info) => {
-          const day = info.date.toISOString().split('T')[0];
-          const dayEvents = events.filter((event) => event.start.includes(day)); // Filtrar eventos para el día
-        
+       plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+          initialView="dayGridMonth"
+          headerToolbar={{ left: 'prev,next', center: 'title', right: '' }}
+          editable={true}
+          selectable={true}
+          events={events}
+          eventColor="#20b2aa"
+          height="100%"
+          dayMaxEventRows={true}
+          buttonText={{ month: 'Mes', week: 'Semana', day: 'Día' }}
+          locale="es"
+          firstDay={1}
+          dateClick={handleDayClick}
+          dayCellContent={(info) => {
+            const day = info.date.toISOString().split('T')[0];
+            const dayEvents = events.filter((event) => event.start.includes(day));
           return (
-            <div className={dayNumberClass(day)}>
-              {info.dayNumberText}
-              {dayEvents.map((event) => (
-                <div key={event.id} className="mt-1 text-sm">
-                  <strong>{event.extendedProps.employee_name}</strong>
-                  <div>{`${event.extendedProps.start_time} - ${event.extendedProps.end_time}`}</div>
-                </div>
-              ))}
+            <div className={`${dayNumberClass(day)} p-2 text-lg font-semibold`}>
+               {info.dayNumberText}
+                {dayEvents.map((event) => (
+                  <div key={event.id} className="mt-1 text-sm bg-gray-200 p-1 rounded-lg text-center">
+                    <strong>{event.extendedProps.employee_name}</strong>
+                    <div>{`${event.extendedProps.start_time} - ${event.extendedProps.end_time}`}</div>
+                  </div>
+                ))}
             </div>
           );
         }}
@@ -275,9 +266,8 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
         eventContent={(eventInfo) => {
           const { event } = eventInfo;
           const { employee_name, start_time, end_time } = event.extendedProps;
-          
           return (
-            <div>
+            <div className="bg-teal-500 text-white p-2 rounded-lg text-center text-sm">
               <strong>{employee_name}</strong>
               <div>{`Inicio: ${start_time}`}</div>
               <div>{`Fin: ${end_time}`}</div>

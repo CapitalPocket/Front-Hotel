@@ -1,123 +1,82 @@
-"use client"
-import axios from 'axios';
-import React, { useEffect, useState } from 'react';
-import DataTable from 'react-data-table-component';
+"use client";
+import axios from "axios";
+import React, { useState } from "react";
+import dynamic from "next/dynamic";
+import { CreateHotel } from "@/app/ui/tickets/buttons";
+// Importación dinámica del mapa para evitar errores en SSR
+const Map = dynamic(() => import("@/app/ui/Map"), { ssr: false });
 
 const Page = () => {
-    const [data, setData] = useState([])
-    const [date, setDate] = useState<any>(new Date().toISOString().split('T')[0])    
+    const [latitude, setLatitude] = useState<number | null>(null);
+    const [longitude, setLongitude] = useState<number | null>(null);
+    const [hotelName, setHotelName] = useState("");
 
-    useEffect(() => {
-        const fetchRedentionsByDate = async () => {
-            try {
-                await axios.post(`/api/taquilla/redentionsByDate`, { date: date })
-                .then((response) => setData(response.data))
-                .catch((error) => { setData([]) });
-            } catch (error) {
-                console.error("Error fetching disabled days: ", error);
-            }
-        };
-        fetchRedentionsByDate();
-    }, [date]);
+    // Función para manejar la selección en el mapa
+    const handleMapClick = (lat: number, lng: number) => {
+        setLatitude(lat);
+        setLongitude(lng);
+    };
 
-    // Definición de columnas
-    const columns: any = [
-        { 
-            name: 'ID', 
-            selector: (row: any) => row.user_id, 
-            sortable: true,
-        },
-        { 
-            name: 'Nombre', 
-            selector: (row: any) => row.nombre_usuario, 
-            sortable: true 
-        },
-        { 
-            name: 'Parque', 
-            selector: (row: any) => row.parque_id == 1 ? 'Parque Norte' : 'Aeroparque', 
-            sortable: true 
-        },
-        { 
-            name: 'Redenciones', 
-            selector: (row: any) => row.total_redimidos, 
-            sortable: true 
+    // Guardar hotel en la base de datos
+    const handleSaveHotel = async () => {
+        if (!hotelName || latitude === null || longitude === null) {
+            alert("Por favor, ingrese un nombre y seleccione una ubicación.");
+            return;
         }
-    ];
 
-return (
-    <div className='w-[100%] md:w-[50%] mx-auto flex flex-col justify-center items-center h-screen'>
-        <h1  className='text-2xl font-bold my-[2.5%] text-center md:absolute md:top-[5rem]'> Verificar las redenciones por fecha </h1>
-        <div className="flex justify-center items-center gap-[2rem] mb-[2rem]">
-            <label htmlFor="Date" className='font-semibold'>Selecciona la fecha</label>
-            <input 
-            type='date'
-            value={date} 
-            className='border-2 border-gray-300 rounded-lg p-2 text-lg focus:outline-none focus:ring-2 focus:ring-blue-500' 
-            onChange={(e) => setDate(e.target.value)} 
+        try {
+            const response = await axios.post("/api/hotels", {
+                name: hotelName,
+                latitude,
+                longitude,
+            });
+
+            alert("Hotel guardado correctamente");
+            console.log(response.data);
+        } catch (error) {
+            console.error("Error al guardar el hotel:", error);
+            alert("Hubo un error al guardar el hotel.");
+        }
+    };
+
+    return (
+        <div className="w-full flex flex-col items-center p-6">
+            <h1 className="text-2xl font-bold my-4 text-center">Registrar Nuevo Hotel</h1>
+
+            {/* Input para el nombre del hotel */}
+            <input
+                type="text"
+                value={hotelName}
+                onChange={(e) => setHotelName(e.target.value)}
+                placeholder="Nombre del hotel"
+                className="border-2 border-gray-300 rounded-lg p-2 mb-4 w-full max-w-md"
             />
+
+            {/* Mapa interactivo */}
+            <div className="w-full h-[800px] mb-4">
+                <Map onMapClick={handleMapClick} />
+            </div>
+
+            {/* Mostrar coordenadas seleccionadas */}
+            {latitude !== null && longitude !== null && (
+                <p className="text-lg">
+                    Ubicación seleccionada: <strong>{latitude}, {longitude}</strong>
+                </p>
+            )}
+
+            {/* Botón para guardar */}
+            <div className="flex gap-4 mt-4">
+            <button
+                onClick={handleSaveHotel}
+                className="bg-black text-white px-6 py-2 rounded-lg hover:bg-black transition"
+            >
+                Guardar Hotel
+            </button>
+            <CreateHotel grupo="defaultGroup"/>
+            </div>
+
         </div>
-        {data.length ? <DataTable
-                columns={columns}
-                data={data}
-                pagination
-                paginationPerPage={5} // Número de filas por página
-                paginationRowsPerPageOptions={[5, 10]} // Opciones de filas por página
-                customStyles = {{
-                    header: {
-                    style: {
-                        minHeight: '56px',
-                        backgroundColor: '#28a745',  // Fondo azul o verde según el parque
-                        color: 'white',  // Texto blanco para resaltar
-                        fontSize: '1.2rem',  // Tamaño de fuente más grande
-                        fontWeight: 'bold',  // Negrita en el texto
-                        textAlign: 'left',  // Alineación a la izquierda
-                        paddingLeft: '20px',  // Espaciado a la izquierda
-                    },
-                    },
-                    headRow: {
-                    style: {
-                        backgroundColor: '#e9f7ef',  // Fondo diferente según el parque
-                        borderBottom: '2px solid #dee2e6',  // Línea separadora debajo de la cabecera
-                    },
-                    },
-                    headCells: {
-                    style: {
-                        fontWeight: 'bold',  // Negrita en las celdas de la cabecera
-                        fontSize: '1rem',  // Fuente con tamaño adecuado
-                        color: '#155724',  // Color verde oscuro o azul según el parque
-                        paddingLeft: '15px',
-                        paddingRight: '15px',  // Espaciado para las celdas de cabecera
-                        textAlign: 'left',  // Alineación a la izquierda
-                    },
-                    },
-                    rows: {
-                    style: {
-                        fontSize: '1rem',  // Tamaño de fuente normal para las filas
-                        paddingLeft: '15px',
-                        paddingRight: '15px',
-                        backgroundColor: '#ffffff',  // Fondo blanco para las filas
-                        borderBottom: '1px solid #dee2e6',  // Línea separadora entre las filas
-                    },
-                    highlightOnHoverStyle: {
-                        backgroundColor: '#d4edda',  // Color de fondo al pasar el cursor según el parque
-                        borderBottomColor: '#c3e6cb',  // Cambio del borde al pasar el cursor según el parque
-                        borderRadius: '10px',  // Bordes redondeados al pasar el cursor
-                        outline: 'none',  // Eliminar outline del hover
-                        boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',  // Sombra suave al pasar el cursor
-                    },
-                    },
-                    cells: {
-                    style: {
-                        fontSize: '0.9rem',  // Fuente un poco más pequeña para las celdas
-                        textAlign: 'left',
-                        paddingTop: '10px',
-                        paddingBottom: '10px',
-                    },
-                    },
-                }}                        
-        /> : <p className='text-lg text-red-300 mt-4'> No hay redenciones del usuario para la fecha {date} </p>}
-    </div>
-);
+    );
 };
 
 export default Page;

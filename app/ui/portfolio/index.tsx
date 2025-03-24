@@ -45,7 +45,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ park }) => {
       const endDate = format(dateRange.to, "yyyy-MM-dd");
       
       const salaryResponse = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACK_LINK}/api/hotel/CalculateEmployeeSalary/${phone_number}?start_date=${startDate}&end_date=${endDate}`
+        `https://9b0lctjk-80.use.devtunnels.ms/api/hotel/CalculateEmployeeSalary/${phone_number}?start_date=${startDate}&end_date=${endDate}`
       );
       return salaryResponse.data ?? {};
     } catch (error) {
@@ -62,9 +62,10 @@ const Portfolio: React.FC<PortfolioProps> = ({ park }) => {
       const salaryData = await fetchEmployeeSalary(employee.phone_number);
       updatedEmployees.push({
         ...employee,
-        total_hours: salaryData.total_hours ?? "0:00:00",
+        total_hours: salaryData.total_hours ?? "00:00",
         rooms_cleaned_A: salaryData.rooms_cleaned_A ?? 0,
         rooms_cleaned_B: salaryData.rooms_cleaned_B ?? 0,
+        extra_hours: salaryData.extra_hours ?? "00:00",
         total_salary: salaryData.total_salary ?? "0.00",
       });
     }
@@ -140,6 +141,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ park }) => {
             <th className="py-2 px-4"> Horas Trabajadas</th>
             <th className="py-2 px-4">Habitación/A</th>
             <th className="py-2 px-4">Habitación/B</th>
+            <th className="py-2 px-4">Horas Extra</th>
             <th className="py-2 px-4">Salario Total</th>
           </tr>
         </thead>
@@ -152,6 +154,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ park }) => {
               <td className="py-2 px-4 text-center">{employee.total_hours}</td>
               <td className="py-2 px-4 text-center">{employee.rooms_cleaned_A}</td>
               <td className="py-2 px-4 text-center">{employee.rooms_cleaned_B}</td>
+              <td className="py-2 px-4 text-center">{employee.extra_hours}</td>
               <td className="py-2 px-4 font-bold">$ {parseFloat(employee.total_salary).toFixed(2)}US</td>
             </tr>
           ))}

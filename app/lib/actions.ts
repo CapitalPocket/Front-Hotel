@@ -166,7 +166,7 @@ export async function updateUser(user: any) {
   try {
     console.log(user);
     const response = await axios.post(
-      `https://9b0lctjk-80.use.devtunnels.ms/api/hotel/updateStatus`,
+      `${process.env.NEXT_PUBLIC_BACK_LINK}/api/hotel/updateStatus`,
       user,
     );
     revalidatePath('/dashboard/candidatos');
