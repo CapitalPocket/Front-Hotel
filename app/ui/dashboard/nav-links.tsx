@@ -1,103 +1,69 @@
 'use client';
-import {
-  UserGroupIcon,
-  HomeIcon,
-  DocumentDuplicateIcon,
-  ChartBarIcon,
-  TicketIcon,
-  ClipboardDocumentIcon,
-  Cog8ToothIcon,
-  ChartPieIcon,
-  CurrencyDollarIcon,
-  PlusCircleIcon,
-} from '@heroicons/react/24/outline';
-import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 import clsx from 'clsx';
 
+// ✅ Aseguramos que los íconos se importan como componentes de React
+import { FaRegCalendarAlt, FaHotel, FaMoneyBillWave, FaUsers} from 'react-icons/fa';
+import { LiaHotelSolid } from "react-icons/lia";
 export const links = [
-  /*{
-    name: 'Home',
-    href: '/dashboard',
-    icon: HomeIcon,
-    roles: ['administrador', 'supervisor', 'marketing', 'taquillero'],
-  },
-{
-    name: 'Tickets',
-    href: '/dashboard/tickets',
-    roles: ['administrador', 'taquillero', 'supervisor'],
-    icon: TicketIcon,
-  },
   {
-    name: 'Ventas',
-    href: '/dashboard/graphs-sales',
-    icon: ChartBarIcon,
-    roles: ['administrador', 'marketing'],
-  },
-  {
-    name: 'Interacciones',
-    href: '/dashboard/graphs-interactions',
-    icon: ChartPieIcon,
-    roles: ['administrador', 'marketing'],
-  },
-  */{
     name: 'Horarios',
     href: '/dashboard/invoices',
-    icon: ClipboardDocumentIcon,
+    icon: FaRegCalendarAlt, // ✅ Guardamos la referencia del componente (sin JSX aquí)
     roles: ['administrador', 'marketing'],
   },
   {
-    name: 'Estado de Habitacion',
+    name: 'Estado de Habitación',
     href: '/dashboard/parks',
-    icon: Cog8ToothIcon,
+    icon: FaHotel,
     roles: ['administrador', 'marketing'],
   },
- 
   {
     name: 'Pagos Empleados',
     href: '/dashboard/portfolio',
-    icon: CurrencyDollarIcon,
+    icon: FaMoneyBillWave,
     roles: ['administrador', 'marketing'],
   },
   {
     name: 'Empleados',
     href: '/dashboard/candidatos',
-    icon: UserGroupIcon,
+    icon: FaUsers,
     roles: ['administrador'],
   },
-  /*{
-    name: 'Redenciones',
+  {
+    name: 'Hoteles',
     href: '/dashboard/redenciones',
-    icon: DocumentDuplicateIcon,
-    roles: ['administrador', 'supervisor'],
-  },*/
+    icon: LiaHotelSolid,
+    roles: ['administrador'],
+  },
 ];
 
-export default function NavLinks(rol: any) {
+export default function NavLinks({ rol }: { rol: string }) {
   const pathname = usePathname();
- 
+
   return (
-    <div className="flex md:flex-col md:w-[90%] gap-1 mx-auto">
+    <nav className="flex flex-col gap-2 w-full px-4">
       {links
-        .filter((link) => link.roles.includes(rol.rol)) // Filtra según el rol del usuario
+        .filter((link) => link.roles.includes(rol))
         .map((link) => {
-          const LinkIcon = link.icon;
+          const Icon = link.icon; // ✅ Convertimos el icono en un componente válido
           return (
             <Link
               key={link.name}
               href={link.href}
               className={clsx(
-                'flex h-[48px] grow items-center justify-center gap-2 rounded-md  p-3 text-gray-500 text-sm font-medium hover:bg-slate-400/20 hover:scale-105 duration-300 hover:font-bold hover:text-gray-900 md:flex-none md:justify-start md:p-2 md:px-3',
+                'flex items-center gap-3 p-3 rounded-lg transition-all duration-300 text-gray-300 hover:bg-gray-800 hover:text-white',
                 {
-                  'bg-slate-400/30 text-gray-900 font-bold scale-105': pathname === link.href,
-                },
+                  'bg-gray-700 text-white font-semibold': pathname === link.href,
+                }
               )}
             >
-              <LinkIcon width={25} height={25} />
-              <p className="hidden md:block">{link.name}</p>
+              <Icon className="text-lg" /> {/* ✅ Renderizamos el icono como componente */}
+              <p className="text-sm">{link.name}</p>
             </Link>
           );
         })}
-    </div>
+    </nav>
   );
 }

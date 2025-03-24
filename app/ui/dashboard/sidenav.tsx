@@ -4,43 +4,48 @@ import { signOut } from '@/auth';
 import Image from 'next/image';
 
 export default function SideNav(user: any) {
-
   return (
-    <div className="flex h-full flex-col px-3 py-4 md:px-2">
-      <div className="mb-4 flex transform items-center justify-start rounded-lg bg-gradient-to-r from-gray-400 to-gray-800 p-4 shadow-lg transition-all duration-300 ease-in-out ">
-        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gray-50">
+
+    <div className="flex h-full flex-col px-4 py-6 bg-gray-900 shadow-xl  md:px-3">
+      {/* Perfil de Usuario */}
+      <div className="mb-6 flex flex-col items-center p-4  bg-gray-800 shadow-md">
+        <div className="relative w-20 h-20">
+
           <Image
             src={'/customers/usuario.png'}
-            className="rounded-full"
-            width={100}
-            height={100}
-            alt={`profile picture`}
+            className="rounded-full border-2 border-gray-400 shadow-md"
+            width={80}
+            height={80}
+            alt="profile picture"
           />
         </div>
-        <div className="ml-4 text-gray-50">
-          <p className="text-xl font-semibold tracking-wide capitalize">
-            {user?.user?.name}
-          </p>
-          <p className="text-xs opacity-80 capitalize">{user?.user?.role}</p>
-      
+
+        <div className="mt-3 text-center text-white">
+          <p className="text-lg font-semibold">{user?.user?.name}</p>
+          <p className="text-sm text-gray-400 capitalize">{user?.user?.role}</p>
+          
+
         </div>
       </div>
-      <div className="flex grow flex-row justify-between space-x-2 md:flex-col md:space-x-0 md:space-y-2">
-        <NavLinks rol={user?.user?.role} />
-        <div className="hidden h-auto w-full grow rounded-md  md:block"></div>
 
-        <form
-          action={async () => {
-            'use server';
-            await signOut({ redirectTo: '/' });
-          }}
-        >
-          <button className="absolute md:relative mb-[2rem] top-[2rem] right-[2rem] md:bottom-4 md:right-0 w-auto flex h-[48px] md:w-full grow items-center justify-center gap-2 rounded-md bg-gray-50 p-3 text-sm font-medium hover:bg-slate-400/30 hover:text-gray-500 md:flex-none md:justify-start md:p-2 md:px-3 shadow-lg">
-            <PowerIcon className="w-6" />
-            <div className="hidden md:block">Salir</div>
-          </button>
-        </form>
-      </div>
+      {/* Menú de Navegación */}
+      <nav className="flex flex-col space-y-2">
+        <NavLinks rol={user?.user?.role} />
+      </nav>
+
+      {/* Botón de Cerrar Sesión */}
+      <form
+        action={async () => {
+          'use server';
+          await signOut({ redirectTo: '/' });
+        }}
+        className="mt-auto"
+      >
+        <button className="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-red-500 text-white font-medium hover:bg-red-600 transition-all duration-300 shadow-md">
+          <PowerIcon className="w-6 h-6" />
+          <span>Cerrar sesión</span>
+        </button>
+      </form>
     </div>
   );
 }

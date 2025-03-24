@@ -94,3 +94,8 @@ export type DateRangePickerProps = {
   className: string;
 
 }
+interface MapProps {
+  lat: number;
+  lng: number;
+}
+

@@ -1,13 +1,7 @@
 'use client';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
-import {
-  UpdateInvoice,
-  DeleteInvoice,
-  UpdatePass,
-  Desabled,
-  Enable,
-} from '@/app/ui/candidatos/buttons';
+
 import { hotelMapping } from '@/app/lib/utils';
 import { fetchFilteredUsers, fetchEmployeeSchedules } from '@/app/lib/data';
 import UserStatus from './status';

@@ -1,8 +1,9 @@
 'use client';
 import { PencilIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
-
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+
 
 export function CreateInvoice({
   grupo,
@@ -35,7 +36,24 @@ export function UpdateInvoice({ id, grupo, page }: { id: string, grupo: string, 
       <PencilIcon className="w-5" />
     </Link>
   );
+
+  
 }
 
+export function CreateHotel({ grupo }: { grupo: string }) {
+  const router = useRouter();
 
+  const handleRedirect = () => {
+    router.push('/dashboard/redenciones/create'); // Ruta correcta
+  };
+
+  return (
+    <button
+      onClick={handleRedirect}
+      className="flex h-10 items-center rounded-lg bg-black px-4 text-sm font-medium text-white transition-colors hover:bg-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400/30"
+    >
+      Editar hotel
+    </button>
+  );
+}
 

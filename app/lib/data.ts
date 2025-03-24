@@ -221,7 +221,9 @@ export async function updateEmployeeDetails(
   }
 ) {
   try {
-    const apiUrl = `/api/hotel/updateEmployeeDetails/${employee_id}`;
+
+    const apiUrl = `${process.env.NEXT_PUBLIC_BACK_LINK}/api/hotel/updateEmployeeDetails/${employee_id}`;
+
     const response = await axios.patch(apiUrl, employeeData);
 
     // Manejar la respuesta exitosa
@@ -247,7 +249,9 @@ export async function fetchEmployeeWorkSchedule(
 
   try {
     // Construir la URL de la API
-    const apiUrl = `/api/hotel/getEmployeeWorkSchedule`;
+
+    const apiUrl = `${process.env.NEXT_PUBLIC_BACK_LINK}/api/hotel/getEmployeeWorkSchedule`;
+
     
     // Hacer la petición a la API
     const { data: schedules } = await axios.get(apiUrl);
