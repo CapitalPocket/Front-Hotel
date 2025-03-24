@@ -1,4 +1,4 @@
-import { formatCurrency } from '@/app/lib/utils';
+/*import { formatCurrency } from '@/app/lib/utils';
 import { useState, useEffect } from 'react';
 
 interface TicketOptionProps {
@@ -76,4 +76,4 @@ const TicketOption = ({
   );
 };
 
-export default TicketOption;
+export default TicketOption;*/
