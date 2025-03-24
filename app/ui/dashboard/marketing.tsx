@@ -42,7 +42,13 @@ const links = [
     description: "Administra la creación y almacenamiento de hoteles, gestionando su información de manera eficiente.",
     roles: ["administrador"],
   },
-
+  {
+    name: "Ingreso/Salida",
+    href: "/dashboard/graphs-sales",
+    icon: FaCalendarAlt,
+    description: "Consulta y gestiona los horarios disponibles.",
+    roles: ["administrador", "marketing"],
+  },
 
 ];
 
