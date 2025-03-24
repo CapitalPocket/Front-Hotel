@@ -37,6 +37,13 @@ export const links = [
     icon: LiaHotelSolid,
     roles: ['administrador'],
   },
+  {
+    name: "Ingreso/Salida",
+    href: "/dashboard/graphs-sales",
+    icon: LiaHotelSolid,
+    roles: ['administrador'],
+  },
+  
 ];
 
 export default function NavLinks({ rol }: { rol: string }) {
