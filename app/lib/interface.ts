@@ -21,16 +21,18 @@ declare module 'next-auth' {
   interface Session {
     user: {
       idUser?: string;
-      park?: string;
+      phone_number?: string;
+      statusprofile?: string;   
       role?: string;
-      changePass?: string;
+      name?: string | null;
+      
     };
   }
   interface User {
-    idUser?: string;
-    park?: string;
+    id_employee?: string;
+    phone_number?: string;
+    statusprofile?: string;
     role?: string;
-    changePass?: string;
   }
 }
 
@@ -38,10 +40,13 @@ declare module 'next-auth/jwt' {
   interface JWT {
     user: {
       role?: string;
-      idUser?: string;
-      park?: string;
-      changePass?: string;
+      id_employee?: string;
+      phone_number?: string;
+      statusprofile?: string;
+      name?: string;
     };
+    
+      
   }
 }
 

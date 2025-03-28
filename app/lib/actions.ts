@@ -44,19 +44,20 @@ const FormSchemaa = z.object({
   nombreUser: z
     .string()
     .nonempty({ message: 'Nombre de usuario es Requerido.' }),
-  nombre: z.string().nonempty({ message: 'Nombre es Requerido.' }),
+  name: z.string().nonempty({ message: 'Nombre es Requerido.' }),
   password: z.string().nonempty({ message: 'password es Requerido.' }),
-  rol: z.string().min(1, { message: 'Rol del usurio es requerido.' }),
-  park: z.string().nonempty({ message: 'Seleccione un parque.' }),
+  role: z.string().min(1, { message: 'Rol del usurio es requerido.' }),
+  phone_number: z.string().nonempty({ message: 'Número de teléfono es Requerido.' }),
+  
 });
 
 export type Statee = {
   errors?: {
-    nombre?: string[];
+    name?: string[];
     nombreUser?: string[];
     password?: string[];
-    rol?: string[];
-    park?: string[];
+    role?: string[];
+    
   };
   message?: string | null;
 };
@@ -70,6 +71,7 @@ export async function createCandidato(prevState: Statee, formData: FormData) {
     nombreUser: formObject.nombreUser,
     password: formObject.password,
     rol: formObject.rol,
+    phone_number: formObject.phone_number,
     park: formObject.park,
   });
 
@@ -79,17 +81,18 @@ export async function createCandidato(prevState: Statee, formData: FormData) {
       message: 'Faltan campos.',
     };
   }
-  const { nombre, nombreUser, password, rol, park } = validatedFields.data;
+  const { name, password, role, phone_number} = validatedFields.data;
 
   try {
     const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_BACK_LINK}/api/taquilla/createUser`,
+      `/api/hotel/getAllEmployees`,
       {
-        name: nombre,
-        email: nombreUser,
+        name: name,
+      
+        phone_number: phone_number,
         password: password,
-        rol: rol,
-        idpark: park,
+        rol: role,
+        
       },
     );
 
@@ -106,7 +109,7 @@ export async function createCandidato(prevState: Statee, formData: FormData) {
 export async function validateTicket(ticketCode: any) {
   try {
     const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_BACK_LINK}/api/taquilla/validateTicket`,
+      `/api/taquilla/validateTicket`,
       ticketCode,
     );
     return response.data.message;
@@ -116,57 +119,14 @@ export async function validateTicket(ticketCode: any) {
   }
 }
 
-// const UpdateCandidato = FormSchemaa.omit({ id: true });
-
-// export async function updateCandidato(
-//   id: string,
-//   prevState: Statee,
-//   formData: FormData,
-// ) {
-//   const formObject = Object.fromEntries(formData.entries());
-//   const validatedFields = UpdateCandidato.safeParse({
-//     tipoid: formObject.tipoid,
-//     nombre: formObject.nombre,
-//     celular: formObject.celular,
-//     cargo: formObject.cargo,
-//     correo: formObject.correo,
-//     motivo: formObject.motivo,
-//     estado_proceso: formObject.estado_proceso,
-//     fecha_envio: formObject.fecha_envio,
-//     fecha_ingreso: formObject.fecha_ingreso,
-//     grupo: formObject.grupo,
-//     estadoCandidato: formObject.estadoCandidato
-//       ? Number(formObject.estadoCandidato)
-//       : undefined,
-//     user_creo: formObject.user_creo ? Number(formObject.user_creo) : undefined,
-//     page: formObject.page,
-//     keyword: formObject.keyword,
-//   });
-
-//   if (!validatedFields.success) {
-//     return {
-//       errors: validatedFields.error.flatten().fieldErrors,
-//       message: 'Missing Fields. Failed to Update Candidate.',
-//     };
-//   }
-
-//   const {
-
-//   } = validatedFields.data;
-
-//   try {
-
-//   } catch (error) {
-//     return { message: 'Database Error: Failed to Update Candidate.' };
-//   }
-
-// }
 
 export async function updateUser(user: any) {
   try {
     console.log(user);
     const response = await axios.post(
+
       `${process.env.NEXT_PUBLIC_BACK_LINK}/api/hotel/updateStatus`,
+
       user,
     );
     revalidatePath('/dashboard/candidatos');
