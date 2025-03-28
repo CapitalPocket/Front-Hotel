@@ -11,8 +11,10 @@ async function getUser(
 ): Promise<LoginResponse | undefined> {
   try {
     const response = await axios.post<ApiResponse>(
-       `${process.env.NEXT_PUBLIC_BACK_LINK}/api/hotel/loginUser`,
-      { phone_number, password },
+
+      `http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/taquilla/loginUser`,
+      { email, password },
+
     );
 
     const apiResponse = response.data;

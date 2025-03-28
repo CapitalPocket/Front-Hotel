@@ -85,7 +85,9 @@ export async function createCandidato(prevState: Statee, formData: FormData) {
 
   try {
     const response = await axios.post(
-      `/api/hotel/getAllEmployees`,
+
+      `http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/taquilla/createUser`,
+
       {
         name: name,
       
@@ -109,7 +111,9 @@ export async function createCandidato(prevState: Statee, formData: FormData) {
 export async function validateTicket(ticketCode: any) {
   try {
     const response = await axios.post(
-      `/api/taquilla/validateTicket`,
+
+      `http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/taquilla/validateTicket`,
+
       ticketCode,
     );
     return response.data.message;
@@ -125,7 +129,7 @@ export async function updateUser(user: any) {
     console.log(user);
     const response = await axios.post(
 
-      `${process.env.NEXT_PUBLIC_BACK_LINK}/api/hotel/updateStatus`,
+      `http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/updateStatus`,
 
       user,
     );
