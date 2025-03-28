@@ -44,6 +44,19 @@ export async function fetchCandidatoById(id: string) {
 }
 
 
+// Add or ensure the export for fetchInvoices exists
+export async function fetchInvoices(idpark: string, month: string) {
+  // Implementation of fetchInvoices
+  return []; // Replace with actual logic
+}
+// Add or verify the export for fetchFilteredCandidatos
+export type Ticket = { id: string; name: string; [key: string]: any }; // Define Ticket type
+
+export async function fetchFilteredCandidatos(query: string, currentPage: number, user: any): Promise<Ticket[]> {
+  // Ensure this function returns a Ticket[] instead of void
+  const tickets: Ticket[] = []; // Replace with actual logic to fetch tickets
+  return tickets;
+}
 
 export async function fetchFilteredInvoices(
   query: string,

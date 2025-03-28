@@ -4,7 +4,7 @@ import React from "react";
 import { useSession } from "@/app/context";
 import { FaCalendarAlt, FaHotel, FaMoneyBillWave, FaUsers } from "react-icons/fa";
 import { LiaHotelSolid } from "react-icons/lia";
-
+import { GrAction } from "react-icons/gr";
 // Enlaces con iconos correctos y descripciones
 const links = [
   {
@@ -45,7 +45,7 @@ const links = [
   {
     name: "Ingreso/Salida",
     href: "/dashboard/graphs-sales",
-    icon: FaCalendarAlt,
+    icon: GrAction,
     description: "Consulta y gestiona los horarios disponibles.",
     roles: ["administrador", "marketing"],
   },

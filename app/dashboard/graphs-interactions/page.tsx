@@ -27,8 +27,7 @@ const Page = () => {
         </button>
       </div>
       <div className="flex-grow w-full max-w-6xl mx-auto mt-8">
-        {park === 'PN' && <Graphs metric="interactions" park="Heron I" />}
-        {park === 'AP' && <Graphs metric="interactions" park="II" />}
+       
       </div>
     </div>
   );

@@ -99,3 +99,21 @@ interface MapProps {
   lng: number;
 }
 
+// Add the missing Ticket export
+export interface Ticket {
+  idticket: string;
+  namepark: string;
+  id_operation: string;
+  name: string;
+  lastname: string;
+  identity_type: string;
+  identity_number: string;
+  price_ticket: number;
+  date_ticket: string;
+  status: string;
+  invoice_electronic?: number;
+  email_person?: string;
+  phone_number?: string;
+  ticket_code?: string;
+  ticket_info?: { type: string; count: number }[];
+}
