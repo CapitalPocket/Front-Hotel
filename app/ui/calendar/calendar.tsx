@@ -66,7 +66,7 @@ const HotelView: React.FC<HotelViewProps> = ({ park }) => {
     const fetchEmployees = async () => {
       try {
         const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_BACK_LINK}/api/hotel/getemployeGetRoom`,
+          `http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/getemployeGetRoom`,
           { params: { park } }
         );
         setEmployees(response.data.employees || []);
@@ -78,7 +78,7 @@ const HotelView: React.FC<HotelViewProps> = ({ park }) => {
     const fetchRoomStatuses = async () => {
       try {
         const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_BACK_LINK}/api/hotel/getAllRoomStatus`,
+          `http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/getAllRoomStatus`,
           { params: { hotel_id: park } }
         );
     

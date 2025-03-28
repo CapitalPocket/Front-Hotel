@@ -16,7 +16,7 @@ const Page = () => {
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACK_LINK}/api/hotel/getAllEmployees`);
+        const response = await fetch(`http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/getAllEmployees`);
         if (!response.ok) throw new Error("Error fetching employees");
         const data = await response.json();
         setEmployees(data);

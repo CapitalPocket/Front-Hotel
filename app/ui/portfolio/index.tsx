@@ -29,7 +29,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ park }) => {
   const fetchEmployees = async () => {
     try {
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACK_LINK}/api/hotel/getAllEmployees`);
+        `http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/getAllEmployees`);
       return response.data;
     } catch (err) {
       console.error("❌ Error obteniendo empleados:", err);
@@ -45,7 +45,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ park }) => {
       const endDate = format(dateRange.to, "yyyy-MM-dd");
       
       const salaryResponse = await axios.get(
-        `https://9b0lctjk-80.use.devtunnels.ms/api/hotel/CalculateEmployeeSalary/${phone_number}?start_date=${startDate}&end_date=${endDate}`
+        `http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/CalculateEmployeeSalary/${phone_number}?start_date=${startDate}&end_date=${endDate}`
       );
       return salaryResponse.data ?? {};
     } catch (error) {
