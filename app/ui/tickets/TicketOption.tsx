@@ -23,7 +23,8 @@ const TicketOption = ({
   useEffect(() => {
     setTotalPrice(price * quantity);
     onQuantityChange(title, quantity, price * quantity);
-  }, [quantity, price, totalPrice, title]); 
+  }, [quantity, price, totalPrice, title, onQuantityChange]); 
+
   // Dependencias correctas
   useEffect(() => {
     if (reset) {

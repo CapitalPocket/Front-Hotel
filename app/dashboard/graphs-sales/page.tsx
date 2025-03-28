@@ -10,6 +10,7 @@ const Page = () => {
   const [selectedEmployee, setSelectedEmployee] = useState<{ value: string; label: string } | null>(null);
   const [selectedHotel, setSelectedHotel] = useState<{ value: string; label: string } | null>(null);
   const [entryType, setEntryType] = useState<{ value: string; label: string } | null>(null);
+  const [verificationCode, setVerificationCode] = useState("");
 
   useEffect(() => {
     const fetchEmployees = async () => {
@@ -27,11 +28,27 @@ const Page = () => {
     fetchEmployees();
   }, []);
 
+  const generateVerificationCode = () => {
+    return Math.floor(100000 + Math.random() * 900000).toString(); // Código de 6 dígitos
+  };
+
+  const getCurrentDate = () => {
+    const now = new Date();
+    return now.toISOString().split("T")[0]; // YYYY-MM-DD
+  };
+
+  useEffect(() => {
+    setVerificationCode(generateVerificationCode());
+  }, [selectedEmployee, selectedHotel, entryType]); // Regenera el código cuando se selecciona algo nuevo
+
   const generateWhatsAppLink = () => {
     if (!selectedEmployee || !selectedHotel || !entryType) return "";
-    const message = `Empleado: ${selectedEmployee.label}\nHotel: ${selectedHotel.label}\nAcción: ${entryType.label}`;
+    const date = getCurrentDate();
+    const actionCode = entryType.value === "ingreso" ? "Clock In" : "Clock Out";
+    const message = `${actionCode}: ${verificationCode}`;
     return `https://wa.me/17863403034?text=${encodeURIComponent(message)}`;
-  };
+};
+
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-10">
@@ -45,7 +62,7 @@ const Page = () => {
           Generador de QR para WhatsApp
         </h1>
 
-        {/* Selectores con más espacio y alineados mejor */}
+        {/* Selectores */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div>
             <label className="block text-lg font-medium text-gray-700 mb-2">Empleado</label>
@@ -90,7 +107,7 @@ const Page = () => {
           </div>
         </div>
 
-        {/* Sección QR con más espacio y tamaño mejorado */}
+        {/* Sección QR */}
         {selectedEmployee && selectedHotel && entryType && (
           <motion.div
             className="flex flex-col items-center bg-gray-100 p-8 rounded-2xl shadow-md"
@@ -103,6 +120,7 @@ const Page = () => {
               Escanea para contactar a <span className="text-blue-600">{selectedEmployee.label}</span> -{" "}
               <span className="text-green-600">{selectedHotel.label}</span> ({entryType.label}) 📲
             </p>
+            c
           </motion.div>
         )}
       </motion.div>

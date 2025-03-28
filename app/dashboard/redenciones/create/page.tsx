@@ -1,5 +1,3 @@
-"use client";
-
 import Form from '@/app/ui/redentions/create-form';
 import Breadcrumbs from '@/app/ui/tickets/breadcrumbs';
 
