@@ -18,15 +18,19 @@ export default function LoginForm() {
         <p className="text-sm text-gray-400 text-center mb-6">Accede a tu cuenta</p>
         <div className="w-full">
           <div>
+
             <label className="block text-sm font-medium text-gray-300" htmlFor="email">
               Nombre de usuario
+
             </label>
             <div className="relative mt-1">
               <input
+
                 className="peer block w-full rounded-md border border-gray-600 bg-gray-700 py-2 pl-10 text-sm text-gray-200 shadow-sm focus:border-gray-400 focus:ring focus:ring-gray-500"
                 id="email"
+
                 type="text"
-                name="email"
+                name="phone_number"
                 placeholder="Ingrese usuario"
                 required
               />

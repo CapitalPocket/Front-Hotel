@@ -1,6 +1,6 @@
 import Pagination from '@/app/ui/tickets/pagination';
 import Search from '@/app/ui/search';
-import Table from '@/app/ui/tickets/table';
+//import Table from '@/app/ui/tickets/table';
 import { CreateInvoice } from '@/app/ui/tickets/buttons';
 import { lusitana } from '@/app/ui/fonts';
 import { InvoicesTableSkeleton } from '@/app/ui/skeletons';
@@ -36,7 +36,8 @@ export default async function Page({
         {/* <CreateInvoice grupo={grupo} /> */}
       </div>
       <Suspense key={query + currentPage} fallback={<InvoicesTableSkeleton />}>
-        
+     
+
       </Suspense>
       <div className="mt-5 flex w-full justify-center">
         <Pagination totalPages={totalPages} />

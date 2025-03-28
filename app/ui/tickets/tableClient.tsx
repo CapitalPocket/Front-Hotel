@@ -1,10 +1,10 @@
-'use client';
+/*'use client';
 
 import React, { useEffect, useState } from 'react';
 
 import Image from 'next/image';
 import TicketStatus from '@/app/ui/tickets/status';
-import { Ticket } from '@/app/lib/definitions';
+//import { Ticket } from '@/app/lib/definitions';
 import { formatCurrency, formatDateToLocal } from '@/app/lib/utils';
 import Modal from './modalTicket';
 import { validateTicket } from '@/app/lib/actions';
@@ -261,4 +261,4 @@ export default function InvoicesTableClient({
       </Modal>
     </>
   );
-}
+}*/

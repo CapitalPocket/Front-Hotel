@@ -99,7 +99,9 @@ export async function fetchFilteredUsers(query: string, currentPage: number, sta
 
   try {
     const effectiveStatus = status || 'Habilitado';
+
     const apiUrl = `http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/getAllEmployees`;
+
     const response = await axios.get(apiUrl);
     if (response.data.message) {
       console.warn(response.data.message); 
@@ -168,7 +170,9 @@ export async function fetchFilteredUsersPage(
 export async function fetchEmployeeSchedules(query: string, status: string = 'Habilitado') {
   try {
     // 1️⃣ Obtener empleados
+
     const employeesApiUrl = `http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/getAllEmployees`;
+
     const response = await axios.get(employeesApiUrl);
     
     if (!response.data || !Array.isArray(response.data)) {
@@ -181,6 +185,7 @@ export async function fetchEmployeeSchedules(query: string, status: string = 'Ha
     // 2️⃣ Obtener los horarios de cada empleado
     const scheduleRequests = employees.map(async (employee: any) => {
       const employeeId = employee.id_employee;
+
       const schedulesApiUrl = `http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/getAllShedule/${employeeId}`;
 
       try {
@@ -234,7 +239,9 @@ export async function updateEmployeeDetails(
   }
 ) {
   try {
+
     const apiUrl = `http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/updateEmployeeDetails/${employee_id}`;
+
     const response = await axios.patch(apiUrl, employeeData);
 
     // Manejar la respuesta exitosa
@@ -260,7 +267,9 @@ export async function fetchEmployeeWorkSchedule(
 
   try {
     // Construir la URL de la API
+
     const apiUrl = `http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/getEmployeeWorkSchedule`;
+
     
     // Hacer la petición a la API
     const { data: schedules } = await axios.get(apiUrl);
