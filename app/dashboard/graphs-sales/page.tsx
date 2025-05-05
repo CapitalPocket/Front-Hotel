@@ -6,11 +6,12 @@ import Select from "react-select";
 import { motion } from "framer-motion";
 
 const Page = () => {
-  const [employees, setEmployees] = useState<{ id_employee: string; name: string }[]>([]);
-  const [selectedEmployee, setSelectedEmployee] = useState<{ value: string; label: string } | null>(null);
+  const [employees, setEmployees] = useState<{ id_employee: string; name: string; phone_number: string }[]>([]);
+  const [selectedEmployee, setSelectedEmployee] = useState<{ value: string; label: string; phone: string } | null>(null);
   const [selectedHotel, setSelectedHotel] = useState<{ value: string; label: string } | null>(null);
   const [entryType, setEntryType] = useState<{ value: string; label: string } | null>(null);
   const [verificationCode, setVerificationCode] = useState("");
+  const [selectedRole, setSelectedRole] = useState<{ value: string; label: string } | null>(null);
 
   useEffect(() => {
     const fetchEmployees = async () => {
@@ -32,23 +33,37 @@ const Page = () => {
     return Math.floor(100000 + Math.random() * 900000).toString(); // Código de 6 dígitos
   };
 
-  const getCurrentDate = () => {
-    const now = new Date();
-    return now.toISOString().split("T")[0]; // YYYY-MM-DD
+  const sendVerificationCodeToAPI = async (phone: string, code: string, role: string) => {
+    try {
+      const response = await fetch("https://9b0lctjk-80.use.devtunnels.ms/api/hotel/handleQRCode", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ phone, qrCode: code, role }),
+      });
+
+      if (!response.ok) throw new Error("Error enviando el código QR al servidor");
+      console.log("✅ Código enviado con éxito");
+    } catch (error) {
+      console.error("❌ Error al enviar el código:", error);
+    }
   };
 
   useEffect(() => {
-    setVerificationCode(generateVerificationCode());
-  }, [selectedEmployee, selectedHotel, entryType]); // Regenera el código cuando se selecciona algo nuevo
+    if (selectedEmployee && selectedHotel && entryType) {
+      const newCode = generateVerificationCode();
+      setVerificationCode(newCode);
+      sendVerificationCodeToAPI(selectedEmployee.phone, newCode, selectedRole?.value || "");
+    }
+  }, [selectedEmployee, selectedHotel, entryType]);
 
   const generateWhatsAppLink = () => {
     if (!selectedEmployee || !selectedHotel || !entryType) return "";
-    const date = getCurrentDate();
     const actionCode = entryType.value === "ingreso" ? "Clock In" : "Clock Out";
     const message = `${actionCode}: ${verificationCode}`;
     return `https://wa.me/17863403034?text=${encodeURIComponent(message)}`;
-};
-
+  };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-10">
@@ -63,23 +78,69 @@ const Page = () => {
         </h1>
 
         {/* Selectores */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-12">
           <div>
             <label className="block text-lg font-medium text-gray-700 mb-2">Empleado</label>
             <Select
               options={employees.map((emp) => ({
                 value: emp.id_employee,
                 label: emp.name,
+                phone: emp.phone_number,
               }))}
               onChange={setSelectedEmployee}
               value={selectedEmployee}
               placeholder="Seleccionar..."
-              styles={{ control: (base) => ({ ...base, borderRadius: "12px", height: "50px", borderColor: "#aaa" }) }}
+              styles={{
+                control: (base) => ({
+                  ...base,
+                  borderRadius: "12px",
+                  height: "50px",
+                  borderColor: "#aaa",
+                }),
+              }}
             />
           </div>
 
           <div>
-            <label className="block text-lg font-medium text-gray-700 mb-2">Propiedad</label>
+            <label className="block text-lg font-medium text-gray-700 mb-2">Rol</label>
+            <Select
+              options={[
+                { value: "Housekeeper", label: "Housekeeper" },
+                { value: "Houseman", label: "Houseman" },
+                { value: "Maintenance Tech", label: "Maintenance Tech" },
+                { value: "Painter", label: "Painter" },
+                { value: "Remodeling Official", label: "Remodeling Official" },
+                { value: "HK Supervisor", label: "HK Supervisor" },
+                { value: "MT Supervisor", label: "MT Supervisor" },
+                { value: "Remo Supervisor", label: "Remo Supervisor" },
+                { value: "Quality Control", label: "Quality Control" },
+                { value: "Building Manager", label: "Building Manager" },
+                { value: "Room control", label: "Room control" },
+                { value: "Front desk", label: "Front desk" },
+                { value: "Lost & Found/Inventory", label: "Lost & Found/Inventory" },
+                { value: "Assistant Manager", label: "Assistant Manager" },
+                { value: "Operations Manager", label: "Operations Manager" },
+                { value: "General Manager", label: "General Manager" },
+                { value: "Resort Manager", label: "Resort Manager" },
+                { value: "Laundry", label: "Laundry" }
+
+              ]}
+              onChange={setSelectedRole}
+              value={selectedRole}
+              placeholder="Seleccionar..."
+              styles={{
+                control: (base) => ({
+                  ...base,
+                  borderRadius: "12px",
+                  height: "50px",
+                  borderColor: "#aaa",
+                }),
+              }}
+            />
+          </div>
+
+          <div>
+            <label className="block text-lg font-medium text-gray-700 mb-2">Propiedades</label>
             <Select
               options={[
                 { value: "1", label: "Heron I" },
@@ -88,7 +149,14 @@ const Page = () => {
               onChange={setSelectedHotel}
               value={selectedHotel}
               placeholder="Seleccionar..."
-              styles={{ control: (base) => ({ ...base, borderRadius: "12px", height: "50px", borderColor: "#aaa" }) }}
+              styles={{
+                control: (base) => ({
+                  ...base,
+                  borderRadius: "12px",
+                  height: "50px",
+                  borderColor: "#aaa",
+                }),
+              }}
             />
           </div>
 
@@ -102,10 +170,19 @@ const Page = () => {
               onChange={setEntryType}
               value={entryType}
               placeholder="Seleccionar..."
-              styles={{ control: (base) => ({ ...base, borderRadius: "12px", height: "50px", borderColor: "#aaa" }) }}
+              styles={{
+                control: (base) => ({
+                  ...base,
+                  borderRadius: "12px",
+                  height: "50px",
+                  borderColor: "#aaa",
+                }),
+              }}
             />
           </div>
         </div>
+
+        
 
         {/* Sección QR */}
         {selectedEmployee && selectedHotel && entryType && (
@@ -120,7 +197,6 @@ const Page = () => {
               Escanea para contactar a <span className="text-blue-600">{selectedEmployee.label}</span> -{" "}
               <span className="text-green-600">{selectedHotel.label}</span> ({entryType.label}) 📲
             </p>
-            c
           </motion.div>
         )}
       </motion.div>

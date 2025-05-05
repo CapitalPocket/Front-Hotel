@@ -8,6 +8,7 @@ import { format } from "date-fns";
 import { DateRange, DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
 import Pagination from "./Pagination";
+import ModalPago from "./ModalPago";
 
 interface PortfolioProps {
   park: string;
@@ -16,7 +17,9 @@ interface PortfolioProps {
 const Portfolio: React.FC<PortfolioProps> = ({ park }) => {
   const [employees, setEmployees] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
-  
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState<any | null>(null);
+
   const searchParams = useSearchParams();
   const currentPage = Number(searchParams.get("page")) || 1;
   const employeesPerPage = 9;
@@ -26,24 +29,32 @@ const Portfolio: React.FC<PortfolioProps> = ({ park }) => {
     to: new Date(),
   });
 
+  const openModal = (employee: any) => {
+    setSelectedEmployee(employee);
+    setModalOpen(true);
+  };
+
   const fetchEmployees = async () => {
     try {
-      const response = await axios.get(
-        `http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/getAllEmployees`);
+      const response = await axios.post(
+        'https://9b0lctjk-80.use.devtunnels.ms/api/hotel/getAllEmployees',
+        { role: '' } // puedes enviar vacío si es opcional
+      );
       return response.data;
     } catch (err) {
-      console.error("❌ Error obteniendo empleados:", err);
+      console.error('❌ Error obteniendo empleados:', err);
       return [];
     }
+    
   };
 
   const fetchEmployeeSalary = async (phone_number: string) => {
     if (!dateRange?.from || !dateRange?.to) return {};
-    
+
     try {
       const startDate = format(dateRange.from, "yyyy-MM-dd");
       const endDate = format(dateRange.to, "yyyy-MM-dd");
-      
+
       const salaryResponse = await axios.get(
         `http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/CalculateEmployeeSalary/${phone_number}?start_date=${startDate}&end_date=${endDate}`
       );
@@ -88,7 +99,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ park }) => {
   return (
     <div className="p-6">
       <div className="mb-4 flex items-center gap-3">
-        <h3 className="text-base font-semibold"> Rango de fecha:</h3>
+        <h3 className="text-base font-semibold">Rango de fecha:</h3>
         <Popover className="relative flex">
           {({ open, close }) => (
             <>
@@ -107,14 +118,18 @@ const Portfolio: React.FC<PortfolioProps> = ({ park }) => {
               >
                 <Popover.Panel className="absolute left-0 mt-2 z-10 w-[650px] origin-top-left rounded-lg border bg-white shadow-lg">
                   <div className="p-3">
-                    <DayPicker mode="range" selected={dateRange} onSelect={setDateRange} numberOfMonths={2} classNames={{
-                          months: "flex flex-row gap-4",
-                        }} />
+                    <DayPicker
+                      mode="range"
+                      selected={dateRange}
+                      onSelect={setDateRange}
+                      numberOfMonths={2}
+                      classNames={{ months: "flex flex-row gap-4" }}
+                    />
                     <div className="mt-3 flex justify-end gap-2 p-3">
-                    <button
+                      <button
                         onClick={() => {
                           handleApply();
-                          close(); // <-- Cierra el Popover después de aplicar
+                          close();
                         }}
                         className="border-green-600 bg-green-100 border text-green-600 rounded-md px-4 py-1 text-sm hover:bg-green-200 transition"
                       >
@@ -128,41 +143,68 @@ const Portfolio: React.FC<PortfolioProps> = ({ park }) => {
           )}
         </Popover>
       </div>
+
       <div className="mb-4 flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Total a pagar: ${totalSalaryToPay.toFixed(2)} US</h3>
-        <input type="text" placeholder="Buscar empleado..." className="border p-2 rounded-md" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+        <h3 className="text-lg font-semibold">Total a pagar: ${totalSalaryToPay.toFixed(2)}</h3>
+        <input
+          type="text"
+          placeholder="Buscar empleado..."
+          className="border p-2 rounded-md"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
       </div>
-      <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
-          <thead className="bg-gray-800 text-white">
+
+      <table className="min-w-full bg-white border border-gray-300 shadow rounded-lg overflow-hidden">
+  <thead className="bg-gray-100 text-gray-800 text-sm font-medium">
           <tr>
-            <th className="py-2 px-4 w-1/6">Nombre</th>
-            <th className="py-2 px-4 w-1/6">Rol</th>
-            <th className="py-2 px-4">Valor/Hora</th>
-            <th className="py-2 px-4"> Horas Trabajadas</th>
-            <th className="py-2 px-4">Habitación/A</th>
-            <th className="py-2 px-4">Habitación/B</th>
-            <th className="py-2 px-4">Horas Extra</th>
-            <th className="py-2 px-4">Salario Total</th>
+            <th className="text-left px-4 py-3">Nombre</th>
+            <th className="text-left px-4 py-3">Rol</th>
+            <th className="text-right px-4 py-3">Valor/Hora</th>
+            <th className="text-center px-4 py-3">Horas Trabajadas</th>
+            <th className="text-center px-4 py-3">Habitación A</th>
+            <th className="text-center px-4 py-3">Habitación B</th>
+            <th className="text-center px-4 py-3">Horas Extra</th>
+            <th className="text-left px-4 py-3">Supervisor</th>
+            <th className="text-right px-4 py-3">Salario Total</th>
           </tr>
         </thead>
         <tbody>
-          {paginatedEmployees.map((employee) => (
-            <tr key={employee.id_employee} className="border-b hover:bg-gray-100">
-              <td className="py-2 px-4 w-1/6">{employee.name}</td>
-              <td className="py-2 px-4 w-1/6">{employee.role}</td>
-              <td className="py-2 px-4">$ {employee.hourly_wage}US</td>
-              <td className="py-2 px-4 text-center">{employee.total_hours}</td>
-              <td className="py-2 px-4 text-center">{employee.rooms_cleaned_A}</td>
-              <td className="py-2 px-4 text-center">{employee.rooms_cleaned_B}</td>
-              <td className="py-2 px-4 text-center">{employee.extra_hours}</td>
-              <td className="py-2 px-4 font-bold">$ {parseFloat(employee.total_salary).toFixed(2)}US</td>
+          {paginatedEmployees.map((employee, index) => (
+            <tr key={employee.id_employee} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+              <td
+                className="px-4 py-2 text-sm text-black cursor-pointer hover:underline font-bold
+"
+                onClick={() => openModal(employee)}
+              >
+                {employee.name}
+              </td>
+              <td className="px-4 py-2 text-sm">{employee.role}</td>
+              <td className="px-4 py-2 text-sm text-right">${employee.hourly_wage}</td>
+              <td className="px-4 py-2 text-sm text-center">{employee.total_hours}</td>
+              <td className="px-4 py-2 text-sm text-center">{employee.rooms_cleaned_A}</td>
+              <td className="px-4 py-2 text-sm text-center">{employee.rooms_cleaned_B}</td>
+              <td className="px-4 py-2 text-sm text-center">{employee.extra_hours}</td>
+              <td className="px-4 py-2 text-sm">{employee.supervisor}</td>
+              <td className="px-4 py-2 text-sm text-right font-semibold text-green-600">
+                ${parseFloat(employee.total_salary).toFixed(2)}
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
+
       <div className="mt-4 flex justify-center">
         <Pagination totalPages={totalPages} />
       </div>
+
+      {modalOpen && selectedEmployee && (
+        <ModalPago
+          isOpen={modalOpen}
+          onClose={() => setModalOpen(false)}
+          employee={selectedEmployee}
+        />
+      )}
     </div>
   );
 };

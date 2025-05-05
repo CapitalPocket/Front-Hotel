@@ -1,12 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 
-import Image from 'next/image';
-
 interface Employee {
   employeeName: string;
   hotelName: string;
-  currentRoom: string; // Incluye la categoría como "101A" o "101B"
+  currentRoom: string; // Ej: "101A" o "101B"
 }
 
 interface RoomStatus {
@@ -14,35 +12,38 @@ interface RoomStatus {
   hotel_id: number;
   room_number: string;
   category: 'A' | 'B';
-  status: string; // El estado de la habitación, por ejemplo, "V/C" o "Ocupado"
-  created_at: string; // Fecha de creación del estado de la habitación
+  status: string;
+  created_at: string;
 }
 
 interface HotelViewProps {
-  park: string; // Recibimos el nombre del hotel
+  park: string;
 }
-const statusColors = {
-  'V/C': '#4CAF50',  // 🟢 Verde (Vacant and Clean)
-  'O': '#FF9800',    // 🟠 Naranja (Occupied)
-  'V/D': '#F44336',  // 🔴 Rojo (Vacant and Dirty)
-  'OOO': '#9E9E9E',  // ⚪ Gris (Out of Service)
-  'CLEAN/IN': '#2196F3',  // 🔵 Azul (Cleaning Start)
-  'P/S': '#673AB7',  // 🟣 Morado (Cleaning Out)
-  'DEV': '#FFEB3B',  // 🟡 Amarillo (Devolution)
-  'RM': '#795548',   // 🟤 Café (Removed)
-  'S/O': '#009688',  // 🟢 Verde-azulado (Stay Over)
-  'E/CH': '#03A9F4', // 🔷 Azul claro (Early Check Out)
-  'MT/IN': '#8BC34A', // 🟢 Verde lima (Maintenance In)
-  'MT/OUT': '#CDDC39', // 🟡 Verde lima más claro (Maintenance Out)
-  'DEP': '#FF5722',  // 🟥 Rojo oscuro (Linen Remove)
-  'CALL': '#607D8B', // 🟦 Gris azulado (Call for Guest Need)
-  'REMO PROJECT': '#E91E63', // 💖 Rosa (Remodeling Project)
-  'F/S': '#3F51B5',  // 🔷 Azul índigo (Full Service)
-  'N/A': '#808080'   // ⚫ Gris oscuro (Default)
-};
 
+const statusColors: Record<string, string> = {
   
-const floors = [
+  'V/C': '#1B5E20',       // Verde bosque
+  'O': '#FF6F00',         // Naranja intenso
+  'V/D': '#B71C1C',       // Rojo sangre
+  'OOO': '#424242',       // Gris carbón
+  'CLEAN/IN': '#0D47A1',  // Azul fuerte
+  'P/S': '#4A148C',       // Púrpura profundo
+  'DEV': '#FDD835',       // Amarillo vibrante
+  'RM': '#3E2723',        // Marrón muy oscuro
+  'S/O': '#00695C',       // Verde azulado
+  'E/CH': '#0288D1',      // Azul cielo fuerte
+  'MT/IN': '#558B2F',     // Verde oliva
+  'MT/OUT': '#AFB42B',    // Amarillo oliva
+  'DEP': '#BF360C',       // Naranja quemado
+  'CALL': '#263238',      // Azul grisáceo muy oscuro
+  'REMO PROJECT': '#AD1457', // Rosa oscuro
+  'F/S': '#1A237E',       // Azul marino fuerte
+  'N/A': '#9E9E9E'        // Gris neutro
+  };
+  
+
+
+const groupedRooms = [
   { floor: 7, rooms: [701, 702, 703, 704, 705, 706] },
   { floor: 6, rooms: [601, 602, 603, 604, 605, 606] },
   { floor: 5, rooms: [501, 502, 503, 504, 505, 506, 507, 508] },
@@ -53,44 +54,28 @@ const floors = [
 ];
 
 const HotelView: React.FC<HotelViewProps> = ({ park }) => {
-  const [employees, setEmployees] = useState<Employee[]>([]);
   const [roomStatuses, setRoomStatuses] = useState<RoomStatus[]>([]);
-  const [activeCategory, setActiveCategory] = useState<{ [room: string]: 'A' | 'B' | null }>({});
-  
   const hotelViewRef = useRef<HTMLDivElement>(null);
 
+  // Convertir "heron i" a 1 y "heron ii" a 2
+  const hotelId = park === 'Heron I' ? 1 : park === 'Heron II' ? 2 : 0;
+
   useEffect(() => {
-    // Desplazamiento al cargar la página para ver desde la parte superior
     if (hotelViewRef.current) {
       hotelViewRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
-    const fetchEmployees = async () => {
-      try {
-        const response = await axios.get(
-
-          `http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/getemployeGetRoom`,
-
-          { params: { park } }
-        );
-        setEmployees(response.data.employees || []);
-      } catch (error) {
-        console.error('Error al obtener empleados:', error);
-      }
-    };
 
     const fetchRoomStatuses = async () => {
       try {
-        const response = await axios.get(
+        const response = await axios.post(
+          `https://9b0lctjk-80.use.devtunnels.ms/api/hotel/getAllRoomStatus`,
+          {hotel_id: hotelId }  // Usamos el hotelId calculado
 
-          `http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/getAllRoomStatus`,
-
-          { params: { hotel_id: park } }
         );
-    
+
         const allStatuses: RoomStatus[] = response.data || [];
-    
-        // Filtrar el estado más reciente por cada habitación y categoría
+
         const latestRoomStatuses = Object.values(
           allStatuses.reduce((acc, room) => {
             const key = `${room.room_number}-${room.category}`;
@@ -100,152 +85,181 @@ const HotelView: React.FC<HotelViewProps> = ({ park }) => {
             return acc;
           }, {} as Record<string, RoomStatus>)
         );
-    
+
         setRoomStatuses(latestRoomStatuses);
       } catch (error) {
-        console.error('Error al obtener el estado de las habitaciones:', error);
+        console.error('Error al obtener estados de habitaciones:', error);
       }
     };
-    
 
-    fetchEmployees();
     fetchRoomStatuses();
-  }, [park]);
+  }, [hotelId]); // Cambié de park a hotelId aquí para que reaccione a cambios en hotelId
 
-  const handleCategoryClick = (room: number, category: 'A' | 'B') => {
-    setActiveCategory((prevState) => ({
-      ...prevState,
-      [room]: prevState[room] === category ? null : category, // Alternar entre mostrar y ocultar
-    }));
+  const getStatusColor = (room: number, category: 'A' | 'B') => {
+    const status = roomStatuses.find(
+      (r) => r.room_number === room.toString() && r.category === category
+    )?.status;
+    return statusColors[status || 'N/A'] || '#ccc';
   };
 
-  const getRoomStatusCounts = (floors: { floor: number; rooms: number[] }[], rooms: RoomStatus[]): Record<string, number> => {
-    return rooms
-      .filter(room => floors.some(floor => room.room_number.startsWith(`${floor.floor}`)))
-      .reduce((acc: Record<string, number>, room: RoomStatus) => {
-        const estado = room.status;
-        const alias = statusColors[estado as keyof typeof statusColors] || "N/A";
-        acc[alias] = (acc[alias] || 0) + 1;
-        return acc;
-      }, {});
-  };
-  
+  const half = Math.ceil(groupedRooms.length / 2);
+  const [leftFloors, rightFloors] = [groupedRooms.slice(0, half), groupedRooms.slice(half)];
 
   return (
-    <div ref={hotelViewRef} className="hotel-container space-y-4 px-4">
-      {floors.map(({ floor, rooms }) => (
-        <div key={floor} className="floor flex flex-col items-center mb-8">
-          <h2 className="font-bold text-lg mb-3">Piso {floor}</h2>
-          <div className="rooms-container grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
-            {rooms.map((room) => {
-              const employeesInRoom = employees.filter(
-                (emp) => emp.hotelName === park && emp.currentRoom.startsWith(`${room}`)
-              );
-
-              const employeeA = employeesInRoom.find((emp) => emp.currentRoom.endsWith('A'));
-              const employeeB = employeesInRoom.find((emp) => emp.currentRoom.endsWith('B'));
-
-              const active = activeCategory[room]; // Categoría activa para esta habitación
-
-              const roomStatusA = roomStatuses.find(
-                (status) => status.room_number === room.toString() && status.category === 'A'
-              );
-              const roomStatusB = roomStatuses.find(
-                (status) => status.room_number === room.toString() && status.category === 'B'
-              );
-
-              return (
-                <div
-                  key={room}
-                  className="room relative w-32 h-56 border rounded-lg flex flex-col items-center bg-gray-50 shadow-sm"
-                >
-                  {/* Parte superior: Estado de la habitación */}
-                  <div className="room-status flex w-full">
-                    <div className="w-1/2 bg-gray-200 py-1 text-center font-medium text-sm border-r border-white">
-                      {roomStatusA ? roomStatusA.status : '...'}
-                    </div>
-                    <div className="w-1/2 bg-gray-200 py-1 text-center font-medium text-sm">
-                      {roomStatusB ? roomStatusB.status : '...'}
-                    </div>
-                  </div>
-                  
-                  {/* Contenido de la tarjeta (empleados, número de habitación, categorías) */}
-                  <div className="flex flex-col items-center justify-between p-2 w-full flex-1">
-                    {/* Empleados */}
-                    <div className="employee flex flex-col items-center justify-center flex-1 mb-2">
-                      {active === 'A' && employeeA && (
-                        <div className="employee-category flex flex-col items-center mb-2">
-                          <div className="icon mb-1">
-
-                            <Image
-                              src="/customers/usuario.png"
-                              alt="Empleado A"
-                              className="w-10 h-10 rounded-full border border-gray-150"
-                            />
-
-                          </div>
-                          <p className="text-xs font-medium">{employeeA.employeeName}</p>
-                        </div>
-                      )}
-
-                      {active === 'B' && employeeB && (
-                        <div className="employee-category flex flex-col items-center">
-                          <div className="icon mb-1">
-
-                            <Image
-                              src="/customers/usuario.png"
-                              alt="Empleado B"
-                              className="w-10 h-10 rounded-full border border-gray-150"
-                            />
-
-                          </div>
-                          <p className="text-xs font-medium">{employeeB.employeeName}</p>
-                        </div>
-                      )}
-
-                      {!active && !employeeA && !employeeB && (
-                        <p className="text-gray-400 text-xs">Vacío</p>
-                      )}
-                    </div>
-
-                    
-                  </div>
-                  {/* Número de habitación */}
-                  <div className="room-number text-center text-sm font-bold border-neutral-200 bg-gray-100 border text-gray-700 py-1 w-full overflow-hidden text-ellipsis whitespace-nowrap">
-                      Hab. {room}
-                    </div>
-
-                    {/* Categorías A y B */}
-                    <div className="categories flex w-full">
-                    <button
-                      className={`w-1/2 text-xs font-bold py-1 text-center ${employeeA ? 'border-red-600 bg-red-100 border text-red-600' : 'border-green-600 bg-green-100 border text-green-600'} rounded-bl-lg`}
-                      onClick={() => handleCategoryClick(room, 'A')}
-                    >
-                      A
-                    </button>
-
-                      <button
-
-                      className={`w-1/2 text-xs font-bold py-1 text-center ${employeeB ? 'border-red-600 bg-red-100 border text-red-600' : 'border-green-600 bg-green-100 border text-green-600'} rounded-br-lg`}
-                      onClick={() => handleCategoryClick(room, 'B')}
-                      >
-                      B
-                      </button>
-
-
-                    </div>
-                    
-                </div>
-                
-              );
-
-              
-            })}
-
-
+    <div ref={hotelViewRef} className="hotel-view">
+      {/* Leyenda */}
+      <div className="legend">
+        {Object.entries(statusColors).map(([key, color]) => (
+          <div key={key} className="legend-item">
+            <div className="color-box" style={{ backgroundColor: color }}></div>
+            <span>{key}</span>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
+
+      {/* Habitaciones */}
+      <div className="room-columns">
+        {[leftFloors, rightFloors].map((column, i) => (
+          <div key={i} className="room-column">
+            {column.map((group) => (
+              <div key={group.floor} className="floor-row">
+                {group.rooms.map((room) => (
+                  <div key={room} className="hex">
+                    <div className="room-number">Hab. {room}</div>
+                    <div className="split">
+                      <div
+                        className="half a"
+                        style={{ backgroundColor: getStatusColor(room, 'A') }}
+                      >
+                        A
+                      </div>
+                      <div
+                        className="half b"
+                        style={{ backgroundColor: getStatusColor(room, 'B') }}
+                      >
+                        B
+                      </div>
+                    </div>
+                  </div>
+
+                ))}
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+
+
+      <style jsx>{`
+        .hotel-view {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 20px;
+        }
+
+        .legend {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 12px;
+          margin-bottom: 24px;
+          justify-content: center;
+        }
+
+        .legend-item {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 0.9rem;
+        }
+
+        .color-box {
+          width: 18px;
+          height: 18px;
+          border-radius: 4px;
+          border: 1px solid #ccc;
+        }
+
+        .room-columns {
+          display: flex;
+          gap: 40px;
+          justify-content: center;
+          flex-wrap: wrap;
+        }
+
+        .room-column {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .floor-row {
+          display: flex;
+          gap: 10px;
+          justify-content: center;
+        }
+
+        .hex {
+          width: 100px;
+          background-color: #f9fafb;
+          border-radius: 8px;
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+          text-align: center;
+          font-size: 0.9rem;
+        }
+
+        .room-number {
+          font-weight: bold;
+          padding-top: 4px;
+        }
+
+        .split {
+          display: flex;
+          height: 40px;
+        }
+
+        .half {
+          flex: 1;
+          color: white;
+          font-weight: bold;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .a {
+          border-right: 1px solid #fff;
+        }
+
+        .b {
+          border-left: 1px solid #fff;
+        }
+
+        .legend {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+          gap: 12px;
+          margin-bottom: 24px;
+          width: 100%;
+          max-width: 800px;
+          background: #f0f4f8;
+          padding: 16px;
+          border-radius: 12px;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .legend-item {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          background: white;
+          padding: 6px 10px;
+          border-radius: 8px;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+          font-size: 0.85rem;
+          font-weight: 500;
+        }
+      `}</style>
     </div>
   );
 };
