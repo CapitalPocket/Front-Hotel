@@ -65,11 +65,13 @@ const HotelView: React.FC<HotelViewProps> = ({ park }) => {
       hotelViewRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
+
     const fetchRoomStatuses = async () => {
       try {
         const response = await axios.post(
           `https://9b0lctjk-80.use.devtunnels.ms/api/hotel/getAllRoomStatus`,
           {hotel_id: hotelId }  // Usamos el hotelId calculado
+
         );
 
         const allStatuses: RoomStatus[] = response.data || [];
@@ -139,12 +141,14 @@ const HotelView: React.FC<HotelViewProps> = ({ park }) => {
                       </div>
                     </div>
                   </div>
+
                 ))}
               </div>
             ))}
           </div>
         ))}
       </div>
+
 
       <style jsx>{`
         .hotel-view {

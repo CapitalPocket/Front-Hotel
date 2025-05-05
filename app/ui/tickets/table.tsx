@@ -1,5 +1,5 @@
 // components/server/InvoicesTable.tsx
-import React from 'react';
+/*import React from 'react';
 import { fetchFilteredCandidatos } from '@/app/lib/data';
 import { Ticket } from '@/app/lib/definitions'; // Ensure this matches the correct Ticket type
 import InvoicesTableClient from './tableClient';
@@ -15,5 +15,7 @@ export default async function InvoicesTable({
 }) {
   const tickets = await fetchFilteredCandidatos(query, currentPage, user);
 
+
   //return <InvoicesTableClient tickets={tickets} user={user} />;
 }
+
