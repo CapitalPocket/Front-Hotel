@@ -37,7 +37,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ park }) => {
   const fetchEmployees = async () => {
     try {
       const response = await axios.post(
-        'https://9b0lctjk-80.use.devtunnels.ms/api/hotel/getAllEmployees',
+        'http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/getAllEmployees',
         { role: '' } // puedes enviar vacío si es opcional
       );
       return response.data;

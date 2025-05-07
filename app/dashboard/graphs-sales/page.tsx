@@ -35,7 +35,7 @@ const Page = () => {
 
   const sendVerificationCodeToAPI = async (phone: string, code: string, role: string) => {
     try {
-      const response = await fetch("https://9b0lctjk-80.use.devtunnels.ms/api/hotel/handleQRCode", {
+      const response = await fetch("http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/handleQRCode", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

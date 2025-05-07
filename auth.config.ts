@@ -45,6 +45,9 @@ export const authConfig = {
           '/dashboard/candidatos/create',
           '/dashboard/redenciones',
           '/dashboard/generar-excel',
+          '/dashboard/redenciones/create',
+          '/dashboard/redenciones/edit',  
+          '/dashboard/asignacion',
         ],
         
       };

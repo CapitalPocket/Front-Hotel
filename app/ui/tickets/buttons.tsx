@@ -41,19 +41,11 @@ export function UpdateInvoice({ id, grupo, page }: { id: string, grupo: string, 
 }
 
 export function CreateHotel({ grupo }: { grupo: string }) {
-  const router = useRouter();
-
-  const handleRedirect = () => {
-    router.push('/dashboard/redenciones/create'); // Ruta correcta
-  };
-
   return (
-    <button
-      onClick={handleRedirect}
-      className="flex h-10 items-center rounded-lg bg-black px-4 text-sm font-medium text-white transition-colors hover:bg-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400/30"
-    >
-      Editar hotel
-    </button>
+    <Link href="/dashboard/redenciones/edit">
+      <button className="bg-gray-700 text-white px-6 py-2 rounded-lg hover:bg-gray-900 transition">
+        Editar Hotel
+      </button>
+    </Link>
   );
 }
-

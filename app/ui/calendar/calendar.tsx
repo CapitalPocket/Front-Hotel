@@ -68,7 +68,7 @@ const HotelView: React.FC<HotelViewProps> = ({ park }) => {
     const fetchRoomStatuses = async () => {
       try {
         const response = await axios.post(
-          `https://9b0lctjk-80.use.devtunnels.ms/api/hotel/getAllRoomStatus`,
+          `http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/getAllRoomStatus`,
           {hotel_id: hotelId }  // Usamos el hotelId calculado
         );
 

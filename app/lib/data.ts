@@ -100,7 +100,7 @@ export async function fetchFilteredUsers(query: string, currentPage: number, sta
   try {
     const effectiveStatus = status || 'Habilitado';
     const apiUrl = `http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/getAllEmployees`;
-    const response = await axios.get(apiUrl);
+    const response = await axios.post(apiUrl);
     if (response.data.message) {
       console.warn(response.data.message); 
       return 0;
@@ -137,7 +137,7 @@ export async function fetchFilteredUsersPage(
     
     const effectiveStatus = status || 'Habilitado';
     const apiUrl = `http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/getAllEmployees`;
-    const response = await axios.get(apiUrl);
+    const response = await axios.post(apiUrl);
     if (response.data.message) {
       console.warn(response.data.message); 
       return 1;
@@ -169,7 +169,7 @@ export async function fetchEmployeeSchedules(query: string, status: string = 'Ha
   try {
     // 1️⃣ Obtener empleados
     const employeesApiUrl = `http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/getAllEmployees`;
-    const response = await axios.get(employeesApiUrl);
+    const response = await axios.post(employeesApiUrl);
     
     if (!response.data || !Array.isArray(response.data)) {
       console.warn("La respuesta de empleados no es válida.");

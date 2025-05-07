@@ -47,7 +47,7 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
   const fetchData = async (role: string | null = null) => {
     try {
       const employeeResponse = await axios.post(
-        'https://9b0lctjk-80.use.devtunnels.ms/api/hotel/getAllEmployees',
+        'http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/getAllEmployees',
         role ? { role } : {}
       );
 

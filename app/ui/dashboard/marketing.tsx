@@ -2,7 +2,7 @@
 import Link from "next/link";
 import React from "react";
 import { useSession } from "@/app/context";
-import { FaCalendarAlt, FaHotel, FaMoneyBillWave, FaUsers } from "react-icons/fa";
+import { FaCalendarAlt, FaHotel, FaMoneyBillWave, FaUsers, FaUserCheck  } from "react-icons/fa";
 import { LiaHotelSolid } from "react-icons/lia";
 import { GrAction } from "react-icons/gr";
 // Enlaces con iconos correctos y descripciones
@@ -49,7 +49,14 @@ const links = [
     description: "Consulta y gestiona los horarios disponibles.",
     roles: ["administrador", "marketing"],
   },
-
+  {
+    name: "Asignaciones",
+    href: "/dashboard/asignacion",
+    icon: FaUserCheck, 
+    description: "Revisa qué habitaciones tiene asignadas cada empleado.",
+    roles: ["administrador"],
+  }
+  
 ];
 
 const Marketing = () => {

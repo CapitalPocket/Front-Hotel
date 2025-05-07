@@ -1,5 +1,5 @@
 "use client";
-import Portfolio from '@/app/ui/portfolio/index';
+import Asignacion from '@/app/ui/asignacion/asignacion';
 import React, { useState } from 'react';
 
 const Page = () => {
@@ -8,10 +8,10 @@ const Page = () => {
 
   return (
     <div className="h-screen flex flex-col items-center bg-gray-100 px-6">
-      <h1 className="text-3xl font-bold my-6 text-center">Pagos</h1>
+      <h1 className="text-3xl font-bold my-6 text-center">Asignacion de habitaciones</h1>
 
       <div className="flex-grow w-full max-w-7xl mx-auto mt-10 px-4">
-        <Portfolio park="Heron I" />
+        <Asignacion  />
       </div>
     </div>
   );
