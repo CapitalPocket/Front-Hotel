@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server';
+/*import { NextResponse } from 'next/server';
 import XlsxPopulate from 'xlsx-populate';
-import { fetchInvoices } from '@/app/lib/data';
+//import { fetchInvoices } from '@/app/lib/data';
 import { string } from 'zod';
 
 
@@ -13,7 +13,7 @@ export async function GET(request: any, { params }: any) {
     const idpark = url.searchParams.get('idpark'); 
     const month = url.searchParams.get('month');
 
-    const tickets = await fetchInvoices(idpark || '', month || '');
+    //const tickets = await fetchInvoices(idpark || '', month || '');
 
     const workbook = await XlsxPopulate.fromBlankAsync();
     const sheet = workbook.sheet(0);
@@ -43,7 +43,7 @@ export async function GET(request: any, { params }: any) {
     });
 
     // Iterar sobre los datos de los tickets y agregarlos al Excel
-    tickets.forEach((ticket: any, rowIndex: any) => {
+    /*tickets.forEach((ticket: any, rowIndex: any) => {
       sheet.cell(rowIndex + 2, 1).value(ticket.idticket);
       sheet.cell(rowIndex + 2, 2).value(ticket.name);
       sheet.cell(rowIndex + 2, 3).value(ticket.lastname);
@@ -65,7 +65,7 @@ export async function GET(request: any, { params }: any) {
       sheet.cell(rowIndex + 2, 13).value(ticket.ticket_code);
       sheet.cell(rowIndex + 2, 14).value(ticket.id_operation);
       sheet.cell(rowIndex + 2, 15).value(ticket.user_id);
-    });
+    });*/
     const arrayBuffer = await workbook.outputAsync();
     return new Response(arrayBuffer, {
       headers: {

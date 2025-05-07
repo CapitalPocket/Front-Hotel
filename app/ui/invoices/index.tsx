@@ -46,9 +46,11 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
 
   const fetchData = async (role: string | null = null) => {
     try {
+
       const employeeResponse = await axios.post(
         'http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/getAllEmployees',
         role ? { role } : {}
+
       );
 
       if (Array.isArray(employeeResponse.data)) {
@@ -62,7 +64,9 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
 
         for (const emp of employeeData) {
           const scheduleResponse = await axios.get(
+
             `http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/getAllWorkShedule/${emp.id_employee}`
+
           );
 
           if (Array.isArray(scheduleResponse.data)) {
@@ -130,7 +134,9 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
         };
 
         await axios.put(
+
           `http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/updateEmployeeSchedule/${id_employee}`,
+
           updateData
         );
       }
@@ -142,7 +148,9 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
       };
 
       const response = await axios.post(
+
         `http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/postWorkDays`,
+
         dataToSend
       );
 

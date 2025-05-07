@@ -1,4 +1,9 @@
-import type { NextAuthConfig } from 'next-auth';
+import type { NextAuthConfig, User as NextAuthUser } from 'next-auth';
+import type { Response } from 'express';
+interface User extends NextAuthUser {
+  phone_number?: string;
+  statusprofile?: string;
+}
 
 type Role = 'administrador' ;
 export const authConfig = {
@@ -8,10 +13,12 @@ export const authConfig = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.idUser = user.idUser;
+        token.id_employee = user.id_employee;
         token.role = user.role;
-        token.park = user.park;
-        token.changePass = user.changePass;
+        token.name = user.name;
+        token.phone_number = (user as User).phone_number;
+        token.statusprofile = (user as User).statusprofile;
+        
       }
       return token;
     },
@@ -19,9 +26,11 @@ export const authConfig = {
     async session({ session, token }) {
       if (session.user && typeof token.role === 'string') {
         (session.user as any).role = token.role;
-        (session.user as any).park = token.park;
-        (session.user as any).idUser = token.idUser;
-        (session.user as any).changePass = token.changePass;
+        (session.user as any).id_employee = token.id_employee;
+        (session.user as any).name = token.name;  
+        (session.user as any).phone_number = token.phone_number;
+        (session.user as any).statusprofile = token.status
+
       }
       return session;
     },
@@ -35,7 +44,7 @@ export const authConfig = {
       const rolePermissions: Record<Role, string[]> = {
         administrador: [
           '/dashboard',
-          '/dashboard/tickets',
+          /*'/dashboard/tickets',*/
           '/dashboard/graphs-sales',
           '/dashboard/graphs-interactions',
           '/dashboard/invoices',
@@ -44,27 +53,29 @@ export const authConfig = {
           '/dashboard/candidatos',
           '/dashboard/candidatos/create',
           '/dashboard/redenciones',
+
           '/dashboard/generar-excel',
           '/dashboard/redenciones/create',
           '/dashboard/redenciones/edit',  
           '/dashboard/asignacion',
+
         ],
         
       };
       
       if (isOnDashboard) {
         const pathSegments = nextUrl.pathname.split('/');
-        const isGenerarExcelRoute = pathSegments[2] === 'generar-excel';
+        //const isGenerarExcelRoute = pathSegments[2] === 'generar-excel';
 
         // Si la ruta es "generar-excel" con parámetros dinámicos
-        if (isGenerarExcelRoute) {
+        /*if (isGenerarExcelRoute) {
           const allowedRoutes = userRole && rolePermissions[userRole] ? rolePermissions[userRole] : [];
           if (allowedRoutes.some(route => route.includes('generar-excel'))) {
             return true; // Acceso permitido
           } else {
             return Response.redirect(new URL('/login', nextUrl)); // Redirigir si no tiene permiso
           }
-        }
+        }*/
         if (isLoggedIn) {
           const allowedRoutes = userRole && rolePermissions[userRole] ? rolePermissions[userRole] : [];
           // Verificar si el usuario tiene permiso para acceder a la ruta actual
@@ -80,7 +91,8 @@ export const authConfig = {
         }
       } else if (isLoggedIn) {
         // Si está logueado, redirigir al dashboard si intenta acceder a rutas no protegidas
-        return Response.redirect(new URL('/dashboard', nextUrl));
+        return Response.redirect(new URL('/login', nextUrl));
+
       }
       return true;
     },
