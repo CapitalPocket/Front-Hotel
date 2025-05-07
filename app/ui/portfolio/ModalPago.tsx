@@ -23,7 +23,7 @@ const ModalPago: React.FC<ModalPagoProps> = ({ isOpen, onClose, employee }) => {
     if (!startDate || !endDate) return;
 
     try {
-      const response = await fetch("https://9b0lctjk-80.use.devtunnels.ms/api/hotel/getEmployeeDailyWorkAndRoomCleaning", {
+      const response = await fetch("http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/getEmployeeDailyWorkAndRoomCleaning", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

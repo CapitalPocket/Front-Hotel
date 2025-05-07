@@ -1,16 +1,16 @@
-import Form from '@/app/ui/redentions/create-form';
-import Breadcrumbs from '@/app/ui/tickets/breadcrumbs';
+'use client';
 
-export default function Page() {
-  const breadcrumbs = [
-    { label: 'Hoteles', href: '/dashboard/redenciones' },
-    { label: 'Editar Hotel', href: '/dashboard/redenciones/create', active: true },
-  ];
+import Link from 'next/link';
 
+export function CreateHotel({ grupo }: { grupo: string }) {
   return (
-    <main>
-      <Breadcrumbs breadcrumbs={breadcrumbs} />
-      <Form />
-    </main>
+    <Link href="/dashboard/redenciones/edit">
+      <button
+        type="button"
+        className="bg-gray-500 hover:bg-gray-700 text-white font-semibold px-6 py-2 rounded-lg transition"
+      >
+        Editar Hotel
+      </button>
+    </Link>
   );
 }

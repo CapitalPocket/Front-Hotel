@@ -4,7 +4,7 @@ import Link from 'next/link';
 import clsx from 'clsx';
 
 // ✅ Aseguramos que los íconos se importan como componentes de React
-import { FaRegCalendarAlt, FaHotel, FaMoneyBillWave, FaUsers} from 'react-icons/fa';
+import { FaRegCalendarAlt, FaHotel, FaMoneyBillWave, FaUsers, FaUserCheck } from 'react-icons/fa';
 import { LiaHotelSolid } from "react-icons/lia";
 import { GrAction } from "react-icons/gr";
 export const links = [
@@ -42,6 +42,12 @@ export const links = [
     name: "Ingreso/Salida",
     href: "/dashboard/graphs-sales",
     icon: GrAction,
+    roles: ['administrador'],
+  },
+  {
+    name: "Asignaciones",
+    href: "/dashboard/asignacion",
+    icon: FaUserCheck,
     roles: ['administrador'],
   },
   

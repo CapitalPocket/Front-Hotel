@@ -25,7 +25,7 @@ const Invoices: React.FC = () => {
         }
 
         try {
-            const response = await axios.post("/api/hotels", {
+            const response = await axios.post("http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/getAllHotel", {
                 name: hotelName,
                 latitude,
                 longitude,
@@ -54,7 +54,11 @@ const Invoices: React.FC = () => {
 
             {/* Mapa interactivo */}
             <div className="w-full h-[500px] mb-4">
-                <MapComponent onMapClick={handleMapClick} />
+                <MapComponent 
+                    onMapClick={handleMapClick} 
+                    initialLatitude={latitude || 0} 
+                    initialLongitude={longitude || 0} 
+                />
             </div>
 
             {/* Mostrar coordenadas seleccionadas */}
