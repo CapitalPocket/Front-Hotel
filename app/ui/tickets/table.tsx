@@ -19,3 +19,5 @@ export default async function InvoicesTable({
   //return <InvoicesTableClient tickets={tickets} user={user} />;
 }
 
+
+*/
