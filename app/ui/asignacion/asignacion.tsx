@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Pencil, Repeat } from 'lucide-react';
 import EditStatusModal from './editstatusmodal'; 
-import RessignModal from './ressignmodal'; // Asegúrate de que la ruta sea correcta
+import RessignModal from './ressignmodal'; 
 
 interface Assignment {
   assignment_id: number;
@@ -35,13 +35,15 @@ const AssignmentsView = () => {
     fetchAssignments();
   }, []);
 
+  // Compara la fecha UTC (fecha sin considerar zona horaria del navegador)
   const isToday = (dateStr: string) => {
     const date = new Date(dateStr);
-    const today = new Date();
+    const now = new Date();
+
     return (
-      date.getDate() === today.getDate() &&
-      date.getMonth() === today.getMonth() &&
-      date.getFullYear() === today.getFullYear()
+      date.getUTCFullYear() === now.getUTCFullYear() &&
+      date.getUTCMonth() === now.getUTCMonth() &&
+      date.getUTCDate() === now.getUTCDate()
     );
   };
 
@@ -50,15 +52,13 @@ const AssignmentsView = () => {
   };
 
   const handleReassign = (assignment: Assignment) => {
-    if (assignment) {
-      setSelectedAssignment(assignment);  // Solo establecer si el assignment no es null
-      setIsReassignModalOpen(true); // Abrir el modal de reasignación
-    }
+    setSelectedAssignment(assignment);
+    setIsReassignModalOpen(true);
   };
 
   const closeModal = () => {
     setSelectedAssignment(null);
-    setIsReassignModalOpen(false); // Cerrar el modal de reasignación
+    setIsReassignModalOpen(false);
   };
 
   return (
@@ -105,7 +105,6 @@ const AssignmentsView = () => {
         </div>
       )}
 
-      {/* Modal de edición */}
       {selectedAssignment && !isReassignModalOpen && selectedAssignment.room_number && (
         <EditStatusModal
           assignment={selectedAssignment}
@@ -114,7 +113,6 @@ const AssignmentsView = () => {
         />
       )}
 
-      {/* Modal de reasignación */}
       {selectedAssignment && isReassignModalOpen && selectedAssignment.room_number && (
         <RessignModal
           assignment={selectedAssignment}
