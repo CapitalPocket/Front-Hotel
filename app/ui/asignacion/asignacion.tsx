@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Pencil, Repeat } from 'lucide-react';
 import EditStatusModal from './editstatusmodal'; 
-import RessignModal from './ressignmodal'; 
+import RessignModal from './ressignmodal'; // Asegúrate de que la ruta sea correcta
 
 interface Assignment {
   assignment_id: number;
@@ -35,15 +35,13 @@ const AssignmentsView = () => {
     fetchAssignments();
   }, []);
 
-  // Compara la fecha UTC (fecha sin considerar zona horaria del navegador)
   const isToday = (dateStr: string) => {
     const date = new Date(dateStr);
-    const now = new Date();
-
+    const today = new Date();
     return (
-      date.getUTCFullYear() === now.getUTCFullYear() &&
-      date.getUTCMonth() === now.getUTCMonth() &&
-      date.getUTCDate() === now.getUTCDate()
+      date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear()
     );
   };
 
@@ -52,19 +50,21 @@ const AssignmentsView = () => {
   };
 
   const handleReassign = (assignment: Assignment) => {
-    setSelectedAssignment(assignment);
-    setIsReassignModalOpen(true);
+    if (assignment) {
+      setSelectedAssignment(assignment);  // Solo establecer si el assignment no es null
+      setIsReassignModalOpen(true); // Abrir el modal de reasignación
+    }
   };
 
   const closeModal = () => {
     setSelectedAssignment(null);
-    setIsReassignModalOpen(false);
+    setIsReassignModalOpen(false); // Cerrar el modal de reasignación
   };
 
   return (
     <div className="p-6 bg-gray-50 rounded-lg shadow-md">
       {assignments.filter((a) => isToday(a.created_at)).length === 0 ? (
-        <p className="text-center text-gray-500 text-lg">No hay asignaciones para hoy...</p>
+        <p className="text-center text-gray-500 text-lg">No hay asignaciones para hoy.</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {assignments
@@ -105,6 +105,7 @@ const AssignmentsView = () => {
         </div>
       )}
 
+      {/* Modal de edición */}
       {selectedAssignment && !isReassignModalOpen && selectedAssignment.room_number && (
         <EditStatusModal
           assignment={selectedAssignment}
@@ -113,6 +114,7 @@ const AssignmentsView = () => {
         />
       )}
 
+      {/* Modal de reasignación */}
       {selectedAssignment && isReassignModalOpen && selectedAssignment.room_number && (
         <RessignModal
           assignment={selectedAssignment}

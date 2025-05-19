@@ -2,52 +2,36 @@ import NextAuth from 'next-auth';
 import { authConfig } from './auth.config';
 import Credentials from 'next-auth/providers/credentials';
 import { z } from 'zod';
-import type { ApiResponse } from '@/app/lib/definitions';
-
-interface LoginResponse {
-  user?: {
-    idUser: string;
-    name: string;
-    email: string;
-    password: string;
-    rol: string;
-    park: string;
-    changePass: boolean;
-    statusprofile: string;
-  };
-  message: string;
-  token?: string;
-}
+import type { ApiResponse, LoginResponse } from '@/app/lib/definitions';
 import axios from 'axios';
 
 async function getUser(
-  email: string,
+  phone_number: string,
   password: string,
 ): Promise<LoginResponse | undefined> {
   try {
     const response = await axios.post<ApiResponse>(
+
       `http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/taquilla/loginUser`,
       { email, password },
+
     );
 
     const apiResponse = response.data;
-    const { message ,token } = apiResponse;
-
+    const { message } = apiResponse;
+    
     if (apiResponse.user) {
+      
       const user = apiResponse.user;
       return {
         user: {
-          idUser: String(user.idUser),
+          id_employee: user.id_employee.toString(),
           name: user.name,
-          email: user.email,
-          password: user.password,
-          rol: user.rol,
-          park: user.idpark,
-          changePass: user.changepassword,
+          phone_number: user.phone_number,
+          role: user.role,
           statusprofile: user.statusprofile,
         },
         message,
-        token: token,
       };
     }
     return { message };
@@ -57,19 +41,20 @@ async function getUser(
   }
 }
 
-export const {handlers, auth, signIn, signOut } = NextAuth({
+export const { auth, signIn, signOut } = NextAuth({
   ...authConfig,
+  
   secret: process.env.NEXTAUTH_SECRET || 'some-random-secret-key',
   providers: [
     Credentials({
       async authorize(credentials) {
         const parsedCredentials = z
-          .object({ email: z.string().min(3), password: z.string().min(4) })
+          .object({ phone_number: z.string().min(3), password: z.string().min(6) })
           .safeParse(credentials);
 
         if (parsedCredentials.success) {
-          const { email, password } = parsedCredentials.data;
-          const response = await getUser(email, password);
+          const { phone_number, password } = parsedCredentials.data;
+          const response = await getUser(phone_number, password);
 
           if (!response?.user) return null;
 
@@ -80,13 +65,11 @@ export const {handlers, auth, signIn, signOut } = NextAuth({
             throw new Error('User is disabled.');
           }
           return {
-            idUser: response.user.idUser,
+            id_employee: response.user.id_employee,
             name: response.user.name,
-            email: response.user.email,
-            role: response.user?.rol,
-            park: response.user?.park,
-            changePass: response.user?.changePass.toString(),
-            token: response.token,
+            phone_number: response.user.phone_number,
+            role: response.user?.role,
+            statusprofile: response.user.statusprofile,
           };
         }
         return null;

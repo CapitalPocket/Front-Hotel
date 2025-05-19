@@ -1,53 +1,52 @@
 // types/next-auth.d.ts
 import NextAuth from 'next-auth';
 import { JWT } from 'next-auth/jwt';
-
-// Define or import the Ticket type
-export interface Ticket {
-  id: string;
-  name: string;
-  selectedTicket: Ticket | null; // Ensure Ticket is defined or imported
-}
 export interface ModalProps {
+
   isOpen: boolean;
+
   onClose: () => void;
+
   children: React.ReactNode;
+
   status: string;
-  selectedTicket: Ticket | null;
+
+  selectedTicket: any;
+
   onValidate: () => void;
+
 }
 
 declare module 'next-auth' {
   interface Session {
     user: {
       idUser?: string;
-      park?: string;
+      phone_number?: string;
+      statusprofile?: string;   
       role?: string;
-      changePass?: string;
+      name?: string | null;
+      
     };
-    accessToken ?: string;
   }
   interface User {
-    idUser?: string;
-    park?: string;
+    id_employee?: string;
+    phone_number?: string;
+    statusprofile?: string;
     role?: string;
-    changePass?: string;
-    token?: string;
   }
 }
 
-
-  declare module 'next-auth/jwt' {
-    interface JWT {
-      user: {
-        role?: string;
-        idUser?: string;
-        park?: string;
-        changePass?: string;
-      };
-    }
-  }
+declare module 'next-auth/jwt' {
+  interface JWT {
+    user: {
+      role?: string;
+      id_employee?: string;
+      phone_number?: string;
+      statusprofile?: string;
+      name?: string;
+    };
+    
       
-  
-
+  }
+}
 

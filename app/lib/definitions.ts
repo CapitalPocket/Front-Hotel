@@ -1,31 +1,26 @@
 export type LoginResponse = { user?: User; message: string };
 
 export type User = {
-  idUser: string;
-  name: string;
-  email: string;
-  password: string;
-  rol: string;
-  park: string;
-  changePass?: string;
+  id_employee: string;
+  name: string; 
+  role: string;
+  phone_number: string;
   statusprofile?: string;
-  token?: string;
 };
 
-export interface ApiResponse {
+export type ApiResponse = {
+
   user?: {
-    idUser: number;
+    id_employee: string;
     name: string;
-    email: string;
     password: string;
-    rol: string;
-    idpark: string;
-    changepassword: boolean;
-    statusprofile: string;
-  };
+    role: string;
+    phone_number: string;
+    changepassword?: string;
+    statusprofile?: string;
+  }; 
   message: string;
-  token?: string; // Added the token property
-}
+};
 
 export type UserProfile = {
   id_employee: number;
