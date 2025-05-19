@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 
-export function CreateHotel({ grupo }: { grupo: string }) {
+export default function CreateHotelPage() {
   return (
     <Link href="/dashboard/redenciones/edit">
       <button
