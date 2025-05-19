@@ -64,7 +64,7 @@ const AssignmentsView = () => {
   return (
     <div className="p-6 bg-gray-50 rounded-lg shadow-md">
       {assignments.filter((a) => isToday(a.created_at)).length === 0 ? (
-        <p className="text-center text-gray-500 text-lg">No hay asignaciones para hoy.</p>
+        <p className="text-center text-gray-500 text-lg">No hay asignaciones para hoy...</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {assignments
