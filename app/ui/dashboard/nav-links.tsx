@@ -33,7 +33,7 @@ export const links = [
     roles: ['administrador'],
   },
   {
-    name: 'Hoteles',
+    name: 'Propiedades',
     href: '/dashboard/redenciones',
     icon: LiaHotelSolid,
     roles: ['administrador'],

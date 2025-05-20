@@ -82,8 +82,9 @@ interface RoomStatus {
   created_at: string; // Fecha de creación del estado de la habitación
 }
 
-interface HotelViewProps {
-  park: string; // Recibimos el nombre del hotel
+export interface HotelViewProps {
+  // ¿Está hotelId definido aquí? ¿O tiene otro nombre?
+  hotelId: number;
 }
 
 export type DateRangePickerProps = {

@@ -47,7 +47,12 @@ declare module 'next-auth' {
       };
     }
   }
-      
+   
+  interface HotelViewProps  {
+    id_hotel: number;
+    name: string;
+    hotelId: number;
+  };
   
 
 

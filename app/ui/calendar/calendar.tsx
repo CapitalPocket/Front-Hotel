@@ -1,12 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 
-interface Employee {
-  employeeName: string;
-  hotelName: string;
-  currentRoom: string; // Ej: "101A" o "101B"
-}
-
 interface RoomStatus {
   id_room: number;
   hotel_id: number;
@@ -17,11 +11,10 @@ interface RoomStatus {
 }
 
 interface HotelViewProps {
-  park: string;
+  hotelId: string;
 }
 
 const statusColors: Record<string, string> = {
-  
   'V/C': '#1B5E20',       // Verde bosque
   'O': '#FF6F00',         // Naranja intenso
   'V/D': '#B71C1C',       // Rojo sangre
@@ -39,43 +32,29 @@ const statusColors: Record<string, string> = {
   'REMO PROJECT': '#AD1457', // Rosa oscuro
   'F/S': '#1A237E',       // Azul marino fuerte
   'N/A': '#9E9E9E'        // Gris neutro
-  };
-  
+};
 
-
-const groupedRooms = [
-  { floor: 7, rooms: [701, 702, 703, 704, 705, 706] },
-  { floor: 6, rooms: [601, 602, 603, 604, 605, 606] },
-  { floor: 5, rooms: [501, 502, 503, 504, 505, 506, 507, 508] },
-  { floor: 4, rooms: [401, 402, 403, 404, 405, 406, 407, 408, 409, 410] },
-  { floor: 3, rooms: [301, 302, 303, 304, 305, 306, 307, 308, 309, 310] },
-  { floor: 2, rooms: [201, 202, 203, 204, 205, 206, 207, 208, 209, 210] },
-  { floor: 1, rooms: [101, 102, 103, 104, 105, 106, 107, 108, 109, 110] },
-];
-
-const HotelView: React.FC<HotelViewProps> = ({ park }) => {
+const HotelView: React.FC<HotelViewProps> = ({ hotelId }) => {
   const [roomStatuses, setRoomStatuses] = useState<RoomStatus[]>([]);
   const hotelViewRef = useRef<HTMLDivElement>(null);
 
-  // Convertir "heron i" a 1 y "heron ii" a 2
-  const hotelId = park === 'Heron I' ? 1 : park === 'Heron II' ? 2 : 0;
+  const resolvedHotelId = parseInt(hotelId, 10) || 0;
 
   useEffect(() => {
     if (hotelViewRef.current) {
       hotelViewRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
-
     const fetchRoomStatuses = async () => {
       try {
         const response = await axios.post(
           `http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/getAllRoomStatus`,
-          {hotel_id: hotelId }  // Usamos el hotelId calculado
-
+          { hotel_id: resolvedHotelId }
         );
 
         const allStatuses: RoomStatus[] = response.data || [];
 
+        // Obtener el último estado por habitación y categoría
         const latestRoomStatuses = Object.values(
           allStatuses.reduce((acc, room) => {
             const key = `${room.room_number}-${room.category}`;
@@ -93,17 +72,48 @@ const HotelView: React.FC<HotelViewProps> = ({ park }) => {
     };
 
     fetchRoomStatuses();
-  }, [hotelId]); // Cambié de park a hotelId aquí para que reaccione a cambios en hotelId
+  }, [hotelId]);
 
+  // Función para agrupar habitaciones por piso (primer dígito del room_number)
+  const groupedRoomsByFloor = React.useMemo(() => {
+    const groups: Record<number, number[]> = {};
+
+    // Obtenemos sólo los números de habitación únicos
+    const uniqueRooms = Array.from(
+      new Set(roomStatuses.map(r => parseInt(r.room_number)))
+    );
+
+    uniqueRooms.forEach(roomNum => {
+      const floor = Math.floor(roomNum / 100); // primer dígito (ej: 701 -> 7)
+      if (!groups[floor]) groups[floor] = [];
+      groups[floor].push(roomNum);
+    });
+
+    // Ordenamos pisos y habitaciones
+    const sortedFloors = Object.keys(groups)
+      .map(Number)
+      .sort((a, b) => b - a); // pisos descendentes
+
+    return sortedFloors.map(floor => ({
+      floor,
+      rooms: groups[floor].sort((a, b) => a - b),
+    }));
+  }, [roomStatuses]);
+
+  // Dividir en dos columnas
+  const half = Math.ceil(groupedRoomsByFloor.length / 2);
+  const [leftFloors, rightFloors] = [
+    groupedRoomsByFloor.slice(0, half),
+    groupedRoomsByFloor.slice(half),
+  ];
+
+  // Obtener color de estado para la habitación y categoría
   const getStatusColor = (room: number, category: 'A' | 'B') => {
     const status = roomStatuses.find(
-      (r) => r.room_number === room.toString() && r.category === category
+      r => r.room_number === room.toString() && r.category === category
     )?.status;
     return statusColors[status || 'N/A'] || '#ccc';
   };
-
-  const half = Math.ceil(groupedRooms.length / 2);
-  const [leftFloors, rightFloors] = [groupedRooms.slice(0, half), groupedRooms.slice(half)];
 
   return (
     <div ref={hotelViewRef} className="hotel-view">
@@ -117,13 +127,13 @@ const HotelView: React.FC<HotelViewProps> = ({ park }) => {
         ))}
       </div>
 
-      {/* Habitaciones */}
+      {/* Habitaciones dinámicas agrupadas por piso */}
       <div className="room-columns">
         {[leftFloors, rightFloors].map((column, i) => (
           <div key={i} className="room-column">
-            {column.map((group) => (
+            {column.map(group => (
               <div key={group.floor} className="floor-row">
-                {group.rooms.map((room) => (
+                {group.rooms.map(room => (
                   <div key={room} className="hex">
                     <div className="room-number">Hab. {room}</div>
                     <div className="split">
@@ -141,7 +151,6 @@ const HotelView: React.FC<HotelViewProps> = ({ park }) => {
                       </div>
                     </div>
                   </div>
-
                 ))}
               </div>
             ))}
@@ -149,7 +158,7 @@ const HotelView: React.FC<HotelViewProps> = ({ park }) => {
         ))}
       </div>
 
-
+      {/* Estilos igual que antes */}
       <style jsx>{`
         .hotel-view {
           display: flex;
@@ -159,18 +168,28 @@ const HotelView: React.FC<HotelViewProps> = ({ park }) => {
         }
 
         .legend {
-          display: flex;
-          flex-wrap: wrap;
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
           gap: 12px;
           margin-bottom: 24px;
-          justify-content: center;
+          width: 100%;
+          max-width: 800px;
+          background: #f0f4f8;
+          padding: 16px;
+          border-radius: 12px;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
         }
 
         .legend-item {
           display: flex;
           align-items: center;
-          gap: 6px;
-          font-size: 0.9rem;
+          gap: 8px;
+          background: white;
+          padding: 6px 10px;
+          border-radius: 8px;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+          font-size: 0.85rem;
+          font-weight: 500;
         }
 
         .color-box {
@@ -233,31 +252,6 @@ const HotelView: React.FC<HotelViewProps> = ({ park }) => {
 
         .b {
           border-left: 1px solid #fff;
-        }
-
-        .legend {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-          gap: 12px;
-          margin-bottom: 24px;
-          width: 100%;
-          max-width: 800px;
-          background: #f0f4f8;
-          padding: 16px;
-          border-radius: 12px;
-          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-        }
-
-        .legend-item {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          background: white;
-          padding: 6px 10px;
-          border-radius: 8px;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-          font-size: 0.85rem;
-          font-weight: 500;
         }
       `}</style>
     </div>
