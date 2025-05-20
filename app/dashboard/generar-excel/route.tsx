@@ -1,10 +1,12 @@
-import { NextResponse } from 'next/server';
+/*import { NextResponse } from 'next/server';
 import XlsxPopulate from 'xlsx-populate';
 //import { fetchInvoices } from '@/app/lib/data';
 import { string } from 'zod';
 
 
 
+
+/*
 export async function GET(request: any, { params }: any) {
   try {
     //const url = new URL(request.url);
@@ -79,4 +81,4 @@ export async function GET(request: any, { params }: any) {
       { status: 500 },
     );
   }
-}
+}*/

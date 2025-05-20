@@ -15,31 +15,20 @@ const Page = () => {
   const [selectedRole, setSelectedRole] = useState<{ value: string; label: string } | null>(null);
 
   useEffect(() => {
-      const fetchEmployees = async () => {
-        try {
-          const response = await fetch(
-            'http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/getAllEmployees',
-            {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({})  // No filtramos por rol
-            }
-          );
-    
-          if (!response.ok) throw new Error("Error fetching employees");
-    
-          const data = await response.json();
+    const fetchEmployees = async () => {
+      try {
+        const response = await fetch(`http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/getAllEmployees`);
+        if (!response.ok) throw new Error("Error fetching employees");
+        const data = await response.json();
+        if (Array.isArray(data)) {
           setEmployees(data);
-        } catch (error) {
-          console.error("Error:", error);
         }
-      };
-    
-      fetchEmployees();
-    }, []);
-    
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchEmployees();
+  }, []);
 
   const generateVerificationCode = () => {
     return Math.floor(100000 + Math.random() * 900000).toString(); // Código de 6 dígitos
@@ -68,7 +57,7 @@ const Page = () => {
       setVerificationCode(newCode);
       sendVerificationCodeToAPI(selectedEmployee.phone, newCode, selectedRole?.value || "");
     }
-  }, [selectedEmployee, selectedHotel, entryType, selectedRole?.value]);
+  }, [selectedEmployee, selectedHotel, entryType]);
 
   const generateWhatsAppLink = () => {
     if (!selectedEmployee || !selectedHotel || !entryType) return "";
