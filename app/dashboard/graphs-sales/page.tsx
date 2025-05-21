@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { QRCodeCanvas } from "qrcode.react";
 import Select from "react-select";
 import { motion } from "framer-motion";
+import axios from "axios";
 
 const Page = () => {
   const [employees, setEmployees] = useState<{ id_employee: string; name: string; phone_number: string }[]>([]);
@@ -64,6 +65,27 @@ const Page = () => {
     const message = `${actionCode}: ${verificationCode}`;
     return `https://wa.me/17863403034?text=${encodeURIComponent(message)}`;
   };
+
+  const [hotels, setHotels] = useState<{ id_hotel: number; name: string }[]>([]);
+
+  useEffect(() => {
+    const fetchHotels = async () => {
+      try {
+        const response = await axios.get('http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/getAllHotel');
+        if (Array.isArray(response.data)) {
+          setHotels(response.data);
+        } else {
+          console.error('La respuesta de hoteles no es un array.');
+        }
+      } catch (error) {
+        console.error('Error al obtener hoteles:', error);
+      }
+    };
+
+    fetchHotels();
+  }, []);
+
+  
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-10">
@@ -140,15 +162,16 @@ const Page = () => {
           </div>
 
           <div>
-            <label className="block text-lg font-medium text-gray-700 mb-2">Propiedades</label>
-            <Select
-              options={[
-                { value: "1", label: "Heron I" },
-                { value: "2", label: "Heron II" },
-              ]}
-              onChange={setSelectedHotel}
+          <label className="block text-lg font-medium text-gray-700 mb-2">Propiedades</label>
+          <Select
+              options={hotels.map((hotel) => ({
+                value: hotel.id_hotel.toString(),
+                label: hotel.name,
+              }))}
+              onChange={setSelectedHotel}  // 👈 FALTABA ESTO
               value={selectedHotel}
               placeholder="Seleccionar..."
+              className="w-full"
               styles={{
                 control: (base) => ({
                   ...base,
@@ -158,7 +181,9 @@ const Page = () => {
                 }),
               }}
             />
-          </div>
+
+        </div>
+
 
           <div>
             <label className="block text-lg font-medium text-gray-700 mb-2">Acción</label>
@@ -205,3 +230,5 @@ const Page = () => {
 };
 
 export default Page;
+
+

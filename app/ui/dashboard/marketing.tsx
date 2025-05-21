@@ -36,7 +36,7 @@ const links = [
     roles: ["administrador"],
   },
   {
-    name: "Hoteles",
+    name: "Propiedades",
     href: "/dashboard/redentions",
     icon: LiaHotelSolid,
     description: "Administra la creación y almacenamiento de hoteles, gestionando su información de manera eficiente.",

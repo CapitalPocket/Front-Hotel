@@ -36,17 +36,23 @@ declare module 'next-auth' {
   }
 }
 
-declare module 'next-auth/jwt' {
-  interface JWT {
-    user: {
-      role?: string;
-      id_employee?: string;
-      phone_number?: string;
-      statusprofile?: string;
-      name?: string;
-    };
-    
-      
+  declare module 'next-auth/jwt' {
+    interface JWT {
+      user: {
+        role?: string;
+        idUser?: string;
+        park?: string;
+        changePass?: string;
+      };
+    }
   }
-}
+   
+  interface HotelViewProps  {
+    id_hotel: number;
+    name: string;
+    hotelId: number;
+  };
+  
+
+
 
