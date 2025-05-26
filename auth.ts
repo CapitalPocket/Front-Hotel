@@ -7,6 +7,7 @@ import axios from 'axios';
 
 async function getUser(
   phone_number: string,
+  email: string,
   password: string,
 ): Promise<LoginResponse | undefined> {
   try {
@@ -54,7 +55,7 @@ export const { auth, signIn, signOut } = NextAuth({
 
         if (parsedCredentials.success) {
           const { phone_number, password } = parsedCredentials.data;
-          const response = await getUser(phone_number, password);
+          const response = await getUser(phone_number, phone_number, password);
 
           if (!response?.user) return null;
 

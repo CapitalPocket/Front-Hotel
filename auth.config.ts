@@ -53,14 +53,13 @@ export const authConfig = {
           '/dashboard/candidatos',
           '/dashboard/candidatos/create',
           '/dashboard/redenciones',
-
-          '/dashboard/generar-excel',
-          '/dashboard/redenciones/create',
-          '/dashboard/redenciones/edit',  
-          '/dashboard/asignacion',
-
+         
+          '/dashboard/devoluciones',
+          '/dashboard/candidatos/*/edit',
         ],
-        
+      
+       
+       
       };
       
       if (isOnDashboard) {
