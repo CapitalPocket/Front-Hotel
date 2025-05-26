@@ -72,7 +72,7 @@ const HotelView: React.FC<HotelViewProps> = ({ hotelId }) => {
     };
 
     fetchRoomStatuses();
-  }, [hotelId]);
+  }, [resolvedHotelId]);
 
   // Función para agrupar habitaciones por piso (primer dígito del room_number)
   const groupedRoomsByFloor = React.useMemo(() => {
