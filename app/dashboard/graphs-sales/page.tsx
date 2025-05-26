@@ -57,7 +57,7 @@ const Page = () => {
       setVerificationCode(newCode);
       sendVerificationCodeToAPI(selectedEmployee.phone, newCode, selectedRole?.value || "");
     }
-  }, [selectedEmployee, selectedHotel, entryType]);
+  }, [selectedEmployee, selectedHotel, entryType, selectedRole?.value]);
 
   const generateWhatsAppLink = () => {
     if (!selectedEmployee || !selectedHotel || !entryType) return "";
