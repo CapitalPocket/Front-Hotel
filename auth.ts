@@ -3,7 +3,7 @@ import { authConfig } from './auth.config';
 import Credentials from 'next-auth/providers/credentials';
 import { z } from 'zod';
 import type { ApiResponse } from '@/app/lib/definitions';
-
+// Define the structure of the response from the API
 interface LoginResponse {
   user?: {
     idUser: string;

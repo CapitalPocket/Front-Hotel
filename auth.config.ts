@@ -45,7 +45,7 @@ export const authConfig = {
           '/dashboard/candidatos',
           '/dashboard/candidatos/create',
           '/dashboard/redenciones',
-          '/dashboard/generar-excel',
+ 
           '/dashboard/devoluciones',
           '/dashboard/candidatos/*/edit',
         ],
@@ -62,7 +62,7 @@ export const authConfig = {
           '/dashboard/invoices',
           '/dashboard/parks',
           '/dashboard/portfolio',
-          '/dashboard/generar-excel',
+ 
         ],
       };
 
