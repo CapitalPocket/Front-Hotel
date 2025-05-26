@@ -2,7 +2,24 @@ import NextAuth from 'next-auth';
 import { authConfig } from './auth.config';
 import Credentials from 'next-auth/providers/credentials';
 import { z } from 'zod';
-import type { ApiResponse, LoginResponse } from '@/app/lib/definitions';
+
+import type { ApiResponse } from '@/app/lib/definitions';
+// Define the structure of the response from the API
+interface LoginResponse {
+  user?: {
+    idUser: string;
+    name: string;
+    email: string;
+    password: string;
+    rol: string;
+    park: string;
+    changePass: boolean;
+    statusprofile: string;
+  };
+  message: string;
+  token?: string;
+}
+
 import axios from 'axios';
 
 async function getUser(

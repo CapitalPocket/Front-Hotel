@@ -53,13 +53,27 @@ export const authConfig = {
           '/dashboard/candidatos',
           '/dashboard/candidatos/create',
           '/dashboard/redenciones',
-         
+
+ 
           '/dashboard/devoluciones',
           '/dashboard/candidatos/*/edit',
         ],
-      
-       
-       
+        taquillero: ['/dashboard', '/dashboard/tickets'],
+        supervisor: [
+          '/dashboard',
+          '/dashboard/tickets',
+          '/dashboard/redenciones',
+        ],
+        marketing: [
+          '/dashboard',
+          '/dashboard/graphs-sales',
+          '/dashboard/graphs-interactions',
+          '/dashboard/invoices',
+          '/dashboard/parks',
+          '/dashboard/portfolio',
+ 
+        ],
+
       };
       
       if (isOnDashboard) {
