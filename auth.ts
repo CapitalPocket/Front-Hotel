@@ -85,9 +85,13 @@ export const { auth, signIn, signOut } = NextAuth({
           return {
             id_employee: response.user.id_employee,
             name: response.user.name,
-            phone_number: response.user.phone_number,
-            role: response.user?.role,
-            statusprofile: response.user.statusprofile,
+
+            email: response.user.email,
+            role: response.user?.rol,
+            park: response.user?.park,
+            changePass: Boolean(response.user?.changePass),
+            token: response.token,
+
           };
         }
         return null;

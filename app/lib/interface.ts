@@ -30,10 +30,13 @@ declare module 'next-auth' {
   }
 
   interface User {
-    id_employee?: string;
-    phone_number?: string;
-    statusprofile?: string;
+
+    idUser?: string;
     role?: string;
+    park?: string;
+    changePass?: boolean;
+    token?: string;
+
   }
 }
 
