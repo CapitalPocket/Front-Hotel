@@ -12,23 +12,23 @@ interface EditStatusModalProps {
 }
 
 const statusColors: { [key: string]: string } = {
-  'V/C': '#1B5E20',
-  'O': '#FF6F00',
-  'V/D': '#B71C1C',
-  'OOO': '#424242',
-  'CLEAN/IN': '#0D47A1',
-  'P/S': '#4A148C',
-  'DEV': '#FDD835',
-  'RM': '#3E2723',
-  'S/O': '#00695C',
-  'E/CH': '#0288D1',
-  'MT/IN': '#558B2F',
-  'MT/OUT': '#AFB42B',
-  'DEP': '#BF360C',
-  'CALL': '#263238',
-  'REMO PROJECT': '#AD1457',
-  'F/S': '#1A237E',
-  'N/A': '#9E9E9E'
+  'V/C': '#1B5E20',       // Verde bosque
+  'O': '#FF6F00',         // Naranja intenso
+  'V/D': '#B71C1C',       // Rojo sangre
+  'OOO': '#424242',       // Gris carbón
+  'CLEAN/IN': '#0D47A1',  // Azul fuerte
+  'P/S': '#4A148C',       // Púrpura profundo
+  'DEV': '#FDD835',       // Amarillo vibrante
+  'RM': '#3E2723',        // Marrón muy oscuro
+  'S/O': '#00695C',       // Verde azulado
+  'E/CH': '#0288D1',      // Azul cielo fuerte
+  'MT/IN': '#558B2F',     // Verde oliva
+  'MT/OUT': '#AFB42B',    // Amarillo oliva
+  'DEP': '#BF360C',       // Naranja quemado
+  'CALL': '#263238',      // Azul grisáceo muy oscuro
+  'REMO PROJECT': '#AD1457', // Rosa oscuro
+  'F/S': '#1A237E',       // Azul marino fuerte
+  'N/A': '#9E9E9E'        // Gris neutro
 };
 
 const EditStatusModal: React.FC<EditStatusModalProps> = ({ assignment, onClose, onUpdated }) => {
@@ -68,44 +68,38 @@ const EditStatusModal: React.FC<EditStatusModalProps> = ({ assignment, onClose, 
 
         <div className="mb-4">
           <label className="block mb-2 text-sm font-medium text-gray-400">Nuevo estado:</label>
-          <div className="bg-gray-700 border border-gray-600 rounded-md max-h-60 overflow-y-auto">
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            className="w-full p-3 bg-gray-700 border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 text-gray-100"
+          >
             {Object.keys(statusColors).map((key) => (
-              <div
+              <option
                 key={key}
-                onClick={() => setStatus(key)}
-                className={`flex items-center px-4 py-2 cursor-pointer hover:bg-gray-600 ${
-                  key === status ? 'bg-gray-600' : ''
-                }`}
+                value={key}
+                style={{ backgroundColor: statusColors[key], color: '#fff' }}
               >
-                <span
-                  className="w-4 h-4 rounded-full mr-3"
-                  style={{ backgroundColor: statusColors[key] }}
-                ></span>
-                <span className="text-gray-100">{key}</span>
-              </div>
+                {key}
+              </option>
             ))}
-          </div>
+          </select>
         </div>
 
         <div className="flex justify-end gap-3 mt-6">
-        <button
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded-md bg-gray-600 hover:bg-gray-500 text-white font-medium transition-all duration-200"
+            disabled={loading}
+          >
+            Cancelar
+          </button>
+          <button
             onClick={handleSave}
             className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-all duration-200"
             disabled={loading}
           >
             {loading ? 'Guardando...' : 'Guardar'}
           </button>
-          <button
-            onClick={onClose}
-             className="bg-gray-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-all"
-            disabled={loading}
-          >
-
-
-            
-            Cancelar
-          </button>
-         
         </div>
       </div>
     </div>
