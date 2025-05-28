@@ -22,10 +22,11 @@ export const authConfig = {
       if (user) {
         token.id_employee = user.id_employee;
         token.role = user.role;
-        token.name = user.name;
-        token.phone_number = (user as User).phone_number;
-        token.statusprofile = (user as User).statusprofile;
+
+        token.park = user.park;
         
+        token.accessToken = user.token;
+
       }
       return token;
     },

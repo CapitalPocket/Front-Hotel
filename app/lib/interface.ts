@@ -19,15 +19,16 @@ export interface ModalProps {
 
 declare module 'next-auth' {
   interface Session {
-    user: {
+    accessToken?: string;
+    user?: {
       idUser?: string;
-      phone_number?: string;
-      statusprofile?: string;   
       role?: string;
-      name?: string | null;
-      
+      park?: string;
+      changePass?: boolean;
+
     };
   }
+
   interface User {
     id_employee?: string;
     phone_number?: string;
@@ -38,12 +39,11 @@ declare module 'next-auth' {
 
   declare module 'next-auth/jwt' {
     interface JWT {
-      user: {
-        role?: string;
-        idUser?: string;
-        park?: string;
-        changePass?: string;
-      };
+      accessToken?: string;
+      idUser?: string;
+      role?: string;
+      park?: string;
+      changePass?: boolean;
     }
   }
    
