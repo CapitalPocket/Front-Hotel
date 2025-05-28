@@ -85,7 +85,7 @@ export const {handlers, auth, signIn, signOut } = NextAuth({
             email: response.user.email,
             role: response.user?.rol,
             park: response.user?.park,
-            changePass: response.user?.changePass.toString(),
+            changePass: Boolean(response.user?.changePass),
             token: response.token,
           };
         }

@@ -30,13 +30,12 @@ declare module 'next-auth' {
 
   interface User {
     idUser?: string;
-    park?: string;
     role?: string;
-    changePass?: string;
+    park?: string;
+    changePass?: boolean;
     token?: string;
   }
 }
-
 
   declare module 'next-auth/jwt' {
     interface JWT {
