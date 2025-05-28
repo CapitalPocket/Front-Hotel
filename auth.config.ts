@@ -16,7 +16,7 @@ export const authConfig = {
         token.idUser = user.idUser;
         token.role = user.role;
         token.park = user.park;
-        token.changePass = user.changePass;
+        
         token.accessToken = user.token;
       }
       return token;
