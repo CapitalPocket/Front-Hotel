@@ -16,6 +16,8 @@ export const config = {
    const secret = process.env.NEXTAUTH_SECRET || 'some-random-secret-key';
   const token = await getToken({ req, secret });
    const url = req.nextUrl; 
+   console.log("soy yo",url)
+   console.log("Mi perro",req.url)
    if (!token) {
      if (url.pathname !== '/') {
       return NextResponse.redirect(new URL('/dashboard', req.url)); 
