@@ -1,6 +1,18 @@
-import type { NextAuthConfig } from 'next-auth';
+import type { NextAuthConfig, User as NextAuthUser } from 'next-auth';
+import type { Response } from 'express';
+interface User extends NextAuthUser {
+  phone_number?: string;
+  statusprofile?: string;
+}
+
 
 type Role = 'administrador' | 'supervisor' | 'marketing' | 'taquillero';
+
+// Validar si un valor es un Role permitido
+const isRole = (role: any): role is Role =>
+  ['administrador', 'supervisor', 'marketing', 'taquillero'].includes(role);
+
+
 export const authConfig = {
   pages: {
     signIn: '/login',
@@ -8,11 +20,13 @@ export const authConfig = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.idUser = user.idUser;
+        token.id_employee = user.id_employee;
         token.role = user.role;
+
         token.park = user.park;
-        token.changePass = user.changePass;
+        
         token.accessToken = user.token;
+
       }
       return token;
     },
@@ -20,23 +34,28 @@ export const authConfig = {
     async session({ session, token }) {
       if (session.user && typeof token.role === 'string') {
         (session.user as any).role = token.role;
-        (session.user as any).park = token.park;
-        (session.user as any).idUser = token.idUser;
-        (session.user as any).changePass = token.changePass;
+        (session.user as any).id_employee = token.id_employee;
+        (session.user as any).name = token.name;  
+        (session.user as any).phone_number = token.phone_number;
+        (session.user as any).statusprofile = token.status
+
       }
-      session.accessToken = token.accessToken as string | undefined; // Asegurar el tipo
+
+      session.accessToken = token.accessToken as string | undefined;
+
       return session;
     },
+
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
       const isOnDashboard = nextUrl.pathname.startsWith('/dashboard');
-      const userRole = auth?.user?.role as Role | null;
+      const rawRole = auth?.user?.role;
+      const userRole = isRole(rawRole) ? rawRole : null;
 
-      // Definir las rutas y roles autorizados
       const rolePermissions: Record<Role, string[]> = {
         administrador: [
           '/dashboard',
-          '/dashboard/tickets',
+          /*'/dashboard/tickets',*/
           '/dashboard/graphs-sales',
           '/dashboard/graphs-interactions',
           '/dashboard/invoices',
@@ -45,7 +64,7 @@ export const authConfig = {
           '/dashboard/candidatos',
           '/dashboard/candidatos/create',
           '/dashboard/redenciones',
-          '/dashboard/generar-excel',
+
           '/dashboard/devoluciones',
           '/dashboard/candidatos/*/edit',
         ],
@@ -62,75 +81,52 @@ export const authConfig = {
           '/dashboard/invoices',
           '/dashboard/parks',
           '/dashboard/portfolio',
-          '/dashboard/generar-excel',
         ],
-      };
 
+      };
+      
       if (isOnDashboard) {
         const pathSegments = nextUrl.pathname.split('/');
+
         const isGenerarExcelRoute = pathSegments[2] === 'generar-excel';
 
-        if (isOnDashboard) {
-          const allowedRoutes =
-            userRole && rolePermissions[userRole]
-              ? rolePermissions[userRole]
-              : [];
-          const currentPath = nextUrl.pathname;
-          if (
-            userRole === 'administrador' &&
-            /^\/dashboard\/candidatos\/\d+\/edit$/.test(currentPath)
-          ) {
-            return true;
-          }
-          if (
-            allowedRoutes.includes(currentPath) ||
-            allowedRoutes.some(
-              (route) =>
-                route.endsWith('*') &&
-                currentPath.startsWith(route.replace('*', '')),
-            )
-          ) {
-            return true;
-          }
-          return Response.redirect(new URL('/login', nextUrl));
+        const allowedRoutes = userRole ? rolePermissions[userRole] : [];
+        const currentPath = nextUrl.pathname;
+
+        if (
+          userRole === 'administrador' &&
+          /^\/dashboard\/candidatos\/\d+\/edit$/.test(currentPath)
+        ) {
+          return true;
         }
 
-        // Si la ruta es "generar-excel" con parámetros dinámicos
-        if (isGenerarExcelRoute) {
-          const allowedRoutes =
-            userRole && rolePermissions[userRole]
-              ? rolePermissions[userRole]
-              : [];
-          if (allowedRoutes.some((route) => route.includes('generar-excel'))) {
-            return true; // Acceso permitido
-          } else {
-            return Response.redirect(new URL('/login', nextUrl)); // Redirigir si no tiene permiso
-          }
+        if (
+          allowedRoutes.includes(currentPath) ||
+          allowedRoutes.some(
+            (route) =>
+              route.endsWith('*') &&
+              currentPath.startsWith(route.replace('*', '')),
+          )
+        ) {
+          return true;
         }
 
-        if (isLoggedIn) {
-          const allowedRoutes =
-            userRole && rolePermissions[userRole]
-              ? rolePermissions[userRole]
-              : [];
-          // Verificar si el usuario tiene permiso para acceder a la ruta actual
-          if (allowedRoutes.includes(nextUrl.pathname)) {
-            return true; // Acceso permitido
-          } else {
-            // Si el usuario no tiene permiso, redirigir a una ruta de error o al dashboard
-            return Response.redirect(new URL('/login', nextUrl));
-          }
-        } else {
-          // Si no está logueado, no permitir el acceso
-          return false;
-        }
-      } else if (isLoggedIn) {
-        // Si está logueado, redirigir al dashboard si intenta acceder a rutas no protegidas
-        return Response.redirect(new URL('/dashboard', nextUrl));
+        return Response.redirect(new URL('/login', nextUrl));
       }
+
+      if (isLoggedIn) {
+        return Response.redirect(new URL('/dashboard', nextUrl));
+
+      }
+
       return true;
     },
   },
   providers: [],
-  session: { strategy: 'jwt', maxAge: 4 * 60 * 60 },
+
+  session: {
+    strategy: 'jwt',
+    maxAge: 4 * 60 * 60, // 4 hours
+  },
+
 } satisfies NextAuthConfig;
