@@ -2,8 +2,24 @@ import NextAuth from 'next-auth';
 import { authConfig } from './auth.config';
 import Credentials from 'next-auth/providers/credentials';
 import { z } from 'zod';
-import type { ApiResponse } from '@/app/lib/definitions';
 
+
+// Extend the ApiResponse type to include the token property
+interface ApiResponse {
+  user?: {
+    idUser: string;
+    name: string;
+    email: string;
+    password: string;
+    rol: string;
+    idpark: string;
+    changepassword: boolean;
+    statusprofile: string;
+  };
+  message: string;
+  token?: string;
+}
+// Define the structure of the response from the API
 interface LoginResponse {
   user?: {
     idUser: string;
@@ -32,7 +48,7 @@ async function getUser(
     );
 
     const apiResponse = response.data;
-    const { message ,token } = apiResponse;
+    const { message , token } = apiResponse;
 
     if (apiResponse.user) {
       const user = apiResponse.user;
@@ -86,7 +102,7 @@ export const {handlers, auth, signIn, signOut } = NextAuth({
             email: response.user.email,
             role: response.user?.rol,
             park: response.user?.park,
-            changePass: response.user?.changePass.toString(),
+            changePass: Boolean(response.user?.changePass),
             token: response.token,
           };
         }

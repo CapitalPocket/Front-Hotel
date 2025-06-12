@@ -132,3 +132,12 @@ interface IResponse {
   invoice_electronic: boolean;
   price_ticket: string;
 }
+
+
+
+
+
+
+
+
+

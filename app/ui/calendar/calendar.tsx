@@ -37,10 +37,9 @@ const statusColors: Record<string, string> = {
 const HotelView: React.FC<HotelViewProps> = ({ hotelId }) => {
   const [roomStatuses, setRoomStatuses] = useState<RoomStatus[]>([]);
   const hotelViewRef = useRef<HTMLDivElement>(null);
-
+  const resolvedHotelId = parseInt(hotelId, 10) || 0;
 
   useEffect(() => {
-    const resolvedHotelId = parseInt(hotelId, 10) || 0;
 
     if (hotelViewRef.current) {
       hotelViewRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -73,7 +72,7 @@ const HotelView: React.FC<HotelViewProps> = ({ hotelId }) => {
     };
 
     fetchRoomStatuses();
-  }, [hotelId]);
+  }, [resolvedHotelId]);
 
   // Función para agrupar habitaciones por piso (primer dígito del room_number)
   const groupedRoomsByFloor = React.useMemo(() => {
