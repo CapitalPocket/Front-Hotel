@@ -20,6 +20,7 @@ export type ApiResponse = {
     statusprofile?: string;
   }; 
   message: string;
+  token?: string; // Added token property to match the API response
 };
 
 export type UserProfile = {

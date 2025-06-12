@@ -1,17 +1,10 @@
-import type { NextAuthConfig, User as NextAuthUser } from 'next-auth';
-import type { Response } from 'express';
-interface User extends NextAuthUser {
-  phone_number?: string;
-  statusprofile?: string;
-}
-
+import type { NextAuthConfig } from 'next-auth';
 
 type Role = 'administrador' | 'supervisor' | 'marketing' | 'taquillero';
 
 // Validar si un valor es un Role permitido
 const isRole = (role: any): role is Role =>
   ['administrador', 'supervisor', 'marketing', 'taquillero'].includes(role);
-
 
 export const authConfig = {
   pages: {
@@ -20,13 +13,11 @@ export const authConfig = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id_employee = user.id_employee;
+        token.id_employee = user.idUser;
         token.role = user.role;
-
         token.park = user.park;
-        
+        token.changePass = user.changePass;
         token.accessToken = user.token;
-
       }
       return token;
     },
@@ -34,15 +25,12 @@ export const authConfig = {
     async session({ session, token }) {
       if (session.user && typeof token.role === 'string') {
         (session.user as any).role = token.role;
-        (session.user as any).id_employee = token.id_employee;
-        (session.user as any).name = token.name;  
-        (session.user as any).phone_number = token.phone_number;
-        (session.user as any).statusprofile = token.status
-
+        (session.user as any).park = token.park;
+        (session.user as any).idUser = token.id_employee;
+        (session.user as any).changePass = token.changePass;
       }
 
-      session.accessToken = token.accessToken as string | undefined;
-
+      session.accessToken = token.accessToken;
       return session;
     },
 
@@ -55,7 +43,7 @@ export const authConfig = {
       const rolePermissions: Record<Role, string[]> = {
         administrador: [
           '/dashboard',
-          /*'/dashboard/tickets',*/
+          '/dashboard/tickets',
           '/dashboard/graphs-sales',
           '/dashboard/graphs-interactions',
           '/dashboard/invoices',
@@ -64,16 +52,11 @@ export const authConfig = {
           '/dashboard/candidatos',
           '/dashboard/candidatos/create',
           '/dashboard/redenciones',
-
           '/dashboard/devoluciones',
           '/dashboard/candidatos/*/edit',
         ],
         taquillero: ['/dashboard', '/dashboard/tickets'],
-        supervisor: [
-          '/dashboard',
-          '/dashboard/tickets',
-          '/dashboard/redenciones',
-        ],
+        supervisor: ['/dashboard', '/dashboard/tickets', '/dashboard/redenciones'],
         marketing: [
           '/dashboard',
           '/dashboard/graphs-sales',
@@ -82,16 +65,12 @@ export const authConfig = {
           '/dashboard/parks',
           '/dashboard/portfolio',
         ],
-
       };
-      
+
       if (isOnDashboard) {
         const pathSegments = nextUrl.pathname.split('/');
-
-        const isGenerarExcelRoute = pathSegments[2] === 'generar-excel';
-
-        const allowedRoutes = userRole ? rolePermissions[userRole] : [];
         const currentPath = nextUrl.pathname;
+        const allowedRoutes = userRole ? rolePermissions[userRole] : [];
 
         if (
           userRole === 'administrador' &&
@@ -105,7 +84,7 @@ export const authConfig = {
           allowedRoutes.some(
             (route) =>
               route.endsWith('*') &&
-              currentPath.startsWith(route.replace('*', '')),
+              currentPath.startsWith(route.replace('*', ''))
           )
         ) {
           return true;
@@ -116,17 +95,14 @@ export const authConfig = {
 
       if (isLoggedIn) {
         return Response.redirect(new URL('/dashboard', nextUrl));
-
       }
 
       return true;
     },
   },
   providers: [],
-
   session: {
     strategy: 'jwt',
-    maxAge: 4 * 60 * 60, // 4 hours
+    maxAge: 4 * 60 * 60, // 4 horas
   },
-
 } satisfies NextAuthConfig;

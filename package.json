@@ -32,7 +32,7 @@
     "autoprefixer": "10.4.15",
     "axios": "^1.7.9",
     "bcrypt": "^5.1.1",
-    "caniuse-lite": "^1.0.30001653",
+    "caniuse-lite": "^1.0.30001722",
     "chart.js": "^4.4.7",
     "clsx": "^2.0.0",
     "date-fns": "^4.1.0",
@@ -68,7 +68,6 @@
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.1",
-    "@types/express": "^5.0.2",
     "@types/leaflet": "^1.9.17",
     "@types/qrcode.react": "^3.0.0",
     "@types/react": "18.2.21",

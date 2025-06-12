@@ -37,10 +37,10 @@ const statusColors: Record<string, string> = {
 const HotelView: React.FC<HotelViewProps> = ({ hotelId }) => {
   const [roomStatuses, setRoomStatuses] = useState<RoomStatus[]>([]);
   const hotelViewRef = useRef<HTMLDivElement>(null);
-
   const resolvedHotelId = parseInt(hotelId, 10) || 0;
 
   useEffect(() => {
+
     if (hotelViewRef.current) {
       hotelViewRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
