@@ -42,6 +42,9 @@ async function getUser(
   password: string,
 ): Promise<LoginResponse | undefined> {
   try {
+    console.log('Fetching user with email:', email);
+    console.log('Fetching user with password:', password);
+    
     const response = await axios.post<ApiResponse>(
       `http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/taquilla/loginUser`,
       { email, password },

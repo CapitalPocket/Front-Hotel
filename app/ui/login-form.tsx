@@ -28,9 +28,8 @@ export default function LoginForm() {
 
                 className="peer block w-full rounded-md border border-gray-600 bg-gray-700 py-2 pl-10 text-sm text-gray-200 shadow-sm focus:border-gray-400 focus:ring focus:ring-gray-500"
                 id="email"
-
                 type="text"
-                name="phone_number"
+                name="email"
                 placeholder="Ingrese usuario"
                 required
               />
