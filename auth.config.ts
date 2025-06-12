@@ -8,7 +8,7 @@ export const authConfig = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.idUser = user.idUser;
+        token.id_employee = user.idUser;
         token.role = user.role;
         token.park = user.park;
         token.changePass = user.changePass;
@@ -21,7 +21,7 @@ export const authConfig = {
       if (session.user && typeof token.role === 'string') {
         (session.user as any).role = token.role;
         (session.user as any).park = token.park;
-        (session.user as any).idUser = token.idUser;
+        (session.user as any).idUser = token.id_employee;
         (session.user as any).changePass = token.changePass;
       }
       session.accessToken = token.accessToken as string | undefined; // Asegurar el tipo

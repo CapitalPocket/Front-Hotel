@@ -38,9 +38,10 @@ const HotelView: React.FC<HotelViewProps> = ({ hotelId }) => {
   const [roomStatuses, setRoomStatuses] = useState<RoomStatus[]>([]);
   const hotelViewRef = useRef<HTMLDivElement>(null);
 
-  const resolvedHotelId = parseInt(hotelId, 10) || 0;
 
   useEffect(() => {
+    const resolvedHotelId = parseInt(hotelId, 10) || 0;
+
     if (hotelViewRef.current) {
       hotelViewRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }

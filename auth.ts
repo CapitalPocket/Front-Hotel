@@ -19,11 +19,6 @@ interface LoginResponse {
   token?: string;
 }
 
-
-
-
-
-
 import axios from 'axios';
 
 async function getUser(
