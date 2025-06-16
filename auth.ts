@@ -2,39 +2,7 @@ import NextAuth from 'next-auth';
 import { authConfig } from './auth.config';
 import Credentials from 'next-auth/providers/credentials';
 import { z } from 'zod';
-
-
-// Extend the ApiResponse type to include the token property
-interface ApiResponse {
-  user?: {
-    idUser: string;
-    name: string;
-    email: string;
-    password: string;
-    rol: string;
-    idpark: string;
-    changepassword: boolean;
-    statusprofile: string;
-  };
-  message: string;
-  token?: string;
-}
-// Define the structure of the response from the API
-interface LoginResponse {
-  user?: {
-    idUser: string;
-    name: string;
-    email: string;
-    password: string;
-    rol: string;
-    park: string;
-    changePass: boolean;
-    statusprofile: string;
-  };
-  message: string;
-  token?: string;
-}
-
+import type { ApiResponse, LoginResponse } from '@/app/lib/definitions';
 import axios from 'axios';
 
 async function getUser(
@@ -42,22 +10,19 @@ async function getUser(
   password: string,
 ): Promise<LoginResponse | undefined> {
   try {
-    console.log('Fetching user with email:', email);
-    console.log('Fetching user with password:', password);
-    
     const response = await axios.post<ApiResponse>(
       `http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/taquilla/loginUser`,
       { email, password },
     );
 
     const apiResponse = response.data;
-    const { message , token } = apiResponse;
+    const { message ,token } = apiResponse;
 
     if (apiResponse.user) {
       const user = apiResponse.user;
       return {
         user: {
-          idUser: String(user.idUser),
+          idUser: user.id_user.toString(),
           name: user.name,
           email: user.email,
           password: user.password,
@@ -105,7 +70,7 @@ export const {handlers, auth, signIn, signOut } = NextAuth({
             email: response.user.email,
             role: response.user?.rol,
             park: response.user?.park,
-            changePass: Boolean(response.user?.changePass),
+            changePass: response.user?.changePass,
             token: response.token,
           };
         }

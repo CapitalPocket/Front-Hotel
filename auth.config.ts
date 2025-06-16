@@ -1,13 +1,6 @@
 import type { NextAuthConfig } from 'next-auth';
-import CredentialsProvider from 'next-auth/providers/credentials';
-
 
 type Role = 'administrador' | 'supervisor' | 'marketing' | 'taquillero';
-
-// Validar si un valor es un Role permitido
-const isRole = (role: any): role is Role =>
-  ['administrador', 'supervisor', 'marketing', 'taquillero'].includes(role);
-
 export const authConfig = {
   pages: {
     signIn: '/login',
@@ -15,7 +8,7 @@ export const authConfig = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id_employee = user.idUser;
+        token.idUser = user.idUser;
         token.role = user.role;
         token.park = user.park;
         token.changePass = user.changePass;
@@ -28,20 +21,18 @@ export const authConfig = {
       if (session.user && typeof token.role === 'string') {
         (session.user as any).role = token.role;
         (session.user as any).park = token.park;
-        (session.user as any).idUser = token.id_employee;
+        (session.user as any).idUser = token.idUser;
         (session.user as any).changePass = token.changePass;
       }
-
-      session.accessToken = token.accessToken;
+      session.accessToken = token.accessToken as string | undefined; // Asegurar el tipo
       return session;
     },
-
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
       const isOnDashboard = nextUrl.pathname.startsWith('/dashboard');
-      const rawRole = auth?.user?.role;
-      const userRole = isRole(rawRole) ? rawRole : null;
+      const userRole = auth?.user?.role as Role | null;
 
+      // Definir las rutas y roles autorizados
       const rolePermissions: Record<Role, string[]> = {
         administrador: [
           '/dashboard',
@@ -54,11 +45,16 @@ export const authConfig = {
           '/dashboard/candidatos',
           '/dashboard/candidatos/create',
           '/dashboard/redenciones',
+          '/dashboard/generar-excel',
           '/dashboard/devoluciones',
           '/dashboard/candidatos/*/edit',
         ],
         taquillero: ['/dashboard', '/dashboard/tickets'],
-        supervisor: ['/dashboard', '/dashboard/tickets', '/dashboard/redenciones'],
+        supervisor: [
+          '/dashboard',
+          '/dashboard/tickets',
+          '/dashboard/redenciones',
+        ],
         marketing: [
           '/dashboard',
           '/dashboard/graphs-sales',
@@ -66,45 +62,75 @@ export const authConfig = {
           '/dashboard/invoices',
           '/dashboard/parks',
           '/dashboard/portfolio',
+          '/dashboard/generar-excel',
         ],
       };
 
       if (isOnDashboard) {
         const pathSegments = nextUrl.pathname.split('/');
-        const currentPath = nextUrl.pathname;
-        const allowedRoutes = userRole ? rolePermissions[userRole] : [];
+        const isGenerarExcelRoute = pathSegments[2] === 'generar-excel';
 
-        if (
-          userRole === 'administrador' &&
-          /^\/dashboard\/candidatos\/\d+\/edit$/.test(currentPath)
-        ) {
-          return true;
+        if (isOnDashboard) {
+          const allowedRoutes =
+            userRole && rolePermissions[userRole]
+              ? rolePermissions[userRole]
+              : [];
+          const currentPath = nextUrl.pathname;
+          if (
+            userRole === 'administrador' &&
+            /^\/dashboard\/candidatos\/\d+\/edit$/.test(currentPath)
+          ) {
+            return true;
+          }
+          if (
+            allowedRoutes.includes(currentPath) ||
+            allowedRoutes.some(
+              (route) =>
+                route.endsWith('*') &&
+                currentPath.startsWith(route.replace('*', '')),
+            )
+          ) {
+            return true;
+          }
+          return Response.redirect(new URL('/login', nextUrl));
         }
 
-        if (
-          allowedRoutes.includes(currentPath) ||
-          allowedRoutes.some(
-            (route) =>
-              route.endsWith('*') &&
-              currentPath.startsWith(route.replace('*', ''))
-          )
-        ) {
-          return true;
+        // Si la ruta es "generar-excel" con parámetros dinámicos
+        if (isGenerarExcelRoute) {
+          const allowedRoutes =
+            userRole && rolePermissions[userRole]
+              ? rolePermissions[userRole]
+              : [];
+          if (allowedRoutes.some((route) => route.includes('generar-excel'))) {
+            return true; // Acceso permitido
+          } else {
+            return Response.redirect(new URL('/login', nextUrl)); // Redirigir si no tiene permiso
+          }
         }
 
-        return Response.redirect(new URL('/login', nextUrl));
-      }
-
-      if (isLoggedIn) {
+        if (isLoggedIn) {
+          const allowedRoutes =
+            userRole && rolePermissions[userRole]
+              ? rolePermissions[userRole]
+              : [];
+          // Verificar si el usuario tiene permiso para acceder a la ruta actual
+          if (allowedRoutes.includes(nextUrl.pathname)) {
+            return true; // Acceso permitido
+          } else {
+            // Si el usuario no tiene permiso, redirigir a una ruta de error o al dashboard
+            return Response.redirect(new URL('/login', nextUrl));
+          }
+        } else {
+          // Si no está logueado, no permitir el acceso
+          return false;
+        }
+      } else if (isLoggedIn) {
+        // Si está logueado, redirigir al dashboard si intenta acceder a rutas no protegidas
         return Response.redirect(new URL('/dashboard', nextUrl));
       }
-
       return true;
     },
   },
   providers: [],
-  session: {
-    strategy: 'jwt',
-    maxAge: 4 * 60 * 60, // 4 horas
-  },
+  session: { strategy: 'jwt', maxAge: 4 * 60 * 60 },
 } satisfies NextAuthConfig;
