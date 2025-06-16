@@ -1,81 +1,10 @@
 import type { NextAuthConfig } from 'next-auth';
-import Credentials from 'next-auth/providers/credentials';
-import axios from 'axios';
-import { z } from 'zod';
-import type { ApiResponse, LoginResponse } from '@/app/lib/definitions';
 
 type Role = 'administrador' | 'supervisor' | 'marketing' | 'taquillero';
-
-async function getUser(email: string, password: string): Promise<LoginResponse | undefined> {
-  try {
-    const response = await axios.post<ApiResponse>(
-      `http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/taquilla/loginUser`,
-      { email, password },
-    );
-
-    const apiResponse = response.data;
-    const { message, token } = apiResponse;
-
-    if (apiResponse.user) {
-      const user = apiResponse.user;
-      return {
-        user: {
-          idUser: user.id_user.toString(),
-          name: user.name,
-          email: user.email,
-          password: user.password,
-          rol: user.rol,
-          park: user.idpark,
-          changePass: user.changepassword,
-          statusprofile: user.statusprofile,
-        },
-        message,
-        token,
-      };
-    }
-    return { message };
-  } catch (error) {
-    console.error('Failed to fetch user:', error);
-    throw new Error('Failed to fetch user.');
-  }
-}
-
 export const authConfig = {
   pages: {
     signIn: '/login',
   },
-  providers: [
-    Credentials({
-      async authorize(credentials) {
-        const parsedCredentials = z
-          .object({ email: z.string().min(3), password: z.string().min(4) })
-          .safeParse(credentials);
-
-        if (parsedCredentials.success) {
-          const { email, password } = parsedCredentials.data;
-          const response = await getUser(email, password);
-
-          if (!response?.user) return null;
-
-          if (response.user.statusprofile === 'Deshabilitado' || response.user.statusprofile === 'Eliminado') {
-            throw new Error('User is disabled.');
-          }
-
-          return {
-            idUser: response.user.idUser,
-            name: response.user.name,
-            email: response.user.email,
-            role: response.user?.rol,
-            park: response.user?.park,
-            changePass: response.user?.changePass,
-            token: response.token,
-          };
-        }
-        return null;
-      },
-    }),
-  ],
-  session: { strategy: 'jwt', maxAge: 4 * 60 * 60 },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
@@ -95,15 +24,15 @@ export const authConfig = {
         (session.user as any).idUser = token.idUser;
         (session.user as any).changePass = token.changePass;
       }
-      session.accessToken = token.accessToken as string | undefined;
+      session.accessToken = token.accessToken as string | undefined; // Asegurar el tipo
       return session;
     },
-
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
       const isOnDashboard = nextUrl.pathname.startsWith('/dashboard');
       const userRole = auth?.user?.role as Role | null;
 
+      // Definir las rutas y roles autorizados
       const rolePermissions: Record<Role, string[]> = {
         administrador: [
           '/dashboard',
@@ -121,7 +50,11 @@ export const authConfig = {
           '/dashboard/candidatos/*/edit',
         ],
         taquillero: ['/dashboard', '/dashboard/tickets'],
-        supervisor: ['/dashboard', '/dashboard/tickets', '/dashboard/redenciones'],
+        supervisor: [
+          '/dashboard',
+          '/dashboard/tickets',
+          '/dashboard/redenciones',
+        ],
         marketing: [
           '/dashboard',
           '/dashboard/graphs-sales',
@@ -134,26 +67,70 @@ export const authConfig = {
       };
 
       if (isOnDashboard) {
-        const path = nextUrl.pathname;
+        const pathSegments = nextUrl.pathname.split('/');
+        const isGenerarExcelRoute = pathSegments[2] === 'generar-excel';
 
-        const allowedRoutes = userRole ? rolePermissions[userRole] ?? [] : [];
+        if (isOnDashboard) {
+          const allowedRoutes =
+            userRole && rolePermissions[userRole]
+              ? rolePermissions[userRole]
+              : [];
+          const currentPath = nextUrl.pathname;
+          if (
+            userRole === 'administrador' &&
+            /^\/dashboard\/candidatos\/\d+\/edit$/.test(currentPath)
+          ) {
+            return true;
+          }
+          if (
+            allowedRoutes.includes(currentPath) ||
+            allowedRoutes.some(
+              (route) =>
+                route.endsWith('*') &&
+                currentPath.startsWith(route.replace('*', '')),
+            )
+          ) {
+            return true;
+          }
+          return Response.redirect(new URL('/login', nextUrl));
+        }
 
-        const wildcardMatch = allowedRoutes.some(route =>
-          route.endsWith('*') && path.startsWith(route.replace('*', ''))
-        );
+        // Si la ruta es "generar-excel" con parámetros dinámicos
+        if (isGenerarExcelRoute) {
+          const allowedRoutes =
+            userRole && rolePermissions[userRole]
+              ? rolePermissions[userRole]
+              : [];
+          if (allowedRoutes.some((route) => route.includes('generar-excel'))) {
+            return true; // Acceso permitido
+          } else {
+            return Response.redirect(new URL('/login', nextUrl)); // Redirigir si no tiene permiso
+          }
+        }
 
-        const isExactMatch = allowedRoutes.includes(path);
-
-        const isEditCandidato = userRole === 'administrador' && /^\/dashboard\/candidatos\/\d+\/edit$/.test(path);
-
-        if (wildcardMatch || isExactMatch || isEditCandidato) return true;
-
-        return Response.redirect(new URL('/login', nextUrl));
+        if (isLoggedIn) {
+          const allowedRoutes =
+            userRole && rolePermissions[userRole]
+              ? rolePermissions[userRole]
+              : [];
+          // Verificar si el usuario tiene permiso para acceder a la ruta actual
+          if (allowedRoutes.includes(nextUrl.pathname)) {
+            return true; // Acceso permitido
+          } else {
+            // Si el usuario no tiene permiso, redirigir a una ruta de error o al dashboard
+            return Response.redirect(new URL('/login', nextUrl));
+          }
+        } else {
+          // Si no está logueado, no permitir el acceso
+          return false;
+        }
+      } else if (isLoggedIn) {
+        // Si está logueado, redirigir al dashboard si intenta acceder a rutas no protegidas
+        return Response.redirect(new URL('/dashboard', nextUrl));
       }
-
-      if (isLoggedIn) return Response.redirect(new URL('/dashboard', nextUrl));
-
       return true;
     },
   },
+  providers: [],
+  session: { strategy: 'jwt', maxAge: 4 * 60 * 60 },
 } satisfies NextAuthConfig;
