@@ -1,38 +1,74 @@
-export type LoginResponse = { user?: User; message: string };
+export type Ticket = {
+  idticket: number;
+  namepark: string;
+  ticket_code: string;
+  type_pay: string;
+  type_money: string;
+  name: string;
+  lastname: string;
+  email_person: string;
+  phone_number: string;
+  identity_type: string;
+  identity_number: string;
+  date_ticket: string;
+  status: string;
+  type_ticket_adults: string;
+  count_adult: number;
+  type_ticket_kids: string;
+  count_kid: number;
+  invoice_electronic: number;
+  created_at: string;
+  updated_at: string;
+  ticket_info: TicketInfo[];
+  price_ticket: number;
+  id_operation:string;
+  motive:string;
+};
+export type TicketInfo = {
+  type: string;
+  count: number;
+};
+export type LoginResponse = { user?: User; message: string ; token?: string; };
 
 export type User = {
-  id_employee: string;
-  name: string; 
-  role: string;
-  phone_number: string;
+  idUser: string;
+  name: string;
+  email: string;
+  password: string;
+  rol: string;
+  park: string;
+  changePass?: string;
   statusprofile?: string;
+  token?: string;
 };
 
 export type ApiResponse = {
 
   user?: {
-    id_employee: string;
+    id_user: string;
     name: string;
+    email: string;
     password: string;
-    role: string;
-    phone_number: string;
+    rol: string;
+    idpark: string;
     changepassword?: string;
     statusprofile?: string;
   }; 
-  message: string;
-  token?: string; // Added token property to match the API response
+   message: string;
+   token?: string;
 };
 
 export type UserProfile = {
-  id_employee: number;
+  id_user: number;
   name: string;
-  phone_number: string;
+  email: string;
   password: string;
   rol: string;
-  start_time: string;
-  end_time: string;
-  hourly_wage: number;
-  statusprofile: 'Habilitado' | 'Deshabilitado' | 'Eliminado';  // solo "Enable" o "Disable"
+  created_at: string;
+  updated_at: string;
+  idpark: number;
+  changepassword: number;
+  statusprofile: 'Habilitado' | 'Desahbilitado';  // solo "Enable" o "Disable"
 };
 
 export type CandidatosTable = {
@@ -56,66 +92,3 @@ export type CustomerField = {
   id: string;
   name: string;
 };
-
-export type Shedule = {                                          
-  start_time: string;
-  end_time: string;
-  range_hours: string;
-}
-
-interface Employee {
-  employeeName: string;
-  hotelName: string;
-  currentRoom: string; // Incluye la categoría como "101A" o "101B"
-}
-
-interface RoomStatus {
-  id_room: number;
-  hotel_id: number;
-  room_number: string;
-  category: 'A' | 'B';
-  status: string; // El estado de la habitación, por ejemplo, "V/C" o "Ocupado"
-  created_at: string; // Fecha de creación del estado de la habitación
-}
-
-export interface HotelViewProps {
-  // ¿Está hotelId definido aquí? ¿O tiene otro nombre?
-  hotelId: number;
-}
-
-export type DateRangePickerProps = {
-
-  startDate: Date;
-
-  endDate: Date;
-
-  id: string;
-
-  name: string;
-
-  className: string;
-
-}
-interface MapProps {
-  lat: number;
-  lng: number;
-}
-
-// Add the missing Ticket export
-export interface Ticket {
-  idticket: string;
-  namepark: string;
-  id_operation: string;
-  name: string;
-  lastname: string;
-  identity_type: string;
-  identity_number: string;
-  price_ticket: number;
-  date_ticket: string;
-  status: string;
-  invoice_electronic?: number;
-  email_person?: string;
-  phone_number?: string;
-  ticket_code?: string;
-  ticket_info?: { type: string; count: number }[];
-}
