@@ -12,7 +12,7 @@ export default function StatusButton() {
   const updateStatus = (status: string) => {
     setSelectedStatus(status); 
 
-    const params = new URLSearchParams(searchParams);
+    const params = new URLSearchParams(searchParams?.toString() ?? '');
     if (status) {
       params.set('statusPerfil', status);
     } else {
