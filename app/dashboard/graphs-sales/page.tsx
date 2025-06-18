@@ -17,9 +17,8 @@ const Page = () => {
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const response = await fetch(`http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/getAllEmployees`);
-        if (!response.ok) throw new Error("Error fetching employees");
-        const data = await response.json();
+        const response = await axios.post(`/api/hotel/getAllEmployees`);     
+        const data = response.data
         if (Array.isArray(data)) {
           setEmployees(data);
         }
