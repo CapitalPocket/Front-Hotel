@@ -48,6 +48,10 @@ export const authConfig = {
           '/dashboard/generar-excel',
           '/dashboard/devoluciones',
           '/dashboard/candidatos/*/edit',
+          '/dashboard/asignacion',
+          '/dashboard/redenciones/create',
+          '/dashboard/redenciones/edit',
+    
         ],
         taquillero: ['/dashboard', '/dashboard/tickets'],
         supervisor: [

@@ -23,13 +23,13 @@ const Page = () => {
 
   const handleFloorsChange = (value: number) => {
     setFloors(value);
-    setRoomsPerFloor(Array(value).fill(1)); // Siempre al menos 1 habitación
+    setRoomsPerFloor(Array(value).fill(1));
     setExpanded(null);
   };
 
   const handleRoomChange = (index: number, value: number) => {
     const newRooms = [...roomsPerFloor];
-    newRooms[index] = Math.max(1, value); // mínimo 1 habitación
+    newRooms[index] = Math.max(1, value);
     setRoomsPerFloor(newRooms);
   };
 
@@ -41,51 +41,54 @@ const Page = () => {
 
   const handleSaveHotel = async () => {
     if (!hotelName || latitude === null || longitude === null || floors === null || totalRooms === 0) return;
-  
+
     setLoading(true);
     try {
-      // Crear hotel
-  
-const hotelResponse = await axios.post("http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/createHotel", {
-  name: hotelName,
-  latitude,
-  longitude,
-  floors,
-  roomsPerFloor,
-  totalRooms,
-});
+      const hotelPayload = {
+        name: hotelName,
+        latitude,
+        longitude,
+        floors,
+        roomsPerFloor,
+        totalRooms,
+      };
+      console.log("📦 Enviando hotel a /createHotel:", hotelPayload);
 
-const hotelId = hotelResponse.data.id;
+      const hotelResponse = await axios.post(
+        "http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/createHotel",
+        hotelPayload
+      );
 
-console.log("🏨 ID del hotel creado:", hotelId);
-console.log("🛏️ Datos para habitaciones:", {
+      const hotelId = hotelResponse?.data?.id;
+      if (!hotelId) throw new Error("No se obtuvo un ID del hotel al crearlo.");
 
-  floors,
-  roomsPerFloor,
-});
+      const roomsPayload = {
+        hotelId,
+        floors,
+        roomsPerFloor,
+      };
+      console.log("📦 Enviando habitaciones a /createRoomsWithLastHotel:", roomsPayload);
 
-// Crear pisos y habitaciones
-await axios.post("https://9b0lctjk-80.use.devtunnels.ms/api/hotel/createRoomsWithLastHotel", {
-  floors,
-  roomsPerFloor,
-});
+      await axios.post(
+        "http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/createRoomsWithLastHotel",
+        roomsPayload
+      );
 
-  
       alert("✅ Hotel y habitaciones guardados correctamente");
+
       setHotelName("");
       setLatitude(null);
       setLongitude(null);
       setFloors(null);
       setRoomsPerFloor([]);
       setExpanded(null);
-    } catch (error) {
-      console.error("Error al guardar:", error);
+    } catch (error: any) {
+      console.error("❌ Error al guardar:", error?.response?.data || error.message || error);
       alert("❌ Error al guardar el hotel o las habitaciones.");
     } finally {
       setLoading(false);
     }
   };
-  
 
   const isFormValid =
     hotelName &&
@@ -113,12 +116,10 @@ await axios.post("https://9b0lctjk-80.use.devtunnels.ms/api/hotel/createRoomsWit
           value={floors !== null ? floors.toString() : ""}
           onChange={(e) => {
             const val = e.target.value;
-            // Permitimos vacío temporal (se interpreta como 0)
             const numberVal = val === "" ? 0 : Number(val);
             handleFloorsChange(numberVal);
           }}
           onBlur={() => {
-            // Al perder foco, si es menor a 1 o inválido, poner 1
             if (!floors || floors < 1) {
               handleFloorsChange(1);
             }
@@ -127,14 +128,10 @@ await axios.post("https://9b0lctjk-80.use.devtunnels.ms/api/hotel/createRoomsWit
           className="border border-gray-300 rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-400 transition"
         />
 
-
         {floors !== null && (
           <div className="flex flex-col gap-4">
             {roomsPerFloor.map((rooms, index) => (
-              <div
-                key={index}
-                className="border border-gray-200 rounded-lg bg-gray-50 px-4 py-3 shadow-sm"
-              >
+              <div key={index} className="border border-gray-200 rounded-lg bg-gray-50 px-4 py-3 shadow-sm">
                 <div
                   className="flex justify-between items-center cursor-pointer"
                   onClick={() => toggleExpand(index)}
@@ -149,26 +146,24 @@ await axios.post("https://9b0lctjk-80.use.devtunnels.ms/api/hotel/createRoomsWit
 
                 {expanded === index && (
                   <input
-                  type="text"
-                  inputMode="numeric"
-                  value={roomsPerFloor[index].toString()}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    const newRooms = [...roomsPerFloor];
-                    // Permitir vacío temporal
-                    newRooms[index] = val === "" ? 0 : Number(val);
-                    setRoomsPerFloor(newRooms);
-                  }}
-                  onBlur={() => {
-                    const newRooms = [...roomsPerFloor];
-                    if (!newRooms[index] || isNaN(newRooms[index]) || newRooms[index] < 1) {
-                      newRooms[index] = 1; // Valor mínimo
+                    type="text"
+                    inputMode="numeric"
+                    value={roomsPerFloor[index].toString()}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const newRooms = [...roomsPerFloor];
+                      newRooms[index] = val === "" ? 0 : Number(val);
                       setRoomsPerFloor(newRooms);
-                    }
-                  }}
-                  className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-400 transition"
-                />
-                
+                    }}
+                    onBlur={() => {
+                      const newRooms = [...roomsPerFloor];
+                      if (!newRooms[index] || isNaN(newRooms[index]) || newRooms[index] < 1) {
+                        newRooms[index] = 1;
+                        setRoomsPerFloor(newRooms);
+                      }
+                    }}
+                    className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-400 transition"
+                  />
                 )}
               </div>
             ))}
@@ -178,7 +173,7 @@ await axios.post("https://9b0lctjk-80.use.devtunnels.ms/api/hotel/createRoomsWit
         <div className="h-[500px] rounded-lg overflow-hidden border border-gray-300">
           <Map
             onMapClick={handleMapClick}
-            initialLatitude={latitude !== null ? latitude : 4.7110}
+            initialLatitude={latitude !== null ? latitude : 4.711}
             initialLongitude={longitude !== null ? longitude : -74.0721}
           />
         </div>
@@ -186,9 +181,7 @@ await axios.post("https://9b0lctjk-80.use.devtunnels.ms/api/hotel/createRoomsWit
         {latitude !== null && longitude !== null && (
           <p className="text-sm text-gray-500 text-center">
             Coordenadas seleccionadas:{" "}
-            <span className="font-semibold">
-              {latitude}, {longitude}
-            </span>
+            <span className="font-semibold">{latitude}, {longitude}</span>
           </p>
         )}
 
