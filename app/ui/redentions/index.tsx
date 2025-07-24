@@ -25,7 +25,7 @@ const Invoices: React.FC = () => {
         }
 
         try {
-            const response = await axios.post("http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/getAllHotel", {
+            const response = await axios.post("/api/hotel/getAllHotel", {
                 name: hotelName,
                 latitude,
                 longitude,

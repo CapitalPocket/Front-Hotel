@@ -19,7 +19,7 @@ const EditHotelPage = () => {
 
   useEffect(() => {
     axios
-      .get('http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/getAllHotel')
+      .get('/api/hotel/getAllHotel')
       .then((res) => {
         const transformedHotels = res.data.map((hotel: any) => ({
           id: hotel.id_hotel, // ← mapeo correcto

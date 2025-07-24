@@ -15,7 +15,7 @@ const Page = () => {
   useEffect(() => {
     const fetchHotels = async () => {
       try {
-        const res = await fetch('http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/getAllHotel');
+        const res = await fetch('/api/hotel/getAllHotel');
         const data: Hotel[] = await res.json();
         setHotels(data);
 

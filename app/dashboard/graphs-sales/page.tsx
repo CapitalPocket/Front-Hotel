@@ -70,7 +70,7 @@ const Page = () => {
   useEffect(() => {
     const fetchHotels = async () => {
       try {
-        const response = await axios.get('http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/getAllHotel');
+        const response = await axios.get('/api/hotel/getAllHotel');
         if (Array.isArray(response.data)) {
           setHotels(response.data);
         } else {
