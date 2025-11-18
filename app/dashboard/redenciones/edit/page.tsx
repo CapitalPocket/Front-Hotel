@@ -18,8 +18,9 @@ const EditHotelPage = () => {
   const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
+    const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
     axios
-      .get('/api/hotel/getAllHotel')
+      .get(`${base}/api/hotel/getAllHotel`)
       .then((res) => {
         const transformedHotels = res.data.map((hotel: any) => ({
           id: hotel.id_hotel, // ← mapeo correcto
@@ -59,8 +60,9 @@ const EditHotelPage = () => {
   
     setLoading(true);
     try {
+      const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
       await axios.post(
-        `http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/updateHotel/${selectedHotel.id}`,
+        `${base}/api/hotel/updateHotel/${selectedHotel.id}`,
         {
           name: hotelName,
           latitude: selectedHotel.latitude,

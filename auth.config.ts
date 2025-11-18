@@ -5,6 +5,7 @@ export const authConfig = {
   pages: {
     signIn: '/login',
   },
+  secret: process.env.NEXTAUTH_SECRET || 'some-random-secret-key',
   callbacks: {
     async jwt({ token, user }) {
       if (user) {

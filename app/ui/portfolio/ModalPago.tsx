@@ -18,12 +18,13 @@ const ModalPago: React.FC<ModalPagoProps> = ({ isOpen, onClose, employee }) => {
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [cleaningData, setCleaningData] = useState<CleaningData[]>([]);
+  const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
 
   const fetchCleaningData = async () => {
     if (!startDate || !endDate) return;
 
     try {
-      const response = await fetch("http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/getEmployeeDailyWorkAndRoomCleaning", {
+      const response = await fetch(`${base}/api/hotel/getEmployeeDailyWorkAndRoomCleaning`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

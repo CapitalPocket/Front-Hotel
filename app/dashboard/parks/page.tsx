@@ -15,7 +15,8 @@ const Page = () => {
   useEffect(() => {
     const fetchHotels = async () => {
       try {
-        const res = await fetch('/api/hotel/getAllHotel');
+        const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
+        const res = await fetch(`${base}/api/hotel/getAllHotel`);
         const data: Hotel[] = await res.json();
         setHotels(data);
 

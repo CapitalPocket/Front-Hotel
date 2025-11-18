@@ -17,7 +17,8 @@ const Page = () => {
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const response = await axios.post(`/api/hotel/getAllEmployees`);     
+        const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
+        const response = await axios.post(`${base}/api/hotel/getAllEmployees`);     
         const data = response.data
         if (Array.isArray(data)) {
           setEmployees(data);
@@ -35,7 +36,8 @@ const Page = () => {
 
   const sendVerificationCodeToAPI = async (phone: string, code: string, role: string) => {
     try {
-      const response = await fetch("http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/handleQRCode", {
+      const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
+      const response = await fetch(`${base}/api/hotel/handleQRCode`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -70,7 +72,8 @@ const Page = () => {
   useEffect(() => {
     const fetchHotels = async () => {
       try {
-        const response = await axios.get('/api/hotel/getAllHotel');
+        const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
+        const response = await axios.get(`${base}/api/hotel/getAllHotel`);
         if (Array.isArray(response.data)) {
           setHotels(response.data);
         } else {

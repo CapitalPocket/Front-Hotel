@@ -19,6 +19,7 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
   const [endTime, setEndTime] = useState<string>('17:00');
   const [selectedHotels, setSelectedHotels] = useState<any[]>([]);
   const [selectedRole, setSelectedRole] = useState<any>(null);
+  const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
 
   const roles = [
  
@@ -46,9 +47,8 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
 
   const fetchData = async (role: string | null = null) => {
     try {
-
       const employeeResponse = await axios.post(
-        'http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/getAllEmployees',
+        `${base}/api/hotel/getAllEmployees`,
         role ? { role } : {}
 
       );
@@ -64,9 +64,7 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
 
         for (const emp of employeeData) {
           const scheduleResponse = await axios.get(
-
-            `http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/getAllWorkShedule/${emp.id_employee}`
-
+            `${base}/api/hotel/getAllWorkShedule/${emp.id_employee}`
           );
 
           if (Array.isArray(scheduleResponse.data)) {
@@ -106,7 +104,7 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
   useEffect(() => {
     const fetchHotels = async () => {
       try {
-        const response = await axios.get('/api/hotel/getAllHotel');
+        const response = await axios.get(`${base}/api/hotel/getAllHotel`);
         if (Array.isArray(response.data)) {
           setHotels(response.data);
         } else {
@@ -118,7 +116,7 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
     };
 
     fetchHotels();
-  }, []);
+  }, [base]);
 
   const handleEmployeeSelect = (selectedOptions: any) => {
     setSelectedEmployees(selectedOptions);
@@ -150,9 +148,7 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
         };
 
         await axios.put(
-
-          `http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/updateEmployeeSchedule/${id_employee}`,
-
+          `${base}/api/hotel/updateEmployeeSchedule/${id_employee}`,
           updateData
         );
       }
@@ -164,9 +160,7 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
       };
 
       const response = await axios.post(
-
-        `http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/postWorkDays`,
-
+        `${base}/api/hotel/postWorkDays`,
         dataToSend
       );
 

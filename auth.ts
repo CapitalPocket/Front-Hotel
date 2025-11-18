@@ -10,13 +10,14 @@ async function getUser(
   password: string,
 ): Promise<LoginResponse | undefined> {
   try {
+    const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
     const response = await axios.post<ApiResponse>(
-      `http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/taquilla/loginUser`,
+      `${base}/api/taquilla/loginUser`,
       { email, password },
     );
 
     const apiResponse = response.data;
-    const { message ,token } = apiResponse;
+    const { message, token } = apiResponse;
 
     if (apiResponse.user) {
       const user = apiResponse.user;
@@ -42,7 +43,7 @@ async function getUser(
   }
 }
 
-export const {handlers, auth, signIn, signOut } = NextAuth({
+export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   secret: process.env.NEXTAUTH_SECRET || 'some-random-secret-key',
   providers: [
@@ -78,7 +79,4 @@ export const {handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
-
-
-    
 });

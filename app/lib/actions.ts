@@ -83,8 +83,9 @@ export async function createCandidato(prevState: Statee, formData: FormData) {
   const { nombre, nombreUser, password, rol, park } = validatedFields.data;
 
   try {
+    const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
     const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_BACK_LINK}/api/taquilla/createUser`,
+      `${base}/api/taquilla/createUser`,
       {
         name: nombre,
         email: nombreUser,
@@ -108,8 +109,9 @@ export async function validateTicket(ticketCode: any) {
   try {
     const session = await auth();
     const token = session?.accessToken;
+    const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
     const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_BACK_LINK}/api/taquilla/validateTicketNew`,
+      `${base}/api/taquilla/validateTicketNew`,
       ticketCode,
       { headers: { Authorization: `Bearer ${token}` } },
     );
@@ -152,8 +154,9 @@ export async function updateCandidato(
     const { nombre, nombreUser, rol } = validatedFields.data;
     const session = await auth();
     const token = session?.accessToken;
+    const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
     const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_BACK_LINK}/api/taquilla/updateUserByIdTaquilla`,
+      `${base}/api/taquilla/updateUserByIdTaquilla`,
       {
         id: id,
         updates: {
@@ -175,8 +178,9 @@ export async function updateUser(user: any) {
   try {
     const session = await auth();
     const token = session?.accessToken;
+    const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
     const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_BACK_LINK}/api/taquilla/updateUserByIdTaquilla`,
+      `${base}/api/taquilla/updateUserByIdTaquilla`,
       { user },
       { headers: { Authorization: `Bearer ${token}` } },
     );

@@ -8,7 +8,7 @@ import { unstable_noStore as noStore } from 'next/cache';
 import axios from 'axios';
 
 const ITEMS_PER_PAGE = 9;
-
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? process.env.API_BASE_URL ?? 'https://api.pockiaction.xyz';
 
 export async function fetchCandidatoById(id: string) {
   noStore();
@@ -43,7 +43,6 @@ export async function fetchCandidatoById(id: string) {
   }
 }
 
-
 // Add or ensure the export for fetchInvoices exists
 export async function fetchInvoices(idpark: string, month: string) {
   // Implementation of fetchInvoices
@@ -52,7 +51,11 @@ export async function fetchInvoices(idpark: string, month: string) {
 // Add or verify the export for fetchFilteredCandidatos
 export type Ticket = { id: string; name: string; [key: string]: any }; // Define Ticket type
 
-export async function fetchFilteredCandidatos(query: string, currentPage: number, user: any): Promise<Ticket[]> {
+export async function fetchFilteredCandidatos(
+  query: string,
+  currentPage: number,
+  user: any,
+): Promise<Ticket[]> {
   // Ensure this function returns a Ticket[] instead of void
   const tickets: Ticket[] = []; // Replace with actual logic to fetch tickets
   return tickets;
@@ -92,29 +95,36 @@ export async function fetchFilteredInvoices(
   }
 }
 
-
-export async function fetchFilteredUsers(query: string, currentPage: number, status: string = 'Habilitado',) {
+export async function fetchFilteredUsers(
+  query: string,
+  currentPage: number,
+  status: string = 'Habilitado',
+) {
   noStore();
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
 
   try {
     const effectiveStatus = status || 'Habilitado';
-
-    const apiUrl = `http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/getAllEmployees`;
-
+    if (!API_BASE_URL) {
+      console.error('API base URL not configured');
+      return [];
+    }
+    const apiUrl = `${API_BASE_URL}/api/hotel/getAllEmployees`;
     const response = await axios.post(apiUrl);
 
     if (response.data.message) {
-      console.warn(response.data.message); 
+      console.warn(response.data.message);
       return 0;
     }
     const users = response.data;
     const filteredUsers = users.filter((user: UserProfile) => {
       const searchString = query.toLowerCase();
       return (
-        user.name?.toLowerCase().includes(searchString) ||
-        user.rol?.toLowerCase().includes(searchString) ||
-        user.statusprofile?.toLowerCase().includes(searchString) 
+        (user.statusprofile === effectiveStatus) && (
+          user.name?.toLowerCase().includes(searchString) ||
+          user.rol?.toLowerCase().includes(searchString) ||
+          user.statusprofile?.toLowerCase().includes(searchString)
+        )
       );
     });
 
@@ -123,10 +133,10 @@ export async function fetchFilteredUsers(query: string, currentPage: number, sta
   } catch (error) {
     if (axios.isAxiosError(error)) {
       console.error('Axios Error:', error.response?.data || error.message);
-      throw new Error(`Failed to fetch Users: ${error.message}`);
+      return [];
     }
     console.error('Error:', error);
-    throw new Error('Failed to fetch Users.');
+    return [];
   }
 }
 
@@ -137,62 +147,68 @@ export async function fetchFilteredUsersPage(
   noStore();
 
   try {
-    
     const effectiveStatus = status || 'Habilitado';
-    const apiUrl = `http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/getAllEmployees`;
+    if (!API_BASE_URL) {
+      console.error('API base URL not configured');
+      return 0;
+    }
+    const apiUrl = `${API_BASE_URL}/api/hotel/getAllEmployees`;
     const response = await axios.post(apiUrl);
     if (response.data.message) {
-      console.warn(response.data.message); 
-      return 1;
+      console.warn(response.data.message);
+      return 0;
     }
     const users = response.data;
 
     const count = users.filter((user: UserProfile) => {
       const searchString = query.toLowerCase();
       return (
-        user.name?.toLowerCase().includes(searchString) ||
-        user.rol?.toLowerCase().includes(searchString) ||
-        user.statusprofile?.toLowerCase().includes(searchString) 
+        (user.statusprofile === effectiveStatus) && (
+          user.name?.toLowerCase().includes(searchString) ||
+          user.rol?.toLowerCase().includes(searchString) ||
+          user.statusprofile?.toLowerCase().includes(searchString)
+        )
       );
     }).length;
-    
 
     const totalPages = Math.ceil(count / ITEMS_PER_PAGE);
     return totalPages;
   } catch (error) {
-    console.error('Database Error:', error);
-    throw new Error('Failed to fetch total number of Users.'+error);
+    console.error('Error fetching total number of Users:', error);
+    return 0;
   }
 }
 
-
-
-
-export async function fetchEmployeeSchedules(query: string, status: string = 'Habilitado') {
+export async function fetchEmployeeSchedules(
+  query: string,
+  status: string = 'Habilitado',
+) {
   try {
-    // 1️⃣ Obtener empleados
-
-    const employeesApiUrl = `http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/getAllEmployees`;
-
+    if (!API_BASE_URL) {
+      console.error('API base URL not configured');
+      return [];
+    }
+    const employeesApiUrl = `${API_BASE_URL}/api/hotel/getAllEmployees`;
     const response = await axios.post(employeesApiUrl);
 
-    
     if (!response.data || !Array.isArray(response.data)) {
-      console.warn("La respuesta de empleados no es válida.");
+      console.warn('La respuesta de empleados no es válida.');
       return [];
     }
 
-    const employees = response.data.filter((emp: any) => emp.statusprofile === status);
+    const employees = response.data.filter(
+      (emp: any) => emp.statusprofile === status,
+    );
 
     // 2️⃣ Obtener los horarios de cada empleado
     const scheduleRequests = employees.map(async (employee: any) => {
       const employeeId = employee.id_employee;
 
-      const schedulesApiUrl = `http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/getAllShedule/${employeeId}`;
+      const schedulesApiUrl = `${API_BASE_URL}/api/hotel/getAllShedule/${employeeId}`;
 
       try {
         const scheduleResponse = await axios.get(schedulesApiUrl);
-        
+
         if (!scheduleResponse.data || !Array.isArray(scheduleResponse.data)) {
           console.warn(`No schedules found for employee ${employeeId}`);
           return [];
@@ -205,7 +221,10 @@ export async function fetchEmployeeSchedules(query: string, status: string = 'Ha
           range_hours: schedule.range_hours,
         }));
       } catch (error) {
-        console.error(`Error fetching schedules for employee ${employeeId}:`, error);
+        console.error(
+          `Error fetching schedules for employee ${employeeId}:`,
+          error,
+        );
         return [];
       }
     });
@@ -213,16 +232,13 @@ export async function fetchEmployeeSchedules(query: string, status: string = 'Ha
     // 3️⃣ Esperar todas las solicitudes y aplanar resultados
     const allSchedules = (await Promise.all(scheduleRequests)).flat();
 
-    console.log("All Employee Schedules:", allSchedules);
-    
-    return allSchedules;
+    console.log('All Employee Schedules:', allSchedules);
 
+    return allSchedules;
   } catch (error) {
     console.error('Error fetching employees or schedules:', error);
-    throw new Error('Failed to fetch employee schedules');
+    return [];
   }
- 
-  
 }
 export async function updateEmployeeDetails(
   employee_id: string,
@@ -238,12 +254,14 @@ export async function updateEmployeeDetails(
     birthdate: string;
     address: string;
     social_number: string;
-  }
+  },
 ) {
   try {
-
-    const apiUrl = `http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/updateEmployeeDetails/${employee_id}`;
-
+    if (!API_BASE_URL) {
+      console.error('API base URL not configured');
+      throw new Error('API base URL not configured');
+    }
+    const apiUrl = `${API_BASE_URL}/api/hotel/updateEmployeeDetails/${employee_id}`;
     const response = await axios.patch(apiUrl, employeeData);
 
     // Manejar la respuesta exitosa
@@ -257,23 +275,20 @@ export async function updateEmployeeDetails(
     console.error('Error:', error);
     throw new Error('Failed to update employee details.');
   }
-
-  
 }
 
 export async function fetchEmployeeWorkSchedule(
   query: string,
-  currentPage: number
+  currentPage: number,
 ) {
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
 
   try {
-    // Construir la URL de la API
-
-    const apiUrl = `http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/getEmployeeWorkSchedule`;
-
-    
-    // Hacer la petición a la API
+    if (!API_BASE_URL) {
+      console.error('API base URL not configured');
+      return [];
+    }
+    const apiUrl = `${API_BASE_URL}/api/hotel/getEmployeeWorkSchedule`;
     const { data: schedules } = await axios.get(apiUrl);
 
     // Filtrar resultados según la consulta de búsqueda
@@ -298,7 +313,7 @@ export async function fetchEmployeeWorkSchedule(
     // Aplicar paginación a los resultados formateados
     const paginatedSchedules = formattedSchedules.slice(
       offset,
-      offset + ITEMS_PER_PAGE
+      offset + ITEMS_PER_PAGE,
     );
 
     return paginatedSchedules;

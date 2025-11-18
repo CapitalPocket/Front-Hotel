@@ -36,7 +36,16 @@ export default function EmployeeForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch(`http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/createEmployee`, { // Ajusta la URL de la API según corresponda
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+      if (!baseUrl) {
+        toast.error('Configuración de API faltante', {
+          position: 'top-center',
+          autoClose: 3000,
+          hideProgressBar: true,
+        });
+        return;
+      }
+      const response = await fetch(`${baseUrl}/api/hotel/createEmployee`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),

@@ -17,17 +17,18 @@ interface ReassignModalProps {
 const RessignModal: React.FC<ReassignModalProps> = ({ assignment, onClose, onReassigned }) => {
   const [employees, setEmployees] = useState<any[]>([]);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | null>(null);
+  const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
 
   useEffect(() => {
     // Llamada a la API para obtener todos los empleados con rol Housekeeper
-    axios.post('http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/getAllEmployees', { role: 'Housekeeper' })
+    axios.post(`${base}/api/hotel/getAllEmployees`, { role: 'Housekeeper' })
       .then(response => {
         setEmployees(response.data);
       })
       .catch(error => {
         console.error('Error fetching employees:', error);
       });
-  }, []);
+  }, [base]);
 
   const handleReassignEmployee = async () => {
     if (selectedEmployeeId === null) {
@@ -37,7 +38,7 @@ const RessignModal: React.FC<ReassignModalProps> = ({ assignment, onClose, onRea
 
     // Llamada a la API para actualizar la asignación
     try {
-      await axios.post('http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/updateEmployeeAssignment', {
+      await axios.post(`${base}/api/hotel/updateEmployeeAssignment`, {
         assignment_id: assignment.assignment_id,
         new_employee_id: selectedEmployeeId
       });

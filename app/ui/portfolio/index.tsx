@@ -15,6 +15,7 @@ interface PortfolioProps {
 }
 
 const Portfolio: React.FC<PortfolioProps> = ({ park }) => {
+  const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
   const [employees, setEmployees] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [modalOpen, setModalOpen] = useState(false);
@@ -37,8 +38,8 @@ const Portfolio: React.FC<PortfolioProps> = ({ park }) => {
   const fetchEmployees = async () => {
     try {
       const response = await axios.post(
-        'http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/getAllEmployees',
-        { role: '' } // puedes enviar vacío si es opcional
+        `${base}/api/hotel/getAllEmployees`,
+        { role: '' }
       );
       return response.data;
     } catch (err) {
@@ -56,7 +57,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ park }) => {
       const endDate = format(dateRange.to, "yyyy-MM-dd");
 
       const salaryResponse = await axios.get(
-        `http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/CalculateEmployeeSalary/${phone_number}?start_date=${startDate}&end_date=${endDate}`
+        `${base}/api/hotel/CalculateEmployeeSalary/${phone_number}?start_date=${startDate}&end_date=${endDate}`
       );
       return salaryResponse.data ?? {};
     } catch (error) {

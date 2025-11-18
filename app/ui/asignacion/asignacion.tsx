@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { Pencil, Repeat } from 'lucide-react';
 import EditStatusModal from './editstatusmodal'; 
@@ -22,19 +22,20 @@ const AssignmentsView = () => {
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
   const [isReassignModalOpen, setIsReassignModalOpen] = useState<boolean>(false);
   const [selectedHotel, setSelectedHotel] = useState<string>(''); // hotel seleccionado para filtro
+  const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
 
-  const fetchAssignments = async () => {
+  const fetchAssignments = useCallback(async () => {
     try {
-      const response = await axios.get('http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/hotel/getTodayAssignments');
+      const response = await axios.get(`${base}/api/hotel/getTodayAssignments`);
       setAssignments(response.data);
     } catch (error) {
       console.error('Error al obtener asignaciones:', error);
     }
-  };
+  }, [base]);
 
   useEffect(() => {
     fetchAssignments();
-  }, []);
+  }, [fetchAssignments]);
 
 
   // Obtener hoteles únicos para el filtro

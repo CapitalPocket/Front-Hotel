@@ -1,15 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    output: 'standalone', // necesario si usas AWS Amplify
-    async rewrites() {
-      return [
-        {
-          source: '/api/:path*',
-          destination: 'http://pocki-api-env-1.eba-pprtwpab.us-east-1.elasticbeanstalk.com/api/:path*',
-        },
-      ];
-    },
-  };
-  
-  module.exports = nextConfig;
-  
+  async rewrites() {
+    const base =
+      process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
+    return [
+      {
+        source: '/api/:path*',
+        destination: `${base}/api/:path*`,
+      },
+    ];
+  },
+};
+
+module.exports = nextConfig;
