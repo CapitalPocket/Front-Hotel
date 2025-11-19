@@ -85,6 +85,7 @@ export default function EmployeeModal({
       onClose(); // Cerrar el modal después de la actualización
     } catch (error) {
       console.error("Error updating employee details:", error);
+      onClose();
     }
   };
 
@@ -279,4 +280,4 @@ export default function EmployeeModal({
     </div>
   </div>
   )
-}  
+}

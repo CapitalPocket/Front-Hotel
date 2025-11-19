@@ -34,12 +34,11 @@ const statusColors: { [key: string]: string } = {
 const EditStatusModal: React.FC<EditStatusModalProps> = ({ assignment, onClose, onUpdated }) => {
   const [status, setStatus] = useState(assignment.status);
   const [loading, setLoading] = useState(false);
-  const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
 
   const handleSave = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${base}/api/hotel/updateRoomStatus`, {
+      const res = await fetch(`/api/hotel/updateRoomStatus`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

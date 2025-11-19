@@ -17,8 +17,9 @@ const Page = () => {
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
-        const response = await axios.post(`${base}/api/hotel/getAllEmployees`);     
+      const rawBase = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_BACK_LINK || 'https://api.pockiaction.xyz';
+      const base = typeof rawBase === 'string' ? rawBase.replace(/[`'"\s]/g, '').trim() : rawBase;
+      const response = await axios.post(`${base}/api/hotel/getAllEmployees`);     
         const data = response.data
         if (Array.isArray(data)) {
           setEmployees(data);
@@ -36,7 +37,8 @@ const Page = () => {
 
   const sendVerificationCodeToAPI = async (phone: string, code: string, role: string) => {
     try {
-      const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
+      const rawBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
+      const base = typeof rawBase === 'string' ? rawBase.replace(/[`'"\s]/g, '').trim() : rawBase;
       const response = await fetch(`${base}/api/hotel/handleQRCode`, {
         method: "POST",
         headers: {
@@ -60,11 +62,14 @@ const Page = () => {
     }
   }, [selectedEmployee, selectedHotel, entryType, selectedRole?.value]);
 
+  const rawWhatsApp = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '17863403034';
+  const whatsappNumber = typeof rawWhatsApp === 'string' ? rawWhatsApp.replace(/[`'"\s]/g, '').trim() : rawWhatsApp;
+
   const generateWhatsAppLink = () => {
     if (!selectedEmployee || !selectedHotel || !entryType) return "";
     const actionCode = entryType.value === "ingreso" ? "Clock In" : "Clock Out";
     const message = `${actionCode}: ${verificationCode}`;
-    return `https://wa.me/17863403034?text=${encodeURIComponent(message)}`;
+    return `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
   };
 
   const [hotels, setHotels] = useState<{ id_hotel: number; name: string }[]>([]);

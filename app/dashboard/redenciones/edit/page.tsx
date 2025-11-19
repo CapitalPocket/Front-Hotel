@@ -60,7 +60,8 @@ const EditHotelPage = () => {
   
     setLoading(true);
     try {
-      const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
+      const rawBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
+      const base = typeof rawBase === 'string' ? rawBase.replace(/[`'"\s]/g, '').trim() : rawBase;
       await axios.post(
         `${base}/api/hotel/updateHotel/${selectedHotel.id}`,
         {

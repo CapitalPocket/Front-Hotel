@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { Pencil, Repeat } from 'lucide-react';
-import EditStatusModal from './editstatusmodal'; 
+import EditStatusModal from './editstatusmodal';
 import RessignModal from './ressignmodal'; // Asegúrate de que la ruta sea correcta
 
 interface Assignment {
@@ -21,17 +21,20 @@ const AssignmentsView = () => {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
   const [isReassignModalOpen, setIsReassignModalOpen] = useState<boolean>(false);
-  const [selectedHotel, setSelectedHotel] = useState<string>(''); // hotel seleccionado para filtro
-  const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
+  const [selectedHotel, setSelectedHotel] = useState<string>('');
 
   const fetchAssignments = useCallback(async () => {
     try {
-      const response = await axios.get(`${base}/api/hotel/getTodayAssignments`);
-      setAssignments(response.data);
-    } catch (error) {
-      console.error('Error al obtener asignaciones:', error);
+      const response = await axios.get(`/api/hotel/getTodayAssignments`);
+      setAssignments(Array.isArray(response.data) ? response.data : []);
+    } catch (error: any) {
+      if (error?.response?.status === 404) {
+        setAssignments([]);
+        return;
+      }
+      setAssignments([]);
     }
-  }, [base]);
+  }, []);
 
   useEffect(() => {
     fetchAssignments();
@@ -83,31 +86,31 @@ const AssignmentsView = () => {
   return (
     <div className="p-6 bg-gray-50 rounded-lg shadow-md">
 
-      
-          <div className="mb-6">
-      <label htmlFor="hotelFilter" className="block mb-1 text-sm font-semibold text-gray-700">
-        Filtrar por hotel
-      </label>
-      <div className="relative w-full md:w-64">
-        <select
-          id="hotelFilter"
-          className="appearance-none w-full bg-white border border-gray-300 rounded-md py-2 px-3 pr-8 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-          value={selectedHotel}
-          onChange={(e) => setSelectedHotel(e.target.value)}
-        >
-          <option value="">Todos los hoteles</option>
-          {hotels.map(hotel => (
-            <option key={hotel} value={hotel}>{hotel}</option>
-          ))}
-        </select>
-        {/* Ícono de flecha abajo */}
-        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-          </svg>
+
+      <div className="mb-6">
+        <label htmlFor="hotelFilter" className="block mb-1 text-sm font-semibold text-gray-700">
+          Filtrar por hotel
+        </label>
+        <div className="relative w-full md:w-64">
+          <select
+            id="hotelFilter"
+            className="appearance-none w-full bg-white border border-gray-300 rounded-md py-2 px-3 pr-8 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            value={selectedHotel}
+            onChange={(e) => setSelectedHotel(e.target.value)}
+          >
+            <option value="">Todos los hoteles</option>
+            {hotels.map(hotel => (
+              <option key={hotel} value={hotel}>{hotel}</option>
+            ))}
+          </select>
+          {/* Ícono de flecha abajo */}
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
         </div>
       </div>
-    </div>
 
 
 

@@ -83,7 +83,8 @@ export async function createCandidato(prevState: Statee, formData: FormData) {
   const { nombre, nombreUser, password, rol, park } = validatedFields.data;
 
   try {
-    const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
+    const rawBase = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_BACK_LINK || 'https://api.pockiaction.xyz';
+    const base = typeof rawBase === 'string' ? rawBase.replace(/[`'"\s]/g, '').trim() : rawBase;
     const response = await axios.post(
       `${base}/api/taquilla/createUser`,
       {
@@ -109,7 +110,8 @@ export async function validateTicket(ticketCode: any) {
   try {
     const session = await auth();
     const token = session?.accessToken;
-    const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
+    const rawBase2 = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_BACK_LINK || 'https://api.pockiaction.xyz';
+    const base = typeof rawBase2 === 'string' ? rawBase2.replace(/[`'"\s]/g, '').trim() : rawBase2;
     const response = await axios.post(
       `${base}/api/taquilla/validateTicketNew`,
       ticketCode,
@@ -154,7 +156,8 @@ export async function updateCandidato(
     const { nombre, nombreUser, rol } = validatedFields.data;
     const session = await auth();
     const token = session?.accessToken;
-    const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
+    const rawBase3 = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_BACK_LINK || 'https://api.pockiaction.xyz';
+    const base = typeof rawBase3 === 'string' ? rawBase3.replace(/[`'"\s]/g, '').trim() : rawBase3;
     const response = await axios.post(
       `${base}/api/taquilla/updateUserByIdTaquilla`,
       {

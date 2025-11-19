@@ -36,29 +36,20 @@ export default function EmployeeForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-      if (!baseUrl) {
-        toast.error('Configuración de API faltante', {
-          position: 'top-center',
-          autoClose: 3000,
-          hideProgressBar: true,
-        });
-        return;
-      }
-      const response = await fetch(`${baseUrl}/api/hotel/createEmployee`, {
+      const response = await fetch(`/api/hotel/createEmployee`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 
       const data = await response.json();
-      if (data.success) {
-        toast.success('Empleado creado con éxito!', {
+      if (response.ok) {
+        toast.success(data.message || 'Empleado creado con éxito!', {
           position: 'top-center',
           autoClose: 3000,
           hideProgressBar: true,
         });
-        setFormData(initialState); // Resetear formulario
+        setFormData(initialState);
       } else {
         toast.error(data.message || 'Error al crear empleado', {
           position: 'top-center',

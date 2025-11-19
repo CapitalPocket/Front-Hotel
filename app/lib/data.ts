@@ -8,7 +8,12 @@ import { unstable_noStore as noStore } from 'next/cache';
 import axios from 'axios';
 
 const ITEMS_PER_PAGE = 9;
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? process.env.API_BASE_URL ?? 'https://api.pockiaction.xyz';
+const RAW_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? 'https://api.pockiaction.xyz';
+const API_BASE_URL =
+  typeof RAW_BASE_URL === 'string'
+    ? RAW_BASE_URL.replace(/[`'"\s]/g, '').trim()
+    : RAW_BASE_URL;
 
 export async function fetchCandidatoById(id: string) {
   noStore();
@@ -120,11 +125,10 @@ export async function fetchFilteredUsers(
     const filteredUsers = users.filter((user: UserProfile) => {
       const searchString = query.toLowerCase();
       return (
-        (user.statusprofile === effectiveStatus) && (
-          user.name?.toLowerCase().includes(searchString) ||
+        user.statusprofile === effectiveStatus &&
+        (user.name?.toLowerCase().includes(searchString) ||
           user.rol?.toLowerCase().includes(searchString) ||
-          user.statusprofile?.toLowerCase().includes(searchString)
-        )
+          user.statusprofile?.toLowerCase().includes(searchString))
       );
     });
 
@@ -163,11 +167,10 @@ export async function fetchFilteredUsersPage(
     const count = users.filter((user: UserProfile) => {
       const searchString = query.toLowerCase();
       return (
-        (user.statusprofile === effectiveStatus) && (
-          user.name?.toLowerCase().includes(searchString) ||
+        user.statusprofile === effectiveStatus &&
+        (user.name?.toLowerCase().includes(searchString) ||
           user.rol?.toLowerCase().includes(searchString) ||
-          user.statusprofile?.toLowerCase().includes(searchString)
-        )
+          user.statusprofile?.toLowerCase().includes(searchString))
       );
     }).length;
 
@@ -189,50 +192,40 @@ export async function fetchEmployeeSchedules(
       return [];
     }
     const employeesApiUrl = `${API_BASE_URL}/api/hotel/getAllEmployees`;
-    const response = await axios.post(employeesApiUrl);
+    const employeesRes = await axios.post(employeesApiUrl);
 
-    if (!response.data || !Array.isArray(response.data)) {
+    if (!employeesRes.data || !Array.isArray(employeesRes.data)) {
       console.warn('La respuesta de empleados no es válida.');
       return [];
     }
 
-    const employees = response.data.filter(
-      (emp: any) => emp.statusprofile === status,
+    const enabledEmployees = employeesRes.data
+      .filter((emp: any) => emp.statusprofile === status)
+      .map((emp: any) => ({ id_employee: emp.id_employee }));
+
+    const schedulesApiUrl = `${API_BASE_URL}/api/hotel/getEmployeeWorkSchedule`;
+    let schedulesData: any[] = [];
+    try {
+      const schedulesRes = await axios.get(schedulesApiUrl);
+      schedulesData = Array.isArray(schedulesRes.data) ? schedulesRes.data : [];
+    } catch (error: any) {
+      if (error?.response?.status === 404) {
+        schedulesData = [];
+      } else {
+        throw error;
+      }
+    }
+
+    const enabledIds = new Set(enabledEmployees.map((e: any) => e.id_employee));
+    const filtered = schedulesData.filter((s: any) =>
+      enabledIds.has(s.employee_id),
     );
 
-    // 2️⃣ Obtener los horarios de cada empleado
-    const scheduleRequests = employees.map(async (employee: any) => {
-      const employeeId = employee.id_employee;
-
-      const schedulesApiUrl = `${API_BASE_URL}/api/hotel/getAllShedule/${employeeId}`;
-
-      try {
-        const scheduleResponse = await axios.get(schedulesApiUrl);
-
-        if (!scheduleResponse.data || !Array.isArray(scheduleResponse.data)) {
-          console.warn(`No schedules found for employee ${employeeId}`);
-          return [];
-        }
-
-        return scheduleResponse.data.map((schedule: any) => ({
-          employeeId,
-          start_time: schedule.start_time,
-          end_time: schedule.end_time,
-          range_hours: schedule.range_hours,
-        }));
-      } catch (error) {
-        console.error(
-          `Error fetching schedules for employee ${employeeId}:`,
-          error,
-        );
-        return [];
-      }
-    });
-
-    // 3️⃣ Esperar todas las solicitudes y aplanar resultados
-    const allSchedules = (await Promise.all(scheduleRequests)).flat();
-
-    console.log('All Employee Schedules:', allSchedules);
+    const allSchedules = filtered.map((schedule: any) => ({
+      employeeId: schedule.employee_id,
+      start_time: schedule.start_time,
+      end_time: schedule.end_time,
+    }));
 
     return allSchedules;
   } catch (error) {
@@ -262,13 +255,43 @@ export async function updateEmployeeDetails(
       throw new Error('API base URL not configured');
     }
     const apiUrl = `${API_BASE_URL}/api/hotel/updateEmployeeDetails/${employee_id}`;
-    const response = await axios.patch(apiUrl, employeeData);
+    const normalize = (t: string) =>
+      t && /^\d{1,2}:\d{2}$/.test(t) ? `${t}:00` : t;
+    const response = await axios.patch(apiUrl, {
+      ...employeeData,
+      start_time: normalize(employeeData.start_time),
+      end_time: normalize(employeeData.end_time),
+      lunch_start_time: normalize(employeeData.lunch_start_time),
+      lunch_end_time: normalize(employeeData.lunch_end_time),
+    });
 
-    // Manejar la respuesta exitosa
-    console.log('Employee details updated successfully', response.data);
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
+      const status = error.response?.status;
+      const msg = error.response?.data?.error || error.message;
+      if (status === 500) {
+        try {
+          const scheduleUrl = `${API_BASE_URL}/api/hotel/updateEmployeeSchedule/${employee_id}`;
+          await axios.put(scheduleUrl, {
+            start_time: employeeData.start_time,
+            end_time: employeeData.end_time,
+          });
+          if (employeeData.statusprofile) {
+            const statusUrl = `${API_BASE_URL}/api/hotel/updateStatus`;
+            await axios.post(statusUrl, {
+              id_employee: employee_id,
+              statusprofile: employeeData.statusprofile,
+            });
+          }
+          return {
+            message: 'Partial update applied: schedule and status updated',
+          };
+        } catch (fallbackError) {
+          console.error('Fallback update failed:', fallbackError);
+          throw new Error(`Failed to update employee details: ${msg}`);
+        }
+      }
       console.error('Axios Error:', error.response?.data || error.message);
       throw new Error(`Failed to update employee details: ${error.message}`);
     }

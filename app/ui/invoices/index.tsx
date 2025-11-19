@@ -19,7 +19,8 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
   const [endTime, setEndTime] = useState<string>('17:00');
   const [selectedHotels, setSelectedHotels] = useState<any[]>([]);
   const [selectedRole, setSelectedRole] = useState<any>(null);
-  const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
+  const rawBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
+  const base = typeof rawBase === 'string' ? rawBase.replace(/[`'"\s]/g, '').trim() : rawBase;
 
   const roles = [
  
