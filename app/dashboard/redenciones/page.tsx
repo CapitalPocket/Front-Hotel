@@ -44,7 +44,6 @@ const Page = () => {
 
     setLoading(true);
     try {
-      const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
       const hotelPayload = {
         name: hotelName,
         latitude,
@@ -56,7 +55,7 @@ const Page = () => {
       console.log("📦 Enviando hotel a /createHotel:", hotelPayload);
 
       const hotelResponse = await axios.post(
-        `${base}/api/hotel/createHotel`,
+        `/api/hotel/createHotel`,
         hotelPayload
       );
 
@@ -71,7 +70,7 @@ const Page = () => {
       console.log("📦 Enviando habitaciones a /createRoomsWithLastHotel:", roomsPayload);
 
       await axios.post(
-        `${base}/api/hotel/createRoomsWithLastHotel`,
+        `/api/hotel/createRoomsWithLastHotel`,
         roomsPayload
       );
 

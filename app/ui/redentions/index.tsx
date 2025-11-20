@@ -25,8 +25,7 @@ const Invoices: React.FC = () => {
         }
 
         try {
-            const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
-            const response = await axios.post(`${base}/api/hotel/getAllHotel`, {
+            const response = await axios.post(`/api/hotel/createHotel`, {
                 name: hotelName,
                 latitude,
                 longitude,

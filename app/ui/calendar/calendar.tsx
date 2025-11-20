@@ -38,7 +38,6 @@ const HotelView: React.FC<HotelViewProps> = ({ hotelId }) => {
   const [roomStatuses, setRoomStatuses] = useState<RoomStatus[]>([]);
   const hotelViewRef = useRef<HTMLDivElement>(null);
   const resolvedHotelId = parseInt(hotelId, 10) || 0;
-  const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
 
   useEffect(() => {
 
@@ -49,7 +48,7 @@ const HotelView: React.FC<HotelViewProps> = ({ hotelId }) => {
     const fetchRoomStatuses = async () => {
       try {
         const response = await axios.post(
-          `${base}/api/hotel/getAllRoomStatus`,
+          `/api/hotel/getAllRoomStatus`,
           { hotel_id: resolvedHotelId }
         );
 
@@ -73,7 +72,7 @@ const HotelView: React.FC<HotelViewProps> = ({ hotelId }) => {
     };
 
     fetchRoomStatuses();
-  }, [resolvedHotelId, base]);
+  }, [resolvedHotelId]);
 
   // Función para agrupar habitaciones por piso (primer dígito del room_number)
   const groupedRoomsByFloor = React.useMemo(() => {

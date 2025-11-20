@@ -18,9 +18,8 @@ const EditHotelPage = () => {
   const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
-    const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
     axios
-      .get(`${base}/api/hotel/getAllHotel`)
+      .get(`/api/hotel/getAllHotel`)
       .then((res) => {
         const transformedHotels = res.data.map((hotel: any) => ({
           id: hotel.id_hotel, // ← mapeo correcto
@@ -60,10 +59,8 @@ const EditHotelPage = () => {
   
     setLoading(true);
     try {
-      const rawBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
-      const base = typeof rawBase === 'string' ? rawBase.replace(/[`'"\s]/g, '').trim() : rawBase;
       await axios.post(
-        `${base}/api/hotel/updateHotel/${selectedHotel.id}`,
+        `/api/hotel/updateHotel/${selectedHotel.id}`,
         {
           name: hotelName,
           latitude: selectedHotel.latitude,
