@@ -71,8 +71,8 @@ const Marketing = () => {
           const Icon = element.icon;
           return (
             <Link href={element.href} key={element.href} className="w-full">
-              <div className="flex flex-col items-center justify-center p-6 bg-white rounded-xl shadow-md transition-all hover:shadow-lg hover:scale-105 border border-gray-200 h-48">
-              <Icon className="text-5xl text-gray-700 mb-3" />
+              <div className="flex flex-col items-center justify-center p-6 bg-white rounded-xl shadow-md transition-all hover:shadow-lg border border-gray-200 h-48">
+                <Icon className="text-5xl text-gray-700 mb-3" />
                 <h3 className="text-lg font-semibold text-gray-700">{element.name}</h3>
                 <p className="text-sm text-gray-500 text-center">{element.description}</p>
               </div>

@@ -11,8 +11,8 @@ export default async function Layout({
  
   return (
     <SessionProvider session={session}>
-      <div className="flex h-screen flex-col md:flex-row md:overflow-hidden">
-        <div className="w-full flex-none md:w-64">
+      <div className="flex min-h-screen flex-col md:flex-row">
+        <div className="w-full flex-none md:w-64 md:sticky md:top-0 md:h-screen">
           <SideNav user={session?.user || ''} />
         </div>
         <div className="flex-grow p-4 overflow-y-auto md:p-6">{children}</div>

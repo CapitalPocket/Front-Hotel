@@ -91,12 +91,12 @@ export default function EmployeeModal({
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
-    <div className="bg-white p-8 rounded-lg shadow-lg w-[600px] z-50">
+    <div className="bg-white p-6 sm:p-8 rounded-lg shadow-lg w-full max-w-lg max-h-[90vh] overflow-y-auto z-50">
       <h2 className="text-xl font-semibold mb-6 text-center">Editar {employee.name}</h2>
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Rol y Estado */}
-        <div className="flex gap-6">
-          <div className="flex flex-col w-1/2 space-y-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="flex flex-col w-full space-y-2">
             <label className="text-sm font-medium">Rol</label>
             <select
               name="role"
@@ -125,7 +125,7 @@ export default function EmployeeModal({
               {/* Agrega más opciones según sea necesario */}
             </select>
           </div>
-          <div className="flex flex-col w-1/2 space-y-2">
+          <div className="flex flex-col w-full space-y-2">
             <label className="text-sm font-medium">Estado</label>
             <select
               name="statusprofile"
@@ -155,7 +155,7 @@ export default function EmployeeModal({
         </div>
   
         {/* Horario */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="flex flex-col space-y-2">
             <label className="text-sm font-medium">Hora de inicio</label>
             <input
@@ -179,7 +179,7 @@ export default function EmployeeModal({
         </div>
   
         {/* Almuerzo */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="flex flex-col space-y-2">
             <label className="text-sm font-medium">Hora de inicio almuerzo</label>
             <input
@@ -203,7 +203,7 @@ export default function EmployeeModal({
         </div>
   
         {/* Fecha de nacimiento (con DatePicker) */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="flex flex-col space-y-2">
           <label className="text-sm font-medium">Fecha de nacimiento</label>
           <DatePicker
