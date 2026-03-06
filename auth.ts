@@ -5,16 +5,44 @@ import { z } from 'zod';
 import type { ApiResponse, LoginResponse } from '@/app/lib/definitions';
 import axios from 'axios';
 
+const normalizeHotelRole = (role: string | undefined): string => {
+  const normalized = (role || '').trim().toLowerCase();
+  if (normalized === 'administrador') return 'administrador';
+  if (normalized === 'hk supervisor') return 'supervisor';
+  if (normalized === 'housekeeper') return 'taquillero';
+  return normalized;
+};
+
 async function getUser(
-  email: string,
+  phone_number: string,
   password: string,
 ): Promise<LoginResponse | undefined> {
   try {
-    const rawBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
-    const base = typeof rawBase === 'string' ? rawBase.replace(/[`'"\s]/g, '').trim() : rawBase;
+    const sanitizeEnv = (rawValue: string | undefined) =>
+      typeof rawValue === 'string' ? rawValue.replace(/[`'"\s]/g, '').trim() : '';
+
+    const rawBase =
+      process.env.NEXT_PUBLIC_HOTEL_API_BASE_URL ||
+      process.env.NEXT_PUBLIC_API_BASE_URL ||
+      'http://localhost:8000';
+    const base = sanitizeEnv(rawBase);
+    const rawApiKey =
+      process.env.NEXT_PUBLIC_API_KEY ||
+      process.env.NEXT_PUBLIC_REMINDERS_API_KEY ||
+      process.env.API_KEY ||
+      '';
+    const apiKey = sanitizeEnv(rawApiKey);
+
+    const headers: Record<string, string> = {};
+    if (apiKey) {
+      headers['x-api-key'] = apiKey;
+      headers.Authorization = `Api-Key ${apiKey}`;
+    }
+
     const response = await axios.post<ApiResponse>(
-      `${base}/api/taquilla/loginUser`,
-      { email, password },
+      `${base}/api/hotel/loginUser`,
+      { phone_number, password },
+      { headers },
     );
 
     const apiResponse = response.data;
@@ -22,15 +50,15 @@ async function getUser(
 
     if (apiResponse.user) {
       const user = apiResponse.user;
+      const normalizedRole = normalizeHotelRole(user.role);
       return {
         user: {
-          idUser: user.id_user.toString(),
+          idUser: user.id_employee.toString(),
           name: user.name,
-          email: user.email,
+          email: user.phone_number,
           password: user.password,
-          rol: user.rol,
-          park: user.idpark,
-          changePass: user.changepassword,
+          rol: normalizedRole,
+          park: String(user.current_hotel_id || ''),
           statusprofile: user.statusprofile,
         },
         message,
@@ -40,7 +68,14 @@ async function getUser(
     return { message };
   } catch (error) {
     console.error('Failed to fetch user:', error);
-    throw new Error('Failed to fetch user.');
+    if (axios.isAxiosError(error)) {
+      const backendMessage = error.response?.data?.message;
+      if (typeof backendMessage === 'string' && backendMessage.trim()) {
+        throw new Error(backendMessage);
+      }
+      throw new Error('No fue posible autenticar con el servicio de hoteles.');
+    }
+    throw new Error('No fue posible autenticar con el servicio de hoteles.');
   }
 }
 
@@ -51,20 +86,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     Credentials({
       async authorize(credentials) {
         const parsedCredentials = z
-          .object({ email: z.string().min(3), password: z.string().min(4) })
+          .object({ phone_number: z.string().min(8), password: z.string().min(4) })
           .safeParse(credentials);
 
         if (parsedCredentials.success) {
-          const { email, password } = parsedCredentials.data;
-          const response = await getUser(email, password);
+          const { phone_number, password } = parsedCredentials.data;
+          const response = await getUser(phone_number, password);
 
-          if (!response?.user) return null;
+          if (!response?.user) {
+            throw new Error(response?.message || 'Credenciales incorrectas.');
+          }
 
           if (response.user.statusprofile === 'Deshabilitado') {
-            throw new Error('User is disabled.');
+            throw new Error('El usuario está deshabilitado.');
           }
           if (response.user.statusprofile === 'Eliminado') {
-            throw new Error('User is disabled.');
+            throw new Error('El usuario ha sido eliminado.');
           }
           return {
             idUser: response.user.idUser,

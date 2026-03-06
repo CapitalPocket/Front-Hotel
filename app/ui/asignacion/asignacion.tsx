@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import axios from 'axios';
 import { Pencil, Repeat } from 'lucide-react';
 import EditStatusModal from './editstatusmodal';
@@ -17,15 +17,42 @@ interface Assignment {
   hotel_name: string;
 }
 
+const sanitizeEnv = (rawValue: string | undefined) =>
+  typeof rawValue === 'string' ? rawValue.replace(/[`'"\s]/g, '').trim() : '';
+
 const AssignmentsView = () => {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
   const [isReassignModalOpen, setIsReassignModalOpen] = useState<boolean>(false);
   const [selectedHotel, setSelectedHotel] = useState<string>('');
+  const base = useMemo(() => {
+    const rawBase =
+      process.env.NEXT_PUBLIC_HOTEL_API_BASE_URL ||
+      process.env.NEXT_PUBLIC_API_BASE_URL ||
+      process.env.NEXT_PUBLIC_BACK_LINK ||
+      'http://localhost:8080';
+    return sanitizeEnv(rawBase);
+  }, []);
+  const headers = useMemo(() => {
+    const rawApiKey =
+      process.env.NEXT_PUBLIC_API_KEY ||
+      process.env.NEXT_PUBLIC_REMINDERS_API_KEY ||
+      '';
+    const apiKey = sanitizeEnv(rawApiKey);
+    return apiKey
+      ? {
+          'x-api-key': apiKey,
+          Authorization: `Api-Key ${apiKey}`,
+        }
+      : undefined;
+  }, []);
 
   const fetchAssignments = useCallback(async () => {
     try {
-      const response = await axios.get(`/api/hotel/getTodayAssignments`);
+      const response = await axios.get(
+        `${base}/api/hotel/getTodayAssignments`,
+        headers ? { headers } : undefined,
+      );
       setAssignments(Array.isArray(response.data) ? response.data : []);
     } catch (error: any) {
       if (error?.response?.status === 404) {
@@ -34,7 +61,7 @@ const AssignmentsView = () => {
       }
       setAssignments([]);
     }
-  }, []);
+  }, [base, headers]);
 
   useEffect(() => {
     fetchAssignments();

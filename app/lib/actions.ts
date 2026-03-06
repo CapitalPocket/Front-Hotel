@@ -26,11 +26,22 @@ export async function authenticate(
     await signIn('credentials', formData);
   } catch (error) {
     if (error instanceof AuthError) {
+      const callbackMessage =
+        typeof error.cause === 'object' &&
+        error.cause &&
+        'err' in error.cause &&
+        typeof error.cause.err === 'object' &&
+        error.cause.err &&
+        'message' in error.cause.err &&
+        typeof error.cause.err.message === 'string'
+          ? error.cause.err.message
+          : undefined;
+
       switch (error.type) {
         case 'CallbackRouteError':
-          return 'Cuenta inhabilitada';
+          return callbackMessage || 'No fue posible autenticar. Verifica conexión al backend y credenciales.';
         case 'CredentialsSignin':
-          return 'Usuario invalido.';
+          return 'Credenciales inválidas.';
         default:
           return 'Algo salió mal.';
       }
@@ -83,7 +94,10 @@ export async function createCandidato(prevState: Statee, formData: FormData) {
   const { nombre, nombreUser, password, rol, park } = validatedFields.data;
 
   try {
-    const rawBase = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_BACK_LINK || 'https://api.pockiaction.xyz';
+    const rawBase =
+      process.env.NEXT_PUBLIC_API_BASE_URL ||
+      process.env.NEXT_PUBLIC_BACK_LINK ||
+      'http://localhost:8080';
     const base = typeof rawBase === 'string' ? rawBase.replace(/[`'"\s]/g, '').trim() : rawBase;
     const response = await axios.post(
       `${base}/api/taquilla/createUser`,
@@ -110,7 +124,10 @@ export async function validateTicket(ticketCode: any) {
   try {
     const session = await auth();
     const token = session?.accessToken;
-    const rawBase2 = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_BACK_LINK || 'https://api.pockiaction.xyz';
+    const rawBase2 =
+      process.env.NEXT_PUBLIC_API_BASE_URL ||
+      process.env.NEXT_PUBLIC_BACK_LINK ||
+      'http://localhost:8080';
     const base = typeof rawBase2 === 'string' ? rawBase2.replace(/[`'"\s]/g, '').trim() : rawBase2;
     const response = await axios.post(
       `${base}/api/taquilla/validateTicketNew`,
@@ -156,7 +173,10 @@ export async function updateCandidato(
     const { nombre, nombreUser, rol } = validatedFields.data;
     const session = await auth();
     const token = session?.accessToken;
-    const rawBase3 = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_BACK_LINK || 'https://api.pockiaction.xyz';
+    const rawBase3 =
+      process.env.NEXT_PUBLIC_API_BASE_URL ||
+      process.env.NEXT_PUBLIC_BACK_LINK ||
+      'http://localhost:8080';
     const base = typeof rawBase3 === 'string' ? rawBase3.replace(/[`'"\s]/g, '').trim() : rawBase3;
     const response = await axios.post(
       `${base}/api/taquilla/updateUserByIdTaquilla`,
@@ -181,7 +201,10 @@ export async function updateUser(user: any) {
   try {
     const session = await auth();
     const token = session?.accessToken;
-    const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
+    const base =
+      process.env.NEXT_PUBLIC_API_BASE_URL ||
+      process.env.NEXT_PUBLIC_BACK_LINK ||
+      'http://localhost:8080';
     const response = await axios.post(
       `${base}/api/taquilla/updateUserByIdTaquilla`,
       { user },

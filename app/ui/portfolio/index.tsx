@@ -15,8 +15,14 @@ interface PortfolioProps {
 }
 
 const Portfolio: React.FC<PortfolioProps> = ({ park }) => {
-  const rawBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
+  const rawBase =
+    process.env.NEXT_PUBLIC_API_BASE_URL ||
+    process.env.NEXT_PUBLIC_BACK_LINK ||
+    'http://localhost:8080';
   const base = typeof rawBase === 'string' ? rawBase.replace(/[`'"\s]/g, '').trim() : rawBase;
+  const rawApiKey = process.env.NEXT_PUBLIC_API_KEY || '';
+  const apiKey = typeof rawApiKey === 'string' ? rawApiKey.replace(/[`'"\s]/g, '').trim() : '';
+  const hotelHeaders = apiKey ? { 'x-api-key': apiKey } : undefined;
   const [employees, setEmployees] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [modalOpen, setModalOpen] = useState(false);
@@ -40,7 +46,8 @@ const Portfolio: React.FC<PortfolioProps> = ({ park }) => {
     try {
       const response = await axios.post(
         `${base}/api/hotel/getAllEmployees`,
-        { role: '' }
+        { role: '' },
+        hotelHeaders ? { headers: hotelHeaders } : undefined
       );
       return response.data;
     } catch (err) {
@@ -58,7 +65,8 @@ const Portfolio: React.FC<PortfolioProps> = ({ park }) => {
       const endDate = format(dateRange.to, "yyyy-MM-dd");
 
       const salaryResponse = await axios.get(
-        `${base}/api/hotel/CalculateEmployeeSalary/${phone_number}?start_date=${startDate}&end_date=${endDate}`
+        `${base}/api/hotel/CalculateEmployeeSalary/${phone_number}?start_date=${startDate}&end_date=${endDate}`,
+        hotelHeaders ? { headers: hotelHeaders } : undefined
       );
       return salaryResponse.data ?? {};
     } catch (error) {

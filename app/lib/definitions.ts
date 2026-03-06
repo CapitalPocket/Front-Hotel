@@ -34,7 +34,7 @@ export type User = {
   idUser: string;
   name: string;
   email: string;
-  password: string;
+  password?: string;
   rol: string;
   park: string;
   changePass?: string;
@@ -45,13 +45,12 @@ export type User = {
 export type ApiResponse = {
 
   user?: {
-    id_user: string;
+    id_employee: string;
     name: string;
-    email: string;
-    password: string;
-    rol: string;
-    idpark: string;
-    changepassword?: string;
+    phone_number: string;
+    password?: string;
+    role: string;
+    current_hotel_id?: string | number | null;
     statusprofile?: string;
   }; 
    message: string;

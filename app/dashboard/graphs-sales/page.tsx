@@ -1,12 +1,27 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { QRCodeCanvas } from "qrcode.react";
 import Select from "react-select";
 import { motion } from "framer-motion";
 import axios from "axios";
 
 const Page = () => {
+  const base = useMemo(() => {
+    const rawBase =
+      process.env.NEXT_PUBLIC_API_BASE_URL ||
+      process.env.NEXT_PUBLIC_BACK_LINK ||
+      "http://localhost:8080";
+    return typeof rawBase === "string" ? rawBase.replace(/[`'"\s]/g, "").trim() : rawBase;
+  }, []);
+  const apiKey = useMemo(() => {
+    const rawApiKey = process.env.NEXT_PUBLIC_API_KEY || "";
+    return typeof rawApiKey === "string" ? rawApiKey.replace(/[`'"\s]/g, "").trim() : "";
+  }, []);
+  const hotelHeaders = useMemo(
+    () => (apiKey ? { "x-api-key": apiKey } : undefined),
+    [apiKey]
+  );
   const [employees, setEmployees] = useState<{ id_employee: string; name: string; phone_number: string }[]>([]);
   const [selectedEmployee, setSelectedEmployee] = useState<{ value: string; label: string; phone: string } | null>(null);
   const [selectedHotel, setSelectedHotel] = useState<{ value: string; label: string } | null>(null);
@@ -17,9 +32,11 @@ const Page = () => {
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-      const rawBase = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_BACK_LINK || 'https://api.pockiaction.xyz';
-      const base = typeof rawBase === 'string' ? rawBase.replace(/[`'"\s]/g, '').trim() : rawBase;
-      const response = await axios.post(`${base}/api/hotel/getAllEmployees`);     
+      const response = await axios.post(
+        `${base}/api/hotel/getAllEmployees`,
+        {},
+        hotelHeaders ? { headers: hotelHeaders } : undefined
+      );
         const data = response.data
         if (Array.isArray(data)) {
           setEmployees(data);
@@ -29,20 +46,19 @@ const Page = () => {
       }
     };
     fetchEmployees();
-  }, []);
+  }, [base, hotelHeaders]);
 
   const generateVerificationCode = () => {
     return Math.floor(100000 + Math.random() * 900000).toString(); // Código de 6 dígitos
   };
 
-  const sendVerificationCodeToAPI = async (phone: string, code: string, role: string) => {
+  const sendVerificationCodeToAPI = useCallback(async (phone: string, code: string, role: string) => {
     try {
-      const rawBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
-      const base = typeof rawBase === 'string' ? rawBase.replace(/[`'"\s]/g, '').trim() : rawBase;
       const response = await fetch(`${base}/api/hotel/handleQRCode`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...(hotelHeaders || {}),
         },
         body: JSON.stringify({ phone, qrCode: code, role }),
       });
@@ -52,7 +68,7 @@ const Page = () => {
     } catch (error) {
       console.error("❌ Error al enviar el código:", error);
     }
-  };
+  }, [base, hotelHeaders]);
 
   useEffect(() => {
     if (selectedEmployee && selectedHotel && entryType) {
@@ -60,7 +76,7 @@ const Page = () => {
       setVerificationCode(newCode);
       sendVerificationCodeToAPI(selectedEmployee.phone, newCode, selectedRole?.value || "");
     }
-  }, [selectedEmployee, selectedHotel, entryType, selectedRole?.value]);
+  }, [entryType, selectedEmployee, selectedHotel, selectedRole?.value, sendVerificationCodeToAPI]);
 
   const rawWhatsApp = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '17863403034';
   const whatsappNumber = typeof rawWhatsApp === 'string' ? rawWhatsApp.replace(/[`'"\s]/g, '').trim() : rawWhatsApp;
@@ -77,8 +93,11 @@ const Page = () => {
   useEffect(() => {
     const fetchHotels = async () => {
       try {
-        const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
-        const response = await axios.get(`${base}/api/hotel/getAllHotel`);
+        const response = await axios.post(
+          `${base}/api/hotel/getAllHotel`,
+          {},
+          hotelHeaders ? { headers: hotelHeaders } : undefined
+        );
         if (Array.isArray(response.data)) {
           setHotels(response.data);
         } else {
@@ -90,7 +109,7 @@ const Page = () => {
     };
 
     fetchHotels();
-  }, []);
+  }, [base, hotelHeaders]);
 
   
 

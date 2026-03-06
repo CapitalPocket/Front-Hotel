@@ -11,11 +11,11 @@ export default async function Layout({
  
   return (
     <SessionProvider session={session}>
-      <div className="flex min-h-screen flex-col md:flex-row">
-        <div className="w-full flex-none md:w-64 md:sticky md:top-0 md:h-screen">
+      <div className="flex min-h-screen flex-col bg-slate-100 md:flex-row">
+        <div className="w-full flex-none md:h-screen md:w-72 md:sticky md:top-0">
           <SideNav user={session?.user || ''} />
         </div>
-        <div className="flex-grow p-4 overflow-y-auto md:p-6">{children}</div>
+        <div className="flex-grow overflow-y-auto p-4 md:p-8">{children}</div>
       </div>
     </SessionProvider>
   );

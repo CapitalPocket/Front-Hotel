@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import axios from 'axios';
 
 interface RoomStatus {
@@ -15,23 +15,23 @@ interface HotelViewProps {
 }
 
 const statusColors: Record<string, string> = {
-  'V/C': '#1B5E20',       // Verde bosque
-  'O': '#FF6F00',         // Naranja intenso
-  'V/D': '#B71C1C',       // Rojo sangre
-  'OOO': '#424242',       // Gris carbón
-  'CLEAN/IN': '#0D47A1',  // Azul fuerte
-  'P/S': '#4A148C',       // Púrpura profundo
-  'DEV': '#FDD835',       // Amarillo vibrante
-  'RM': '#3E2723',        // Marrón muy oscuro
-  'S/O': '#00695C',       // Verde azulado
-  'E/CH': '#0288D1',      // Azul cielo fuerte
-  'MT/IN': '#558B2F',     // Verde oliva
-  'MT/OUT': '#AFB42B',    // Amarillo oliva
-  'DEP': '#BF360C',       // Naranja quemado
-  'CALL': '#263238',      // Azul grisáceo muy oscuro
-  'REMO PROJECT': '#AD1457', // Rosa oscuro
-  'F/S': '#1A237E',       // Azul marino fuerte
-  'N/A': '#9E9E9E'        // Gris neutro
+  'V/C': '#1B5E20',
+  'O': '#FF6F00',
+  'V/D': '#B71C1C',
+  'OOO': '#424242',
+  'CLEAN/IN': '#0D47A1',
+  'P/S': '#4A148C',
+  'DEV': '#FDD835',
+  'RM': '#3E2723',
+  'S/O': '#00695C',
+  'E/CH': '#0288D1',
+  'MT/IN': '#558B2F',
+  'MT/OUT': '#AFB42B',
+  'DEP': '#BF360C',
+  'CALL': '#263238',
+  'REMO PROJECT': '#AD1457',
+  'F/S': '#1A237E',
+  'N/A': '#9E9E9E'
 };
 
 const HotelView: React.FC<HotelViewProps> = ({ hotelId }) => {
@@ -40,7 +40,6 @@ const HotelView: React.FC<HotelViewProps> = ({ hotelId }) => {
   const resolvedHotelId = parseInt(hotelId, 10) || 0;
 
   useEffect(() => {
-
     if (hotelViewRef.current) {
       hotelViewRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
@@ -54,7 +53,6 @@ const HotelView: React.FC<HotelViewProps> = ({ hotelId }) => {
 
         const allStatuses: RoomStatus[] = response.data || [];
 
-        // Obtener el último estado por habitación y categoría
         const latestRoomStatuses = Object.values(
           allStatuses.reduce((acc, room) => {
             const key = `${room.room_number}-${room.category}`;
@@ -74,11 +72,8 @@ const HotelView: React.FC<HotelViewProps> = ({ hotelId }) => {
     fetchRoomStatuses();
   }, [resolvedHotelId]);
 
-  // Función para agrupar habitaciones por piso (primer dígito del room_number)
-  const groupedRoomsByFloor = React.useMemo(() => {
+  const groupedRoomsByFloor = useMemo(() => {
     const groups: Record<number, number[]> = {};
-
-    // Obtenemos sólo los números de habitación únicos
     const uniqueRooms = Array.from(
       new Set(roomStatuses.map(r => parseInt(r.room_number)))
     );
@@ -89,10 +84,9 @@ const HotelView: React.FC<HotelViewProps> = ({ hotelId }) => {
       groups[floor].push(roomNum);
     });
 
-    // Ordenamos pisos y habitaciones
     const sortedFloors = Object.keys(groups)
       .map(Number)
-      .sort((a, b) => b - a); // pisos descendentes
+      .sort((a, b) => b - a);
 
     return sortedFloors.map(floor => ({
       floor,
@@ -100,14 +94,6 @@ const HotelView: React.FC<HotelViewProps> = ({ hotelId }) => {
     }));
   }, [roomStatuses]);
 
-  // Dividir en dos columnas
-  const half = Math.ceil(groupedRoomsByFloor.length / 2);
-  const [leftFloors, rightFloors] = [
-    groupedRoomsByFloor.slice(0, half),
-    groupedRoomsByFloor.slice(half),
-  ];
-
-  // Obtener color de estado para la habitación y categoría
   const getStatusColor = (room: number, category: 'A' | 'B') => {
     const status = roomStatuses.find(
       r => r.room_number === room.toString() && r.category === category
@@ -116,144 +102,57 @@ const HotelView: React.FC<HotelViewProps> = ({ hotelId }) => {
   };
 
   return (
-    <div ref={hotelViewRef} className="hotel-view">
-      {/* Leyenda */}
-      <div className="legend">
-        {Object.entries(statusColors).map(([key, color]) => (
-          <div key={key} className="legend-item">
-            <div className="color-box" style={{ backgroundColor: color }}></div>
-            <span>{key}</span>
-          </div>
-        ))}
+    <div ref={hotelViewRef} className="space-y-6">
+      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 md:p-5">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+          <h3 className="text-base md:text-lg font-semibold text-slate-800">Leyenda de estados</h3>
+          <p className="text-sm text-slate-500">{groupedRoomsByFloor.length} pisos detectados</p>
+        </div>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+          {Object.entries(statusColors).map(([key, color]) => (
+            <div key={key} className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2">
+              <div className="h-4 w-4 rounded-md border border-slate-300" style={{ backgroundColor: color }} />
+              <span className="text-xs font-medium text-slate-700">{key}</span>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Habitaciones dinámicas agrupadas por piso */}
-      <div className="room-columns">
-        {[leftFloors, rightFloors].map((column, i) => (
-          <div key={i} className="room-column">
-            {column.map(group => (
-              <div key={group.floor} className="floor-row">
-                {group.rooms.map(room => (
-                  <div key={room} className="hex">
-                    <div className="room-number">Hab. {room}</div>
-                    <div className="split">
-                      <div
-                        className="half a"
-                        style={{ backgroundColor: getStatusColor(room, 'A') }}
-                      >
-                        A
-                      </div>
-                      <div
-                        className="half b"
-                        style={{ backgroundColor: getStatusColor(room, 'B') }}
-                      >
-                        B
-                      </div>
+      <div className="space-y-5">
+        {groupedRoomsByFloor.map((group) => (
+          <div key={group.floor} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:p-5">
+            <div className="mb-4 flex items-center justify-between">
+              <h4 className="text-lg font-semibold text-slate-800">Piso {group.floor}</h4>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+                {group.rooms.length} habitaciones
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6">
+              {group.rooms.map((room) => (
+                <div key={room} className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                  <div className="border-b border-slate-200 bg-slate-50 px-3 py-2 text-center text-sm font-semibold text-slate-700">
+                    Hab. {room}
+                  </div>
+                  <div className="grid grid-cols-2 text-white">
+                    <div
+                      className="flex h-11 items-center justify-center text-sm font-bold"
+                      style={{ backgroundColor: getStatusColor(room, 'A') }}
+                    >
+                      A
+                    </div>
+                    <div
+                      className="flex h-11 items-center justify-center text-sm font-bold"
+                      style={{ backgroundColor: getStatusColor(room, 'B') }}
+                    >
+                      B
                     </div>
                   </div>
-                ))}
-              </div>
-            ))}
+                </div>
+              ))}
+            </div>
           </div>
         ))}
       </div>
-
-      {/* Estilos igual que antes */}
-      <style jsx>{`
-        .hotel-view {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          padding: 20px;
-        }
-
-        .legend {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-          gap: 12px;
-          margin-bottom: 24px;
-          width: 100%;
-          max-width: 800px;
-          background: #f0f4f8;
-          padding: 16px;
-          border-radius: 12px;
-          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-        }
-
-        .legend-item {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          background: white;
-          padding: 6px 10px;
-          border-radius: 8px;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-          font-size: 0.85rem;
-          font-weight: 500;
-        }
-
-        .color-box {
-          width: 18px;
-          height: 18px;
-          border-radius: 4px;
-          border: 1px solid #ccc;
-        }
-
-        .room-columns {
-          display: flex;
-          gap: 40px;
-          justify-content: center;
-          flex-wrap: wrap;
-        }
-
-        .room-column {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-
-        .floor-row {
-          display: flex;
-          gap: 10px;
-          justify-content: center;
-        }
-
-        .hex {
-          width: 100px;
-          background-color: #f9fafb;
-          border-radius: 8px;
-          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-          text-align: center;
-          font-size: 0.9rem;
-        }
-
-        .room-number {
-          font-weight: bold;
-          padding-top: 4px;
-        }
-
-        .split {
-          display: flex;
-          height: 40px;
-        }
-
-        .half {
-          flex: 1;
-          color: white;
-          font-weight: bold;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .a {
-          border-right: 1px solid #fff;
-        }
-
-        .b {
-          border-left: 1px solid #fff;
-        }
-      `}</style>
     </div>
   );
 };

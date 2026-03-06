@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -19,8 +19,17 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
   const [endTime, setEndTime] = useState<string>('17:00');
   const [selectedHotels, setSelectedHotels] = useState<any[]>([]);
   const [selectedRole, setSelectedRole] = useState<any>(null);
-  const rawBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
+  const rawBase =
+    process.env.NEXT_PUBLIC_API_BASE_URL ||
+    process.env.NEXT_PUBLIC_BACK_LINK ||
+    'http://localhost:8080';
   const base = typeof rawBase === 'string' ? rawBase.replace(/[`'"\s]/g, '').trim() : rawBase;
+  const rawApiKey = process.env.NEXT_PUBLIC_API_KEY || '';
+  const apiKey = typeof rawApiKey === 'string' ? rawApiKey.replace(/[`'"\s]/g, '').trim() : '';
+  const hotelHeaders = useMemo(
+    () => (apiKey ? { 'x-api-key': apiKey } : undefined),
+    [apiKey],
+  );
 
   const roles = [
  
@@ -46,11 +55,12 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
     
   ];
 
-  const fetchData = async (role: string | null = null) => {
+  const fetchData = useCallback(async (role: string | null = null) => {
     try {
       const employeeResponse = await axios.post(
         `${base}/api/hotel/getAllEmployees`,
-        role ? { role } : {}
+        role ? { role } : {},
+        hotelHeaders ? { headers: hotelHeaders } : undefined
 
       );
 
@@ -64,31 +74,38 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
         const allEvents: any[] = [];
 
         for (const emp of employeeData) {
-          const scheduleResponse = await axios.get(
-            `${base}/api/hotel/getAllWorkShedule/${emp.id_employee}`
-          );
+          try {
+            const scheduleResponse = await axios.get(
+              `${base}/api/hotel/getAllWorkShedule/${emp.id_employee}`,
+              hotelHeaders ? { headers: hotelHeaders } : undefined
+            );
 
-          if (Array.isArray(scheduleResponse.data)) {
-            const employeeEvents = scheduleResponse.data.map((schedule: any) => {
-              const workDate = new Date(schedule.work_date);
-              const start = new Date(`${workDate.toISOString().split('T')[0]}T${schedule.start_time.split(' ')[1]}`);
-              const end = new Date(`${workDate.toISOString().split('T')[0]}T${schedule.end_time.split(' ')[1]}`);
+            if (Array.isArray(scheduleResponse.data)) {
+              const employeeEvents = scheduleResponse.data.map((schedule: any) => {
+                const workDate = new Date(schedule.work_date);
+                const start = new Date(`${workDate.toISOString().split('T')[0]}T${schedule.start_time.split(' ')[1]}`);
+                const end = new Date(`${workDate.toISOString().split('T')[0]}T${schedule.end_time.split(' ')[1]}`);
 
-              return {
-                id: `${emp.id_employee}-${schedule.id_workdays}`,
-                title: `${emp.name} - ${schedule.start_time} a ${schedule.end_time}`,
-                start: start.toISOString(),
-                end: end.toISOString(),
-                color: "#20b2aa",
-                extendedProps: {
-                  employee_name: emp.name,
-                  start_time: schedule.start_time,
-                  end_time: schedule.end_time,
-                }
-              };
-            });
+                return {
+                  id: `${emp.id_employee}-${schedule.id_workdays}`,
+                  title: `${emp.name} - ${schedule.start_time} a ${schedule.end_time}`,
+                  start: start.toISOString(),
+                  end: end.toISOString(),
+                  color: "#20b2aa",
+                  extendedProps: {
+                    employee_name: emp.name,
+                    start_time: schedule.start_time,
+                    end_time: schedule.end_time,
+                  }
+                };
+              });
 
-            allEvents.push(...employeeEvents);
+              allEvents.push(...employeeEvents);
+            }
+          } catch (error: any) {
+            if (error?.response?.status !== 404) {
+              throw error;
+            }
           }
         }
 
@@ -99,13 +116,17 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
     } catch (error) {
       console.error('Error al obtener datos:', error);
     }
-  };
+  }, [base, hotelHeaders]);
   const [hotels, setHotels] = useState<{ id_hotel: number; name: string }[]>([]);
 
   useEffect(() => {
     const fetchHotels = async () => {
       try {
-        const response = await axios.get(`${base}/api/hotel/getAllHotel`);
+        const response = await axios.post(
+          `${base}/api/hotel/getAllHotel`,
+          {},
+          hotelHeaders ? { headers: hotelHeaders } : undefined
+        );
         if (Array.isArray(response.data)) {
           setHotels(response.data);
         } else {
@@ -117,7 +138,7 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
     };
 
     fetchHotels();
-  }, [base]);
+  }, [base, hotelHeaders]);
 
   const handleEmployeeSelect = (selectedOptions: any) => {
     setSelectedEmployees(selectedOptions);
@@ -129,10 +150,12 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
 
   const handleRoleSelect = (selectedOption: any) => {
     setSelectedRole(selectedOption);
-    fetchData(selectedOption?.value || null);
+    setSelectedEmployees([]);
   };
-  
-
+ 
+  useEffect(() => {
+    fetchData(selectedRole?.value || null);
+  }, [fetchData, selectedRole]);
 
   const handleSaveSchedule = async () => {
     try {
@@ -150,7 +173,8 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
 
         await axios.put(
           `${base}/api/hotel/updateEmployeeSchedule/${id_employee}`,
-          updateData
+          updateData,
+          hotelHeaders ? { headers: hotelHeaders } : undefined
         );
       }
 
@@ -162,7 +186,8 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
 
       const response = await axios.post(
         `${base}/api/hotel/postWorkDays`,
-        dataToSend
+        dataToSend,
+        hotelHeaders ? { headers: hotelHeaders } : undefined
       );
 
       if (response.status === 200) {
@@ -195,9 +220,12 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
     <div className="bg-white p-4 rounded-xl shadow-sm border">
       <label className="block text-md font-medium text-gray-700 mb-2">🎯 Filtrar por Rol:</label>
       <Select
+        instanceId="schedule-role-select"
+        inputId="schedule-role-select"
         options={roles}
         onChange={handleRoleSelect}
         value={selectedRole}
+        isClearable
         placeholder="Seleccionar rol..."
         className="w-full"
       />
@@ -206,12 +234,15 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
     <div className="bg-white p-4 rounded-xl shadow-sm border">
       <label className="block text-md font-medium text-gray-700 mb-2">👥 Seleccionar Empleados:</label>
       <Select
+        instanceId="schedule-employees-select"
+        inputId="schedule-employees-select"
         isMulti
         options={employees.map((emp) => ({
           value: emp.id_employee,
           label: emp.name,
         }))}
         onChange={handleEmployeeSelect}
+        value={selectedEmployees}
         placeholder="Buscar empleados..."
         className="w-full"
       />
@@ -220,6 +251,8 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
     <div className="bg-white p-4 rounded-xl shadow-sm border">
         <label className="block text-md font-medium text-gray-700 mb-2">🏨 Seleccionar Propiedades:</label>
         <Select
+          instanceId="schedule-hotels-select"
+          inputId="schedule-hotels-select"
           isMulti
           options={hotels.map(hotel => ({
             value: hotel.id_hotel,

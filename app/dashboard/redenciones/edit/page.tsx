@@ -19,7 +19,7 @@ const EditHotelPage = () => {
 
   useEffect(() => {
     axios
-      .get(`/api/hotel/getAllHotel`)
+      .post(`/api/hotel/getAllHotel`)
       .then((res) => {
         const transformedHotels = res.data.map((hotel: any) => ({
           id: hotel.id_hotel, // ← mapeo correcto
@@ -59,7 +59,7 @@ const EditHotelPage = () => {
   
     setLoading(true);
     try {
-      await axios.post(
+      await axios.put(
         `/api/hotel/updateHotel/${selectedHotel.id}`,
         {
           name: hotelName,
