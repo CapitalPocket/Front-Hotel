@@ -1,8 +1,11 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import axios from 'axios';
-import { Pencil, Repeat } from 'lucide-react';
-import EditStatusModal from './editstatusmodal';
-import RessignModal from './ressignmodal'; // Asegúrate de que la ruta sea correcta
+"use client";
+
+import React, { useEffect, useState, useCallback, useMemo } from "react";
+import axios from "axios";
+import { Building2, Pencil, RefreshCcw, Repeat, Search, Users } from "lucide-react";
+import EditStatusModal from "./editstatusmodal";
+import RessignModal from "./ressignmodal";
+import { AppToastContainer, notifyError } from "@/app/utils/toast";
 
 interface Assignment {
   assignment_id: number;
@@ -18,219 +21,264 @@ interface Assignment {
 }
 
 const sanitizeEnv = (rawValue: string | undefined) =>
-  typeof rawValue === 'string' ? rawValue.replace(/[`'"\s]/g, '').trim() : '';
+  typeof rawValue === "string" ? rawValue.replace(/[`'"\s]/g, "").trim() : "";
+
+const formatDate = (value: string) =>
+  new Date(value).toLocaleString("es-CO", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
 const AssignmentsView = () => {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
   const [isReassignModalOpen, setIsReassignModalOpen] = useState<boolean>(false);
-  const [selectedHotel, setSelectedHotel] = useState<string>('');
-  const base = useMemo(() => {
-    const rawBase =
-      process.env.NEXT_PUBLIC_HOTEL_API_BASE_URL ||
-      process.env.NEXT_PUBLIC_API_BASE_URL ||
-      process.env.NEXT_PUBLIC_BACK_LINK ||
-      'http://localhost:8080';
-    return sanitizeEnv(rawBase);
-  }, []);
+  const [selectedHotel, setSelectedHotel] = useState<string>("");
+  const [employeeQuery, setEmployeeQuery] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const assignmentsEndpoint = "/api/hotel/getTodayAssignments";
   const headers = useMemo(() => {
-    const rawApiKey =
-      process.env.NEXT_PUBLIC_API_KEY ||
-      process.env.NEXT_PUBLIC_REMINDERS_API_KEY ||
-      '';
+    const rawApiKey = process.env.NEXT_PUBLIC_API_KEY || process.env.NEXT_PUBLIC_REMINDERS_API_KEY || "";
     const apiKey = sanitizeEnv(rawApiKey);
     return apiKey
       ? {
-          'x-api-key': apiKey,
+          "x-api-key": apiKey,
           Authorization: `Api-Key ${apiKey}`,
         }
       : undefined;
   }, []);
 
   const fetchAssignments = useCallback(async () => {
+    setIsLoading(true);
     try {
-      const response = await axios.get(
-        `${base}/api/hotel/getTodayAssignments`,
-        headers ? { headers } : undefined,
-      );
+      const response = await axios.get(assignmentsEndpoint, headers ? { headers } : undefined);
       setAssignments(Array.isArray(response.data) ? response.data : []);
+      setLastUpdated(new Date().toLocaleTimeString("es-CO"));
     } catch (error: any) {
       if (error?.response?.status === 404) {
         setAssignments([]);
-        return;
+        setLastUpdated(new Date().toLocaleTimeString("es-CO"));
+      } else {
+        setAssignments([]);
+        notifyError("No pudimos cargar las asignaciones. Intenta de nuevo.");
       }
-      setAssignments([]);
+    } finally {
+      setIsLoading(false);
     }
-  }, [base, headers]);
+  }, [assignmentsEndpoint, headers]);
 
   useEffect(() => {
     fetchAssignments();
   }, [fetchAssignments]);
 
+  const hotels = useMemo(
+    () =>
+      Array.from(new Set(assignments.map((assignment) => assignment.hotel_name))).sort((a, b) =>
+        a.localeCompare(b, "es"),
+      ),
+    [assignments],
+  );
 
-  // Obtener hoteles únicos para el filtro
-  const hotels = Array.from(new Set(assignments.map(a => a.hotel_name)));
+  const normalizedEmployeeQuery = employeeQuery.trim().toLowerCase();
 
-  const isToday = (dateStr: string) => {
-    const date = new Date(dateStr);
-    const today = new Date();
-    return (
-      date.getDate() === today.getDate() &&
-      date.getMonth() === today.getMonth() &&
-      date.getFullYear() === today.getFullYear()
-    );
-  };
-
-  const handleEdit = (assignment: Assignment) => {
-    setSelectedAssignment(assignment);
-  };
-
-  const handleReassign = (assignment: Assignment) => {
-    if (assignment) {
-      setSelectedAssignment(assignment);  // Solo establecer si el assignment no es null
-      setIsReassignModalOpen(true); // Abrir el modal de reasignación
+  const filteredAssignments = useMemo(() => {
+    const filteredByHotel = selectedHotel
+      ? assignments.filter((assignment) => assignment.hotel_name === selectedHotel)
+      : assignments;
+    if (!normalizedEmployeeQuery) {
+      return filteredByHotel;
     }
-  };
+    return filteredByHotel.filter((assignment) =>
+      assignment.employee_name.toLowerCase().includes(normalizedEmployeeQuery),
+    );
+  }, [assignments, normalizedEmployeeQuery, selectedHotel]);
+
+  const groupedAssignments = useMemo(
+    () =>
+      filteredAssignments.reduce(
+        (accumulator, assignment) => {
+          if (!accumulator[assignment.employee_name]) {
+            accumulator[assignment.employee_name] = [];
+          }
+          accumulator[assignment.employee_name].push(assignment);
+          return accumulator;
+        },
+        {} as Record<string, Assignment[]>,
+      ),
+    [filteredAssignments],
+  );
+
+  const totalRooms = filteredAssignments.length;
+  const totalEmployees = Object.keys(groupedAssignments).length;
 
   const closeModal = () => {
     setSelectedAssignment(null);
-    setIsReassignModalOpen(false); // Cerrar el modal de reasignación
+    setIsReassignModalOpen(false);
   };
 
-  // Filtrar asignaciones de hoy y por hotel seleccionado
-  const todayAssignments = assignments.filter(a => isToday(a.created_at));
-  const filteredAssignments = selectedHotel ? todayAssignments.filter(a => a.hotel_name === selectedHotel) : todayAssignments;
-
-  // Agrupar por empleado
-  const groupedAssignments: Record<string, Assignment[]> = filteredAssignments.reduce((acc, assignment) => {
-    if (!acc[assignment.employee_name]) {
-      acc[assignment.employee_name] = [];
-    }
-    acc[assignment.employee_name].push(assignment);
-    return acc;
-  }, {} as Record<string, Assignment[]>);
-
   return (
-    <div className="p-6 bg-gray-50 rounded-lg shadow-md">
-
-
-      <div className="mb-6">
-        <label htmlFor="hotelFilter" className="block mb-1 text-sm font-semibold text-gray-700">
-          Filtrar por hotel
-        </label>
-        <div className="relative w-full md:w-64">
-          <select
-            id="hotelFilter"
-            className="appearance-none w-full bg-white border border-gray-300 rounded-md py-2 px-3 pr-8 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            value={selectedHotel}
-            onChange={(e) => setSelectedHotel(e.target.value)}
+    <div className="w-full space-y-6">
+      <AppToastContainer />
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div className="space-y-2">
+            <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Operación diaria</p>
+            <h2 className="text-3xl font-bold text-slate-800">Asignaciones de habitaciones</h2>
+            <p className="text-sm text-slate-500">
+              Visualiza, edita y reasigna habitaciones de forma centralizada.
+            </p>
+          </div>
+          <button
+            onClick={fetchAssignments}
+            disabled={isLoading}
+            className={`inline-flex h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold transition ${
+              isLoading
+                ? "cursor-not-allowed bg-slate-200 text-slate-400"
+                : "bg-slate-900 text-white hover:bg-slate-700"
+            }`}
           >
-            <option value="">Todos los hoteles</option>
-            {hotels.map(hotel => (
-              <option key={hotel} value={hotel}>{hotel}</option>
-            ))}
-          </select>
-          {/* Ícono de flecha abajo */}
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-            </svg>
+            <RefreshCcw size={16} className={isLoading ? "animate-spin" : ""} />
+            {isLoading ? "Actualizando..." : "Actualizar"}
+          </button>
+        </div>
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-3">
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Habitaciones</p>
+          <p className="mt-2 text-2xl font-bold text-slate-800">{totalRooms}</p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Empleados</p>
+          <p className="mt-2 text-2xl font-bold text-slate-800">{totalEmployees}</p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Última actualización</p>
+          <p className="mt-2 text-sm font-semibold text-slate-700">{lastUpdated || "Sin sincronizar"}</p>
+        </div>
+      </section>
+
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="grid gap-4 md:grid-cols-[220px_minmax(0,1fr)]">
+          <div>
+            <label htmlFor="hotelFilter" className="mb-2 block text-sm font-semibold text-slate-700">
+              <span className="inline-flex items-center gap-2">
+                <Building2 size={16} /> Hotel
+              </span>
+            </label>
+            <select
+              id="hotelFilter"
+              className="h-11 w-full rounded-xl border border-slate-300 px-3 text-sm text-slate-700 outline-none transition focus:border-slate-500"
+              value={selectedHotel}
+              onChange={(event) => setSelectedHotel(event.target.value)}
+            >
+              <option value="">Todos los hoteles</option>
+              {hotels.map((hotel) => (
+                <option key={hotel} value={hotel}>
+                  {hotel}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="employeeFilter" className="mb-2 block text-sm font-semibold text-slate-700">
+              <span className="inline-flex items-center gap-2">
+                <Users size={16} /> Buscar empleado
+              </span>
+            </label>
+            <div className="relative">
+              <Search
+                size={16}
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              />
+              <input
+                id="employeeFilter"
+                value={employeeQuery}
+                onChange={(event) => setEmployeeQuery(event.target.value)}
+                placeholder="Ej. Maria, Carlos..."
+                className="h-11 w-full rounded-xl border border-slate-300 pl-10 pr-3 text-sm text-slate-700 outline-none transition focus:border-slate-500"
+              />
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
-
-
-      {Object.keys(groupedAssignments).length === 0 ? (
-        <p className="text-center text-gray-500 text-lg">No hay asignaciones para hoy...</p>
-
+      {totalEmployees === 0 ? (
+        <section className="rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-sm">
+          <p className="text-lg font-semibold text-slate-700">No hay asignaciones para los filtros seleccionados.</p>
+          <p className="mt-2 text-sm text-slate-500">Prueba limpiando filtros o actualizando la vista.</p>
+        </section>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {Object.entries(groupedAssignments).map(([employee, assignments]) => {
-            const [first, ...rest] = assignments;
-            return (
-              <div
-                key={first.assignment_id}
-                className="bg-white rounded-2xl shadow-sm p-5 hover:shadow-lg transition-shadow duration-300"
-              >
-                <div className="mb-4">
-                  <h2 className="text-lg font-bold text-gray-800 mb-1">{employee}</h2>
-                  <p className="text-sm text-gray-500">{first.hotel_name}</p>
+        <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {Object.entries(groupedAssignments).map(([employee, employeeAssignments]) => (
+            <article
+              key={employee}
+              className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md"
+            >
+              <div className="mb-4 flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-bold text-slate-800">{employee}</h3>
+                  <p className="text-sm text-slate-500">{employeeAssignments[0].hotel_name}</p>
                 </div>
-
-                <div className="mb-3">
-                  <h3 className="font-semibold text-gray-700">Primera habitación:</h3>
-                  <div className="text-sm text-gray-800 space-y-1">
-                    <p><strong>Habitación:</strong> {first.room_number}</p>
-                    <p><strong>Estado:</strong> {first.status}</p>
-                    <p><strong>Categoría:</strong> {first.category}</p>
-                    <p><strong>Fecha:</strong> {new Date(first.created_at).toLocaleDateString()}</p>
-                  </div>
-                  <div className="mt-2 flex gap-3">
-                    <button
-                      onClick={() => handleEdit(first)}
-                      className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm transition"
-                    >
-                      <Pencil size={16} /> Editar
-                    </button>
-                    <button
-                      onClick={() => handleReassign(first)}
-                      className="flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-xl text-sm transition"
-                    >
-                      <Repeat size={16} /> Reasignar
-                    </button>
-                  </div>
-                </div>
-
-                {rest.length > 0 && (
-                  <div className="mt-4 border-t pt-3">
-                    <h4 className="font-semibold text-gray-600 mb-2">Otras habitaciones:</h4>
-                    {rest.map((assignment) => (
-                      <div key={assignment.assignment_id} className="mb-2 text-sm text-gray-700 bg-gray-100 p-2 rounded-xl">
-                        <p><strong>Habitación:</strong> {assignment.room_number}</p>
-                        <p><strong>Estado:</strong> {assignment.status}</p>
-                        <p><strong>Categoría:</strong> {assignment.category}</p>
-                        <p><strong>Fecha:</strong> {new Date(assignment.created_at).toLocaleDateString()}</p>
-                        <div className="mt-1 flex gap-2">
-                          <button
-                            onClick={() => handleEdit(assignment)}
-                            className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-xl text-xs transition"
-                          >
-                            <Pencil size={14} /> Editar
-                          </button>
-                          <button
-                            onClick={() => handleReassign(assignment)}
-                            className="flex items-center gap-2 bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded-xl text-xs transition"
-                          >
-                            <Repeat size={14} /> Reasignar
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                  {employeeAssignments.length} hab.
+                </span>
               </div>
-            );
-          })}
-        </div>
+
+              <div className="space-y-3">
+                {employeeAssignments.map((assignment) => (
+                  <div key={assignment.assignment_id} className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold text-slate-800">
+                        {assignment.room_number}
+                        {assignment.category}
+                      </p>
+                      <span className="rounded-md bg-white px-2 py-1 text-xs font-medium text-slate-600">
+                        {assignment.status}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs text-slate-500">{formatDate(assignment.created_at)}</p>
+                    <div className="mt-3 flex gap-2">
+                      <button
+                        onClick={() => {
+                          setSelectedAssignment(assignment);
+                          setIsReassignModalOpen(false);
+                        }}
+                        className="inline-flex h-9 items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
+                      >
+                        <Pencil size={13} />
+                        Editar
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedAssignment(assignment);
+                          setIsReassignModalOpen(true);
+                        }}
+                        className="inline-flex h-9 items-center gap-2 rounded-lg bg-amber-500 px-3 text-xs font-semibold text-white transition hover:bg-amber-600"
+                      >
+                        <Repeat size={13} />
+                        Reasignar
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </article>
+          ))}
+        </section>
       )}
 
-      {/* Modal de edición */}
-      {selectedAssignment && !isReassignModalOpen && selectedAssignment.room_number && (
-        <EditStatusModal
-          assignment={selectedAssignment}
-          onClose={closeModal}
-          onUpdated={fetchAssignments}
-        />
+      {selectedAssignment && !isReassignModalOpen && (
+        <EditStatusModal assignment={selectedAssignment} onClose={closeModal} onUpdated={fetchAssignments} />
       )}
 
-      {/* Modal de reasignación */}
-      {selectedAssignment && isReassignModalOpen && selectedAssignment.room_number && (
-        <RessignModal
-          assignment={selectedAssignment}
-          onClose={closeModal}
-          onReassigned={fetchAssignments}
-        />
+      {selectedAssignment && isReassignModalOpen && (
+        <RessignModal assignment={selectedAssignment} onClose={closeModal} onReassigned={fetchAssignments} />
       )}
     </div>
   );

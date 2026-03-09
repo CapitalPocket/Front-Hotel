@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useMemo, useState, useEffect } from "react";
+import axios from "axios";
+import { notifyError, notifySuccess } from "@/app/utils/toast";
 
 interface Assignment {
   assignment_id: number;
   room_number: string;
   category: string;
-  // Otras propiedades de la asignación
 }
 
 interface ReassignModalProps {
@@ -14,51 +14,96 @@ interface ReassignModalProps {
   onReassigned: () => Promise<void>;
 }
 
+const sanitizeEnv = (rawValue: string | undefined) =>
+  typeof rawValue === "string" ? rawValue.replace(/[`'"\s]/g, "").trim() : "";
+
 const RessignModal: React.FC<ReassignModalProps> = ({ assignment, onClose, onReassigned }) => {
   const [employees, setEmployees] = useState<any[]>([]);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | null>(null);
+  const [isLoadingEmployees, setIsLoadingEmployees] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const employeesEndpoint = "/api/hotel/getAllEmployees";
+  const reassignmentEndpoint = "/api/hotel/updateEmployeeAssignment";
+  const headers = useMemo(() => {
+    const rawApiKey = process.env.NEXT_PUBLIC_API_KEY || process.env.NEXT_PUBLIC_REMINDERS_API_KEY || "";
+    const apiKey = sanitizeEnv(rawApiKey);
+    return apiKey
+      ? {
+          "x-api-key": apiKey,
+          Authorization: `Api-Key ${apiKey}`,
+        }
+      : undefined;
+  }, []);
 
   useEffect(() => {
-    axios.post(`/api/hotel/getAllEmployees`, { role: 'Housekeeper' })
-      .then(response => {
+    const fetchEmployees = async () => {
+      setIsLoadingEmployees(true);
+      try {
+        const response = await axios.post(
+          employeesEndpoint,
+          { role: "Housekeeper" },
+          headers ? { headers } : undefined,
+        );
         const data = Array.isArray(response.data) ? response.data : [];
         setEmployees(data);
-      })
-      .catch(error => {
-        console.error('Error fetching employees:', error);
-      });
-  }, []);
+      } catch {
+        setEmployees([]);
+        notifyError("No pudimos cargar la lista de housekeepers.");
+      } finally {
+        setIsLoadingEmployees(false);
+      }
+    };
+    fetchEmployees();
+  }, [employeesEndpoint, headers]);
 
   const handleReassignEmployee = async () => {
     if (selectedEmployeeId === null) {
-      alert('Por favor selecciona un empleado');
+      notifyError("Selecciona un empleado para reasignar.");
       return;
     }
 
-    // Llamada a la API para actualizar la asignación
+    const payload = {
+      assignment_id: assignment.assignment_id,
+      new_employee_id: selectedEmployeeId,
+    };
+
+    setIsSubmitting(true);
     try {
-      await axios.post(`/api/hotel/updateEmployeeAssignment`, {
-        assignment_id: assignment.assignment_id,
-        new_employee_id: selectedEmployeeId
-      });
-      console.log('Empleado reasignado con éxito');
-      await onReassigned(); // Llamar la función para actualizar los datos
-      onClose(); // Cerrar el modal después de reasignar
-    } catch (error) {
-      console.error('Error reasignando el empleado:', error);
+      try {
+        await axios.put(reassignmentEndpoint, payload, headers ? { headers } : undefined);
+      } catch (error: any) {
+        if (error?.response?.status === 404 || error?.response?.status === 405) {
+          await axios.post(reassignmentEndpoint, payload, headers ? { headers } : undefined);
+        } else {
+          throw error;
+        }
+      }
+      await onReassigned();
+      notifySuccess("Habitación reasignada correctamente.");
+      onClose();
+    } catch {
+      notifyError("No se pudo reasignar la habitación.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
-      <div className="bg-gray-900 text-white rounded-lg shadow-lg p-8 w-96">
-        <h2 className="text-2xl font-semibold mb-6 text-gray-100">Reasignar habitación {assignment.room_number}{assignment.category}</h2>
-        <div className="mb-4">
-          <label className="block text-sm text-gray-300 mb-2">Selecciona un empleado:</label>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
+        <h2 className="text-xl font-semibold text-slate-800">
+          Reasignar habitación {assignment.room_number}
+          {assignment.category}
+        </h2>
+        <p className="mt-1 text-sm text-slate-500">Selecciona el nuevo housekeeper.</p>
+
+        <div className="mt-5">
+          <label className="mb-2 block text-sm font-semibold text-slate-700">Empleado</label>
           <select
-            onChange={e => setSelectedEmployeeId(Number(e.target.value))}
-            value={selectedEmployeeId ?? ''}
-            className="w-full p-2 bg-gray-700 text-white border border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500"
+            onChange={(event) => setSelectedEmployeeId(Number(event.target.value))}
+            value={selectedEmployeeId ?? ""}
+            className="h-11 w-full rounded-xl border border-slate-300 px-3 text-sm text-slate-700 outline-none transition focus:border-slate-500"
+            disabled={isLoadingEmployees || isSubmitting}
           >
             <option value="">--Seleccione--</option>
             {employees.map((employee) => (
@@ -68,16 +113,22 @@ const RessignModal: React.FC<ReassignModalProps> = ({ assignment, onClose, onRea
             ))}
           </select>
         </div>
-        <div className="flex justify-end gap-4">
+        <div className="mt-6 flex justify-end gap-3">
           <button
             onClick={handleReassignEmployee}
-            className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg transition-all"
+            disabled={isSubmitting || isLoadingEmployees}
+            className={`h-10 rounded-xl px-4 text-sm font-semibold text-white transition ${
+              isSubmitting || isLoadingEmployees
+                ? "cursor-not-allowed bg-slate-300"
+                : "bg-amber-500 hover:bg-amber-600"
+            }`}
           >
-            Reasignar
+            {isSubmitting ? "Reasignando..." : "Reasignar"}
           </button>
           <button
             onClick={onClose}
-            className="bg-gray-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-all"
+            disabled={isSubmitting}
+            className="h-10 rounded-xl border border-slate-300 px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
           >
             Cancelar
           </button>
