@@ -9,11 +9,19 @@ import axios from 'axios';
 
 const ITEMS_PER_PAGE = 9;
 const RAW_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? 'https://api.pockiaction.xyz';
+  process.env.NEXT_PUBLIC_API_BASE_URL ??
+  process.env.NEXT_PUBLIC_BACK_LINK ??
+  'http://localhost:8080';
 const API_BASE_URL =
   typeof RAW_BASE_URL === 'string'
     ? RAW_BASE_URL.replace(/[`'"\s]/g, '').trim()
     : RAW_BASE_URL;
+const RAW_API_KEY = process.env.NEXT_PUBLIC_API_KEY ?? '';
+const API_KEY =
+  typeof RAW_API_KEY === 'string'
+    ? RAW_API_KEY.replace(/[`'"\s]/g, '').trim()
+    : RAW_API_KEY;
+const HOTEL_AXIOS_CONFIG = API_KEY ? { headers: { 'x-api-key': API_KEY } } : undefined;
 
 export async function fetchCandidatoById(id: string) {
   noStore();
@@ -115,7 +123,7 @@ export async function fetchFilteredUsers(
       return [];
     }
     const apiUrl = `${API_BASE_URL}/api/hotel/getAllEmployees`;
-    const response = await axios.post(apiUrl);
+    const response = await axios.post(apiUrl, {}, HOTEL_AXIOS_CONFIG);
 
     if (response.data.message) {
       console.warn(response.data.message);
@@ -157,7 +165,7 @@ export async function fetchFilteredUsersPage(
       return 0;
     }
     const apiUrl = `${API_BASE_URL}/api/hotel/getAllEmployees`;
-    const response = await axios.post(apiUrl);
+    const response = await axios.post(apiUrl, {}, HOTEL_AXIOS_CONFIG);
     if (response.data.message) {
       console.warn(response.data.message);
       return 0;
@@ -192,7 +200,7 @@ export async function fetchEmployeeSchedules(
       return [];
     }
     const employeesApiUrl = `${API_BASE_URL}/api/hotel/getAllEmployees`;
-    const employeesRes = await axios.post(employeesApiUrl);
+    const employeesRes = await axios.post(employeesApiUrl, {}, HOTEL_AXIOS_CONFIG);
 
     if (!employeesRes.data || !Array.isArray(employeesRes.data)) {
       console.warn('La respuesta de empleados no es válida.');
@@ -206,7 +214,7 @@ export async function fetchEmployeeSchedules(
     const schedulesApiUrl = `${API_BASE_URL}/api/hotel/getEmployeeWorkSchedule`;
     let schedulesData: any[] = [];
     try {
-      const schedulesRes = await axios.get(schedulesApiUrl);
+      const schedulesRes = await axios.get(schedulesApiUrl, HOTEL_AXIOS_CONFIG);
       schedulesData = Array.isArray(schedulesRes.data) ? schedulesRes.data : [];
     } catch (error: any) {
       if (error?.response?.status === 404) {
@@ -257,13 +265,17 @@ export async function updateEmployeeDetails(
     const apiUrl = `${API_BASE_URL}/api/hotel/updateEmployeeDetails/${employee_id}`;
     const normalize = (t: string) =>
       t && /^\d{1,2}:\d{2}$/.test(t) ? `${t}:00` : t;
-    const response = await axios.patch(apiUrl, {
-      ...employeeData,
-      start_time: normalize(employeeData.start_time),
-      end_time: normalize(employeeData.end_time),
-      lunch_start_time: normalize(employeeData.lunch_start_time),
-      lunch_end_time: normalize(employeeData.lunch_end_time),
-    });
+    const response = await axios.patch(
+      apiUrl,
+      {
+        ...employeeData,
+        start_time: normalize(employeeData.start_time),
+        end_time: normalize(employeeData.end_time),
+        lunch_start_time: normalize(employeeData.lunch_start_time),
+        lunch_end_time: normalize(employeeData.lunch_end_time),
+      },
+      HOTEL_AXIOS_CONFIG,
+    );
 
     return response.data;
   } catch (error) {
@@ -273,16 +285,24 @@ export async function updateEmployeeDetails(
       if (status === 500) {
         try {
           const scheduleUrl = `${API_BASE_URL}/api/hotel/updateEmployeeSchedule/${employee_id}`;
-          await axios.put(scheduleUrl, {
-            start_time: employeeData.start_time,
-            end_time: employeeData.end_time,
-          });
+          await axios.put(
+            scheduleUrl,
+            {
+              start_time: employeeData.start_time,
+              end_time: employeeData.end_time,
+            },
+            HOTEL_AXIOS_CONFIG,
+          );
           if (employeeData.statusprofile) {
             const statusUrl = `${API_BASE_URL}/api/hotel/updateStatus`;
-            await axios.post(statusUrl, {
-              id_employee: employee_id,
-              statusprofile: employeeData.statusprofile,
-            });
+            await axios.post(
+              statusUrl,
+              {
+                id_employee: employee_id,
+                statusprofile: employeeData.statusprofile,
+              },
+              HOTEL_AXIOS_CONFIG,
+            );
           }
           return {
             message: 'Partial update applied: schedule and status updated',
@@ -312,7 +332,7 @@ export async function fetchEmployeeWorkSchedule(
       return [];
     }
     const apiUrl = `${API_BASE_URL}/api/hotel/getEmployeeWorkSchedule`;
-    const { data: schedules } = await axios.get(apiUrl);
+    const { data: schedules } = await axios.get(apiUrl, HOTEL_AXIOS_CONFIG);
 
     // Filtrar resultados según la consulta de búsqueda
     const filteredSchedules = schedules.filter((schedule: any) => {

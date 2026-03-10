@@ -1,14 +1,24 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { QRCodeCanvas } from "qrcode.react";
-import Graphs from "@/app/ui/graphs";
 
 export interface GraphsProps {
     park: string;
   }
 
 const Page = () => {
+  const base = useMemo(() => {
+    const rawBase =
+      process.env.NEXT_PUBLIC_API_BASE_URL ||
+      process.env.NEXT_PUBLIC_BACK_LINK ||
+      "http://localhost:8080";
+    return typeof rawBase === "string" ? rawBase.replace(/[`'"\s]/g, "").trim() : rawBase;
+  }, []);
+  const apiKey = useMemo(() => {
+    const rawApiKey = process.env.NEXT_PUBLIC_API_KEY || "";
+    return typeof rawApiKey === "string" ? rawApiKey.replace(/[`'"\s]/g, "").trim() : "";
+  }, []);
   const [park, setPark] = useState<string | null>(null);
   const [employees, setEmployees] = useState([]);
   const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
@@ -16,8 +26,14 @@ const Page = () => {
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
-        const response = await fetch(`${base}/api/hotel/getAllEmployees`);
+        const response = await fetch(`${base}/api/hotel/getAllEmployees`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(apiKey ? { "x-api-key": apiKey } : {}),
+          },
+          body: JSON.stringify({}),
+        });
         if (!response.ok) throw new Error("Error fetching employees");
         const data = await response.json();
         setEmployees(data);
@@ -26,7 +42,7 @@ const Page = () => {
       }
     };
     fetchEmployees();
-  }, []);
+  }, [base, apiKey]);
 
   return (
     <div className="h-full flex flex-col items-center justify-center bg-gray-100">

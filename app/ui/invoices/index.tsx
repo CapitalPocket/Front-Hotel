@@ -1,146 +1,326 @@
-import React, { useEffect, useState } from 'react';
-import FullCalendar from '@fullcalendar/react';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import timeGridPlugin from '@fullcalendar/timegrid';
-import interactionPlugin from '@fullcalendar/interaction';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import Select from 'react-select';
+import { DayPicker } from 'react-day-picker';
+import { format, isBefore, isValid, parseISO, startOfToday } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { AppToastContainer, notifyError, notifySuccess } from '@/app/utils/toast';
+import 'react-day-picker/dist/style.css';
 
 interface EmployeeScheduleProps {
   park: string;
 }
 
-const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
-  const [events, setEvents] = useState<any[]>([]);
-  const [employees, setEmployees] = useState<{ id_employee: number; name: string }[]>([]);
-  const [selectedEmployees, setSelectedEmployees] = useState<any[]>([]);
+type SelectOption = {
+  value: number | string;
+  label: string;
+  phone?: string;
+};
+
+type EmployeeRecord = {
+  id_employee: number;
+  name: string;
+  role: string | null;
+};
+
+type HotelRecord = {
+  id_hotel: number;
+  name: string;
+};
+
+type ScheduleApiItem = {
+  id_workdays?: number | string;
+  employee_id?: number | string;
+  employee_name?: string;
+  work_date?: string | Date;
+  start_time?: string;
+  end_time?: string;
+};
+
+type ScheduleEvent = {
+  id: string;
+  title: string;
+  start: string;
+  end: string;
+  color: string;
+  extendedProps: {
+    employee_id: number;
+    employee_name: string;
+    work_date: string;
+    start_time: string;
+    end_time: string;
+  };
+};
+
+const extractClockToken = (value: unknown): string | null => {
+  if (typeof value !== 'string' || !value.trim()) return null;
+  const match = value.match(/(\d{1,2}:\d{2})/);
+  return match ? match[1] : null;
+};
+
+const extractDayToken = (value: unknown): string | null => {
+  if (!value) return null;
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    const isoMatch = trimmed.match(/^(\d{4}-\d{2}-\d{2})/);
+    if (isoMatch) return isoMatch[1];
+    const asDate = new Date(trimmed);
+    if (!Number.isNaN(asDate.getTime())) return asDate.toISOString().split('T')[0];
+    return null;
+  }
+  const asDate = new Date(value as Date);
+  if (Number.isNaN(asDate.getTime())) return null;
+  return asDate.toISOString().split('T')[0];
+};
+
+const openTimePicker = (input: HTMLInputElement | null) => {
+  if (!input) return;
+  (input as HTMLInputElement & { showPicker?: () => void }).showPicker?.();
+  input.focus();
+};
+
+const toDateKey = (date: Date) => format(date, 'yyyy-MM-dd');
+
+const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park: _park }) => {
+  const [events, setEvents] = useState<ScheduleEvent[]>([]);
+  const [employees, setEmployees] = useState<EmployeeRecord[]>([]);
+  const [employeesCatalog, setEmployeesCatalog] = useState<EmployeeRecord[]>([]);
+  const [selectedEmployees, setSelectedEmployees] = useState<SelectOption[]>([]);
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [startTime, setStartTime] = useState<string>('09:00');
   const [endTime, setEndTime] = useState<string>('17:00');
-  const [selectedHotels, setSelectedHotels] = useState<any[]>([]);
-  const [selectedRole, setSelectedRole] = useState<any>(null);
-  const rawBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
-  const base = typeof rawBase === 'string' ? rawBase.replace(/[`'"\s]/g, '').trim() : rawBase;
+  const [selectedHotels, setSelectedHotels] = useState<SelectOption[]>([]);
+  const [selectedRole, setSelectedRole] = useState<SelectOption | null>(null);
+  const [isLoadingData, setIsLoadingData] = useState<boolean>(false);
+  const [isSavingSchedule, setIsSavingSchedule] = useState<boolean>(false);
+  const today = useMemo(() => startOfToday(), []);
+  const employeesEndpoint = '/api/hotel/getAllEmployees';
+  const scheduleEndpoint = '/api/hotel/getEmployeeWorkSchedule';
+  const hotelsEndpoint = '/api/hotel/getAllHotel';
+  const updateScheduleEndpoint = '/api/hotel/updateEmployeeSchedule';
+  const createWorkdaysEndpoint = '/api/hotel/postWorkDays';
+  const rawApiKey = process.env.NEXT_PUBLIC_API_KEY || process.env.NEXT_PUBLIC_REMINDERS_API_KEY || '';
+  const apiKey = typeof rawApiKey === 'string' ? rawApiKey.replace(/[`'"\s]/g, '').trim() : '';
+  const hotelHeaders = useMemo(
+    () =>
+      apiKey
+        ? {
+            'x-api-key': apiKey,
+            Authorization: `Api-Key ${apiKey}`,
+          }
+        : undefined,
+    [apiKey],
+  );
+  const roleOptions = useMemo(() => {
+    const rolesMap = new Map<string, string>();
+    for (const employee of employeesCatalog) {
+      const role = typeof employee.role === 'string' ? employee.role.trim() : '';
+      if (!role) continue;
+      const roleKey = role.toLowerCase();
+      if (!rolesMap.has(roleKey)) rolesMap.set(roleKey, role);
+    }
+    return Array.from(rolesMap.values())
+      .sort((a, b) => a.localeCompare(b, 'es'))
+      .map((role) => ({ value: role, label: role }));
+  }, [employeesCatalog]);
+  const employeeOptions = useMemo(
+    () =>
+      [...employees]
+        .sort((a, b) => a.name.localeCompare(b.name, 'es'))
+        .map((employee) => ({ value: employee.id_employee, label: employee.name })),
+    [employees],
+  );
 
-  const roles = [
- 
-      { value: "Housekeeper", label: "Housekeeper" },
-      { value: "Houseman", label: "Houseman" },
-      { value: "Maintenance Tech", label: "Maintenance Tech" },
-      { value: "Painter", label: "Painter" },
-      { value: "Remodeling Official", label: "Remodeling Official" },
-      { value: "HK Supervisor", label: "HK Supervisor" },
-      { value: "MT Supervisor", label: "MT Supervisor" },
-      { value: "Remo Supervisor", label: "Remo Supervisor" },
-      { value: "Quality Control", label: "Quality Control" },
-      { value: "Building Manager", label: "Building Manager" },
-      { value: "Room control", label: "Room control" },
-      { value: "Front desk", label: "Front desk" },
-      { value: "Lost & Found/Inventory", label: "Lost & Found/Inventory" },
-      { value: "Assistant Manager", label: "Assistant Manager" },
-      { value: "Operations Manager", label: "Operations Manager" },
-      { value: "General Manager", label: "General Manager" },
-      { value: "Resort Manager", label: "Resort Manager" },
-      { value: "Laundry", label: "Laundry" }
-
-    
-  ];
-
-  const fetchData = async (role: string | null = null) => {
+  const fetchData = useCallback(async (role: string | null = null) => {
+    setIsLoadingData(true);
     try {
       const employeeResponse = await axios.post(
-        `${base}/api/hotel/getAllEmployees`,
-        role ? { role } : {}
+        employeesEndpoint,
+        role ? { role } : {},
+        hotelHeaders ? { headers: hotelHeaders } : undefined
 
       );
 
       if (Array.isArray(employeeResponse.data)) {
-        const employeeData = employeeResponse.data.map((emp) => ({
-          id_employee: emp.id_employee,
-          name: emp.name,
+        const employeeData: EmployeeRecord[] = employeeResponse.data.map((emp: Record<string, unknown>) => ({
+          id_employee: Number(emp.id_employee),
+          name: typeof emp.name === 'string' ? emp.name : `Empleado ${String(emp.id_employee ?? '')}`,
+          role: typeof emp.role === 'string' ? emp.role : null,
         }));
         setEmployees(employeeData);
-
-        const allEvents: any[] = [];
-
-        for (const emp of employeeData) {
-          const scheduleResponse = await axios.get(
-            `${base}/api/hotel/getAllWorkShedule/${emp.id_employee}`
+        try {
+          const schedulesResponse = await axios.get(
+            scheduleEndpoint,
+            {
+              ...(hotelHeaders ? { headers: hotelHeaders } : {}),
+              params: { _ts: Date.now() },
+            },
           );
 
-          if (Array.isArray(scheduleResponse.data)) {
-            const employeeEvents = scheduleResponse.data.map((schedule: any) => {
-              const workDate = new Date(schedule.work_date);
-              const start = new Date(`${workDate.toISOString().split('T')[0]}T${schedule.start_time.split(' ')[1]}`);
-              const end = new Date(`${workDate.toISOString().split('T')[0]}T${schedule.end_time.split(' ')[1]}`);
+          const schedules: ScheduleApiItem[] = Array.isArray(schedulesResponse.data) ? schedulesResponse.data : [];
+          const allowedEmployeeIds = new Set(employeeData.map((emp) => Number(emp.id_employee)));
+          const employeeNameById = new Map(employeeData.map((emp) => [Number(emp.id_employee), emp.name]));
+
+          const allEvents = schedules
+            .filter((schedule) => allowedEmployeeIds.has(Number(schedule.employee_id)))
+            .map((schedule) => {
+              const employeeId = Number(schedule.employee_id);
+              const employeeName = employeeNameById.get(employeeId) || schedule.employee_name || 'Empleado';
+              const rawStartTime = typeof schedule.start_time === 'string' ? schedule.start_time.trim() : '';
+              const rawEndTime = typeof schedule.end_time === 'string' ? schedule.end_time.trim() : '';
+              const workDateKey = extractDayToken(schedule.work_date);
+              const startTimeToken = extractClockToken(rawStartTime);
+              const endTimeToken = extractClockToken(rawEndTime);
+
+              if (!workDateKey || !startTimeToken || !endTimeToken) {
+                return null;
+              }
+
+              const workDate = new Date(workDateKey);
+              if (Number.isNaN(workDate.getTime())) {
+                return null;
+              }
+
+              const start = new Date(`${workDate.toISOString().split('T')[0]}T${startTimeToken}`);
+              const end = new Date(`${workDate.toISOString().split('T')[0]}T${endTimeToken}`);
+              if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+                return null;
+              }
 
               return {
-                id: `${emp.id_employee}-${schedule.id_workdays}`,
-                title: `${emp.name} - ${schedule.start_time} a ${schedule.end_time}`,
+                id: `${employeeId}-${schedule.id_workdays}`,
+                title: `${employeeName} - ${rawStartTime || 'Sin hora inicio'} a ${rawEndTime || 'Sin hora fin'}`,
                 start: start.toISOString(),
                 end: end.toISOString(),
-                color: "#20b2aa",
+                color: '#20b2aa',
                 extendedProps: {
-                  employee_name: emp.name,
-                  start_time: schedule.start_time,
-                  end_time: schedule.end_time,
-                }
-              };
-            });
+                  employee_id: employeeId,
+                  employee_name: employeeName,
+                  work_date: workDateKey,
+                  start_time: rawStartTime || 'Sin hora inicio',
+                  end_time: rawEndTime || 'Sin hora fin',
+                },
+              } as ScheduleEvent;
+            })
+            .filter((event): event is ScheduleEvent => event !== null);
 
-            allEvents.push(...employeeEvents);
+          setEvents(allEvents);
+        } catch (error: any) {
+          if (error?.response?.status === 404) {
+            setEvents([]);
+          } else {
+            throw error;
           }
         }
-
-        setEvents(allEvents);
       } else {
-        console.error('La respuesta de empleados no es un array.');
+        setEmployees([]);
+        setEvents([]);
+        notifyError('La respuesta de empleados no fue válida.');
       }
     } catch (error) {
-      console.error('Error al obtener datos:', error);
+      setEvents([]);
+      setEmployees([]);
+      notifyError('No pudimos cargar los empleados y horarios. Intenta nuevamente.');
+    } finally {
+      setIsLoadingData(false);
     }
-  };
-  const [hotels, setHotels] = useState<{ id_hotel: number; name: string }[]>([]);
+  }, [employeesEndpoint, hotelHeaders, scheduleEndpoint]);
+  const [hotels, setHotels] = useState<HotelRecord[]>([]);
+  const hotelOptions = useMemo(
+    () =>
+      [...hotels]
+        .sort((a, b) => a.name.localeCompare(b.name, 'es'))
+        .map((hotel) => ({ value: hotel.id_hotel, label: hotel.name })),
+    [hotels],
+  );
+
+  useEffect(() => {
+    const fetchEmployeesCatalog = async () => {
+      try {
+        const response = await axios.post(
+          employeesEndpoint,
+          {},
+          hotelHeaders ? { headers: hotelHeaders } : undefined,
+        );
+        if (!Array.isArray(response.data)) {
+          return;
+        }
+        const employeesData: EmployeeRecord[] = response.data.map((emp: Record<string, unknown>) => ({
+          id_employee: Number(emp.id_employee),
+          name: typeof emp.name === 'string' ? emp.name : `Empleado ${String(emp.id_employee ?? '')}`,
+          role: typeof emp.role === 'string' ? emp.role : null,
+        }));
+        setEmployeesCatalog(employeesData);
+      } catch {
+        setEmployeesCatalog([]);
+      }
+    };
+
+    fetchEmployeesCatalog();
+  }, [employeesEndpoint, hotelHeaders]);
 
   useEffect(() => {
     const fetchHotels = async () => {
       try {
-        const response = await axios.get(`${base}/api/hotel/getAllHotel`);
+        const response = await axios.post(
+          hotelsEndpoint,
+          {},
+          hotelHeaders ? { headers: hotelHeaders } : undefined
+        );
         if (Array.isArray(response.data)) {
-          setHotels(response.data);
+          const hotelData: HotelRecord[] = response.data.map((hotel: Record<string, unknown>) => ({
+            id_hotel: Number(hotel.id_hotel),
+            name: typeof hotel.name === 'string' ? hotel.name : `Hotel ${String(hotel.id_hotel ?? '')}`,
+          }));
+          setHotels(hotelData);
         } else {
-          console.error('La respuesta de hoteles no es un array.');
+          setHotels([]);
+          notifyError('La respuesta de hoteles no fue válida.');
         }
-      } catch (error) {
-        console.error('Error al obtener hoteles:', error);
+      } catch {
+        setHotels([]);
+        notifyError('No pudimos cargar los hoteles disponibles.');
       }
     };
 
     fetchHotels();
-  }, [base]);
+  }, [hotelHeaders, hotelsEndpoint]);
 
-  const handleEmployeeSelect = (selectedOptions: any) => {
-    setSelectedEmployees(selectedOptions);
+  const handleEmployeeSelect = (selectedOptions: readonly SelectOption[] | null) => {
+    setSelectedEmployees(selectedOptions ? [...selectedOptions] : []);
   };
 
-  const handleHotelSelect = (selectedOptions: any) => {
-    setSelectedHotels(selectedOptions);
+  const handleHotelSelect = (selectedOptions: readonly SelectOption[] | null) => {
+    setSelectedHotels(selectedOptions ? [...selectedOptions] : []);
   };
 
-  const handleRoleSelect = (selectedOption: any) => {
+  const handleRoleSelect = (selectedOption: SelectOption | null) => {
     setSelectedRole(selectedOption);
-    fetchData(selectedOption?.value || null);
+    setSelectedEmployees([]);
   };
-  
-
+ 
+  useEffect(() => {
+    fetchData(selectedRole?.value ? String(selectedRole.value) : null);
+  }, [fetchData, selectedRole]);
 
   const handleSaveSchedule = async () => {
+    if (isSavingSchedule) return;
     try {
-      const employeeIds = selectedEmployees.map((emp: any) => emp.value);
+      const employeeIds = selectedEmployees.map((emp) => Number(emp.value));
       if (employeeIds.length === 0 || selectedDays.length === 0) {
-        alert('Selecciona al menos un empleado y un día.');
+        notifyError('Selecciona al menos un empleado y un día.');
         return;
       }
+      if (selectedHotels.length === 0) {
+        notifyError('Selecciona al menos una propiedad.');
+        return;
+      }
+      if (startTime >= endTime) {
+        notifyError('La hora de inicio debe ser menor que la hora de finalización.');
+        return;
+      }
+
+      setIsSavingSchedule(true);
 
       for (const id_employee of employeeIds) {
         const updateData = {
@@ -149,168 +329,290 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({ park }) => {
         };
 
         await axios.put(
-          `${base}/api/hotel/updateEmployeeSchedule/${id_employee}`,
-          updateData
+          `${updateScheduleEndpoint}/${id_employee}`,
+          updateData,
+          hotelHeaders ? { headers: hotelHeaders } : undefined
         );
       }
 
       const dataToSend = {
         employeeId: employeeIds,
         workDates: selectedDays,
-        hotelIds: selectedHotels.map((hotel: any) => hotel.value),
+        hotelIds: selectedHotels.map((hotel) => Number(hotel.value)),
       };
 
       const response = await axios.post(
-        `${base}/api/hotel/postWorkDays`,
-        dataToSend
+        createWorkdaysEndpoint,
+        dataToSend,
+        hotelHeaders ? { headers: hotelHeaders } : undefined
       );
 
       if (response.status === 200) {
-        alert('Horarios guardados correctamente.');
+        const successMessage =
+          typeof response.data?.message === 'string' && response.data.message.trim()
+            ? response.data.message
+            : 'Horarios guardados correctamente.';
+        notifySuccess(successMessage);
+        setSelectedEmployees([]);
+        setSelectedDays([]);
+        setSelectedHotels([]);
+        setSelectedRole(null);
+        setStartTime('09:00');
+        setEndTime('17:00');
+        await fetchData(null);
       } else {
-        console.error('Error al guardar los horarios:', response.data);
-        alert('Hubo un error al guardar los horarios.');
+        notifyError('Hubo un error al guardar los horarios.');
       }
     } catch (error) {
-      console.error('Error al enviar los datos:', error);
-      alert('Hubo un error al enviar los datos al servidor.');
+      if (axios.isAxiosError(error)) {
+        const backendMessage =
+          typeof error.response?.data?.message === 'string' && error.response.data.message.trim()
+            ? error.response.data.message
+            : null;
+        notifyError(backendMessage || 'Hubo un error al enviar los datos al servidor.');
+      } else {
+        notifyError('Hubo un error al enviar los datos al servidor.');
+      }
+    } finally {
+      setIsSavingSchedule(false);
     }
   };
 
-  const handleDayClick = (arg: any) => {
-    const clickedDate = arg.dateStr;
-    setSelectedDays((prev) =>
-      prev.includes(clickedDate)
-        ? prev.filter((day) => day !== clickedDate)
-        : [...prev, clickedDate]
+  const selectedDates = useMemo(
+    () =>
+      selectedDays
+        .map((day) => parseISO(day))
+        .filter((day) => isValid(day) && !isBefore(day, today)),
+    [selectedDays, today],
+  );
+
+  const eventsByDate = useMemo(() => {
+    const grouped = new Map<string, ScheduleEvent[]>();
+    for (const event of events) {
+      const key =
+        extractDayToken(event.extendedProps?.work_date) ||
+        (typeof event.start === 'string' ? event.start.split('T')[0] : '');
+      if (!key) continue;
+      const current = grouped.get(key) || [];
+      current.push(event);
+      grouped.set(key, current);
+    }
+    return grouped;
+  }, [events]);
+
+  const assignmentPreview = useMemo(
+    () =>
+      selectedDays.map((day) => ({
+        day,
+        employees: selectedEmployees
+          .map((employee) => employee.label)
+          .filter((label) => typeof label === 'string' && label.trim()),
+      })),
+    [selectedDays, selectedEmployees],
+  );
+
+  const handleSelectedDates = (dates: Date[] | undefined) => {
+    if (!dates || dates.length === 0) {
+      setSelectedDays([]);
+      return;
+    }
+    setSelectedDays(
+      dates
+        .filter((date) => !isBefore(date, today))
+        .map((date) => toDateKey(date))
+        .sort((a, b) => a.localeCompare(b, 'es')),
     );
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-  <h2 className="mb-8 text-4xl font-bold text-gray-800 text-center">🗓️ Gestión de Horarios</h2>
+    <div className="min-h-full w-full space-y-6 px-0 py-4 md:py-6">
+      <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm md:p-8">
+        <div className="space-y-3">
+          <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Planificación operativa</p>
+          <h1 className="text-2xl font-bold text-slate-800 md:text-3xl">Gestión de horarios</h1>
+          <p className="text-slate-500">Filtra por rol real del sistema, selecciona propiedades y publica turnos en el calendario.</p>
+        </div>
+        <div className="mt-5 flex flex-wrap gap-2">
+          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">{employees.length} empleados visibles</span>
+          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">{roleOptions.length} roles activos</span>
+          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">{selectedDays.length} días seleccionados</span>
+        </div>
+      </section>
 
-  {/* Filtros */}
-  <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-    <div className="bg-white p-4 rounded-xl shadow-sm border">
-      <label className="block text-md font-medium text-gray-700 mb-2">🎯 Filtrar por Rol:</label>
-      <Select
-        options={roles}
-        onChange={handleRoleSelect}
-        value={selectedRole}
-        placeholder="Seleccionar rol..."
-        className="w-full"
-      />
-    </div>
+      <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm md:p-6">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <label className="mb-2 block text-sm font-semibold text-slate-700">Filtrar por rol</label>
+            <Select
+              instanceId="schedule-role-select"
+              inputId="schedule-role-select"
+              options={roleOptions}
+              onChange={handleRoleSelect}
+              value={selectedRole}
+              isClearable
+              placeholder={roleOptions.length > 0 ? 'Seleccionar rol...' : 'No hay roles disponibles'}
+              className="w-full"
+            />
+          </div>
 
-    <div className="bg-white p-4 rounded-xl shadow-sm border">
-      <label className="block text-md font-medium text-gray-700 mb-2">👥 Seleccionar Empleados:</label>
-      <Select
-        isMulti
-        options={employees.map((emp) => ({
-          value: emp.id_employee,
-          label: emp.name,
-        }))}
-        onChange={handleEmployeeSelect}
-        placeholder="Buscar empleados..."
-        className="w-full"
-      />
-    </div>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <label className="mb-2 block text-sm font-semibold text-slate-700">Seleccionar empleados</label>
+            <Select
+              instanceId="schedule-employees-select"
+              inputId="schedule-employees-select"
+              isMulti
+              options={employeeOptions}
+              onChange={handleEmployeeSelect}
+              value={selectedEmployees}
+              placeholder="Buscar empleados..."
+              className="w-full"
+            />
+          </div>
 
-    <div className="bg-white p-4 rounded-xl shadow-sm border">
-        <label className="block text-md font-medium text-gray-700 mb-2">🏨 Seleccionar Propiedades:</label>
-        <Select
-          isMulti
-          options={hotels.map(hotel => ({
-            value: hotel.id_hotel,
-            label: hotel.name,
-          }))}
-          onChange={handleHotelSelect}
-          value={selectedHotels}
-          placeholder="Seleccionar hoteles..."
-          className="w-full"
-        />
-      </div>
-  </div>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <label className="mb-2 block text-sm font-semibold text-slate-700">Seleccionar propiedades</label>
+            <Select
+              instanceId="schedule-hotels-select"
+              inputId="schedule-hotels-select"
+              isMulti
+              options={hotelOptions}
+              onChange={handleHotelSelect}
+              value={selectedHotels}
+              placeholder="Seleccionar hoteles..."
+              className="w-full"
+            />
+          </div>
+        </div>
 
-  {/* Horarios */}
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-    <div className="bg-white p-4 rounded-xl shadow-sm border">
-      <label className="block text-md font-medium text-gray-700 mb-2">🕒 Hora de inicio:</label>
-      <input
-        type="time"
-        value={startTime}
-        onChange={(e) => setStartTime(e.target.value)}
-        className="w-full border border-gray-300 rounded-lg p-2 text-lg shadow-sm"
-      />
-    </div>
-    <div className="bg-white p-4 rounded-xl shadow-sm border">
-      <label className="block text-md font-medium text-gray-700 mb-2">🕓 Hora de finalización:</label>
-      <input
-        type="time"
-        value={endTime}
-        onChange={(e) => setEndTime(e.target.value)}
-        className="w-full border border-gray-300 rounded-lg p-2 text-lg shadow-sm"
-      />
-    </div>
-  </div>
+        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <label className="mb-2 block text-sm font-semibold text-slate-700">Hora de inicio</label>
+            <input
+              type="time"
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+              onClick={(event) => openTimePicker(event.currentTarget)}
+              className="w-full cursor-pointer rounded-xl border border-slate-300 bg-white px-3 py-2 text-base text-slate-700 focus:border-slate-500 focus:outline-none"
+            />
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <label className="mb-2 block text-sm font-semibold text-slate-700">Hora de finalización</label>
+            <input
+              type="time"
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
+              onClick={(event) => openTimePicker(event.currentTarget)}
+              className="w-full cursor-pointer rounded-xl border border-slate-300 bg-white px-3 py-2 text-base text-slate-700 focus:border-slate-500 focus:outline-none"
+            />
+          </div>
+        </div>
 
-  {/* Botón guardar */}
-  <button
-    onClick={handleSaveSchedule}
-    className="w-full bg-gray-600 hover:bg-gray-700 transition text-white font-bold py-3 text-xl rounded-lg shadow-md mb-8"
-  >
-    Guardar Horarios
-  </button>
+        <button
+          onClick={handleSaveSchedule}
+          disabled={isSavingSchedule || isLoadingData}
+          className="mt-5 w-full rounded-xl bg-slate-800 py-3 text-base font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {isSavingSchedule ? 'Guardando horarios...' : 'Guardar horarios'}
+        </button>
+      </section>
 
-  {/* Calendario */}
-  <div className="w-full overflow-x-auto rounded-xl shadow-lg border border-gray-200 bg-white p-6">
-    <div className="min-w-[320px]">
-      <FullCalendar
-        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-        initialView="dayGridMonth"
-        headerToolbar={{ left: 'prev,next', center: 'title', right: '' }}
-        editable
-        selectable
-        events={events}
-        eventColor="#20b2aa"
-        height="auto"
-        dayMaxEventRows={true}
-        buttonText={{ month: 'Mes', week: 'Semana', day: 'Día' }}
-        locale="es"
-        firstDay={1}
-        dateClick={handleDayClick}
-        dayCellContent={(info) => {
-          const day = info.date.toISOString().split('T')[0];
-          const dayEvents = events.filter((event) => event.start.includes(day));
-          const dayNumberClass = selectedDays.includes(day) ? 'bg-gray-300 rounded-full' : '';
-
-          return (
-            <div className={`${dayNumberClass} p-2 text-sm`}>
-              {info.dayNumberText}
-              {dayEvents.map((event) => (
-                <div key={event.id} className="mt-1 text-xs bg-gray-200 p-1 rounded-lg text-center">
-                  <strong>{event.extendedProps.employee_name}</strong>
-                  <div>{`${event.extendedProps.start_time} - ${event.extendedProps.end_time}`}</div>
-                </div>
-              ))}
+      <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm md:p-6">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-lg font-semibold text-slate-800">Calendario de turnos</h2>
+          <p className="text-sm text-slate-500">{events.length} eventos cargados</p>
+        </div>
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.3fr_1fr]">
+          <div className="schedule-date-picker rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-slate-100 p-4 md:p-6">
+            {isLoadingData ? (
+              <div className="py-10 text-center text-sm text-slate-500">Cargando horarios...</div>
+            ) : (
+              <DayPicker
+                locale={es}
+                mode="multiple"
+                numberOfMonths={1}
+                selected={selectedDates}
+                onSelect={handleSelectedDates}
+                weekStartsOn={1}
+                fromDate={today}
+                disabled={{ before: today }}
+                modifiers={{
+                  hasEvents: (day) => eventsByDate.has(toDateKey(day)),
+                }}
+                classNames={{
+                  months: 'rdp-months',
+                  month: 'rdp-month',
+                  nav: 'rdp-nav',
+                  button_previous: 'rdp-nav_button rdp-nav_button-previous',
+                  button_next: 'rdp-nav_button rdp-nav_button-next',
+                  chevron: 'rdp-chevron',
+                  month_caption: 'rdp-month_caption',
+                  weekdays: 'rdp-weekdays',
+                  weekday: 'rdp-weekday',
+                  week: 'rdp-week',
+                  day: 'rdp-day',
+                  day_button: 'rdp-day_button',
+                  selected: 'rdp-selected',
+                  today: 'rdp-today',
+                  disabled: 'rdp-disabled',
+                }}
+                footer={
+                  <div className="mt-4 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
+                    Solo se permiten fechas desde hoy en adelante.
+                  </div>
+                }
+                className="w-full"
+              />
+            )}
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <p className="text-sm font-semibold text-slate-700">Resumen de selección</p>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
+                {selectedDays.length} días
+              </span>
             </div>
-          );
-        }}
-        eventContent={(eventInfo) => {
-          const { employee_name, start_time, end_time } = eventInfo.event.extendedProps;
-          return (
-            <div className="bg-gray-600 text-white p-2 rounded-lg text-center text-xs">
-              <strong>{employee_name}</strong>
-              <div>{`Inicio: ${start_time}`}</div>
-              <div>{`Fin: ${end_time}`}</div>
+            <div className="mb-3 grid grid-cols-3 gap-2">
+              <div className="rounded-lg bg-slate-50 p-2 text-center">
+                <p className="text-[11px] text-slate-500">Empleados</p>
+                <p className="text-sm font-semibold text-slate-800">{selectedEmployees.length}</p>
+              </div>
+              <div className="rounded-lg bg-slate-50 p-2 text-center">
+                <p className="text-[11px] text-slate-500">Propiedades</p>
+                <p className="text-sm font-semibold text-slate-800">{selectedHotels.length}</p>
+              </div>
+              <div className="rounded-lg bg-slate-50 p-2 text-center">
+                <p className="text-[11px] text-slate-500">Horario</p>
+                <p className="text-sm font-semibold text-slate-800">{startTime} - {endTime}</p>
+              </div>
             </div>
-          );
-        }}
-      />
+            {assignmentPreview.length === 0 || selectedEmployees.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
+                Selecciona días y empleados para ver exactamente cómo quedará la asignación antes de guardar.
+              </div>
+            ) : (
+              <div className="max-h-[28rem] space-y-2 overflow-y-auto pr-1">
+                {assignmentPreview.map((day) => (
+                  <div key={day.day} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                    <p className="text-sm font-semibold text-slate-800">
+                      {format(parseISO(day.day), "EEEE d 'de' MMMM", { locale: es })}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-600">{startTime} - {endTime}</p>
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {day.employees.map((employeeName) => (
+                        <span key={`${day.day}-${employeeName}`} className="rounded-full bg-white px-2 py-1 text-[11px] font-medium text-slate-700">
+                          {employeeName}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+      <AppToastContainer />
     </div>
-  </div>
-</div>
   );
 }
 

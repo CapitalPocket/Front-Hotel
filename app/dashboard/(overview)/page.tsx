@@ -1,9 +1,8 @@
 import Marketing from '@/app/ui/dashboard/marketing';
 
-const Page = ({ children }: any) => {
-
+const Page = () => {
   return (
-    <main className="flex h-full flex-col items-center justify-center">
+    <main className="min-h-full w-full">
       <Marketing />
     </main>
   );

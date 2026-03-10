@@ -1,9 +1,10 @@
 "use client";
 import axios from "axios";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
-import { CreateHotel } from "@/app/ui/tickets/buttons";
+import Link from "next/link";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { AppToastContainer, notifyError, notifySuccess } from "@/app/utils/toast";
 
 const Map = dynamic(() => import("@/app/ui/Map"), { ssr: false });
 
@@ -27,32 +28,48 @@ const Page = () => {
     setExpanded(null);
   };
 
-  const handleRoomChange = (index: number, value: number) => {
-    const newRooms = [...roomsPerFloor];
-    newRooms[index] = Math.max(1, value);
-    setRoomsPerFloor(newRooms);
-  };
-
   const toggleExpand = (index: number) => {
     setExpanded(expanded === index ? null : index);
   };
 
-  const totalRooms = roomsPerFloor.reduce((sum, num) => sum + num, 0);
+  const totalRooms = useMemo(
+    () => roomsPerFloor.reduce((sum, num) => sum + (Number.isFinite(num) ? num : 0), 0),
+    [roomsPerFloor],
+  );
 
   const handleSaveHotel = async () => {
-    if (!hotelName || latitude === null || longitude === null || floors === null || totalRooms === 0) return;
+    const cleanName = hotelName.trim();
+    if (!cleanName) {
+      notifyError("El nombre de la propiedad es obligatorio.");
+      return;
+    }
+    if (latitude === null || longitude === null) {
+      notifyError("Debes seleccionar la ubicación en el mapa.");
+      return;
+    }
+    if (floors === null || floors < 1) {
+      notifyError("La propiedad debe tener al menos 1 piso.");
+      return;
+    }
+    if (roomsPerFloor.some((value) => value < 1)) {
+      notifyError("Cada piso debe tener al menos 1 habitación.");
+      return;
+    }
+    if (totalRooms < 1) {
+      notifyError("La propiedad debe tener habitaciones.");
+      return;
+    }
 
     setLoading(true);
     try {
       const hotelPayload = {
-        name: hotelName,
+        name: cleanName,
         latitude,
         longitude,
         floors,
         roomsPerFloor,
         totalRooms,
       };
-      console.log("📦 Enviando hotel a /createHotel:", hotelPayload);
 
       const hotelResponse = await axios.post(
         `/api/hotel/createHotel`,
@@ -67,14 +84,12 @@ const Page = () => {
         floors,
         roomsPerFloor,
       };
-      console.log("📦 Enviando habitaciones a /createRoomsWithLastHotel:", roomsPayload);
-
       await axios.post(
         `/api/hotel/createRoomsWithLastHotel`,
         roomsPayload
       );
 
-      alert("✅ Hotel y habitaciones guardados correctamente");
+      notifySuccess("Propiedad y habitaciones guardadas correctamente.");
 
       setHotelName("");
       setLatitude(null);
@@ -83,127 +98,180 @@ const Page = () => {
       setRoomsPerFloor([]);
       setExpanded(null);
     } catch (error: any) {
-      console.error("❌ Error al guardar:", error?.response?.data || error.message || error);
-      alert("❌ Error al guardar el hotel o las habitaciones.");
+      const message =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        "No se pudo guardar la propiedad. Intenta de nuevo.";
+      notifyError(message);
     } finally {
       setLoading(false);
     }
   };
 
   const isFormValid =
-    hotelName &&
+    hotelName.trim() &&
     latitude !== null &&
     longitude !== null &&
-    floors !== null &&
+    floors !== null && floors > 0 &&
     roomsPerFloor.every((num) => num > 0);
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-6 bg-white shadow-xl rounded-2xl mt-10">
-      <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">Registrar Nuevo Hotel</h1>
-
-      <div className="flex flex-col gap-6">
-        <input
-          type="text"
-          value={hotelName}
-          onChange={(e) => setHotelName(e.target.value)}
-          placeholder="Escribe el nombre del hotel"
-          className="border border-gray-300 rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-400 transition"
-        />
-
-        <input
-          type="text"
-          inputMode="numeric"
-          value={floors !== null ? floors.toString() : ""}
-          onChange={(e) => {
-            const val = e.target.value;
-            const numberVal = val === "" ? 0 : Number(val);
-            handleFloorsChange(numberVal);
-          }}
-          onBlur={() => {
-            if (!floors || floors < 1) {
-              handleFloorsChange(1);
-            }
-          }}
-          placeholder="Número de pisos"
-          className="border border-gray-300 rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-400 transition"
-        />
-
-        {floors !== null && (
-          <div className="flex flex-col gap-4">
-            {roomsPerFloor.map((rooms, index) => (
-              <div key={index} className="border border-gray-200 rounded-lg bg-gray-50 px-4 py-3 shadow-sm">
-                <div
-                  className="flex justify-between items-center cursor-pointer"
-                  onClick={() => toggleExpand(index)}
-                >
-                  <span className="font-semibold text-gray-800">🛗 Piso {index + 1}</span>
-                  {expanded === index ? (
-                    <ChevronUp className="w-5 h-5 text-gray-500" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5 text-gray-500" />
-                  )}
-                </div>
-
-                {expanded === index && (
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={roomsPerFloor[index].toString()}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      const newRooms = [...roomsPerFloor];
-                      newRooms[index] = val === "" ? 0 : Number(val);
-                      setRoomsPerFloor(newRooms);
-                    }}
-                    onBlur={() => {
-                      const newRooms = [...roomsPerFloor];
-                      if (!newRooms[index] || isNaN(newRooms[index]) || newRooms[index] < 1) {
-                        newRooms[index] = 1;
-                        setRoomsPerFloor(newRooms);
-                      }
-                    }}
-                    className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-400 transition"
-                  />
-                )}
-              </div>
-            ))}
+    <div className="w-full space-y-6">
+      <AppToastContainer />
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div className="space-y-2">
+            <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Gestión de propiedades</p>
+            <h1 className="text-3xl font-bold text-slate-800">Registro y configuración de hoteles</h1>
+            <p className="max-w-2xl text-sm text-slate-500 md:text-base">
+              Crea nuevas propiedades con ubicación, estructura por pisos y distribución total de habitaciones.
+            </p>
           </div>
-        )}
-
-        <div className="h-[500px] rounded-lg overflow-hidden border border-gray-300">
-          <Map
-            onMapClick={handleMapClick}
-            initialLatitude={latitude !== null ? latitude : 4.711}
-            initialLongitude={longitude !== null ? longitude : -74.0721}
-          />
-        </div>
-
-        {latitude !== null && longitude !== null && (
-          <p className="text-sm text-gray-500 text-center">
-            Coordenadas seleccionadas:{" "}
-            <span className="font-semibold">{latitude}, {longitude}</span>
-          </p>
-        )}
-
-        <p className="text-center text-sm text-gray-600">
-          Total habitaciones: <strong>{totalRooms}</strong>
-        </p>
-
-        <div className="flex justify-end gap-4 mt-4">
-          <button
-            onClick={handleSaveHotel}
-            disabled={!isFormValid || loading}
-            className={`px-6 py-2 rounded-lg font-semibold transition ${
-              isFormValid
-                ? "bg-gray-700 text-white hover:bg-gray-900"
-                : "bg-gray-300 text-gray-500 cursor-not-allowed"
-            }`}
+          <Link
+            href="/dashboard/redenciones/edit"
+            className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
           >
-            {loading ? "Guardando..." : "Guardar Hotel"}
-          </button>
-          <CreateHotel grupo="defaultGroup" />
+            Administrar propiedades existentes
+          </Link>
         </div>
-      </div>
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-3">
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Pisos</p>
+          <p className="mt-2 text-2xl font-bold text-slate-800">{floors ?? 0}</p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Habitaciones</p>
+          <p className="mt-2 text-2xl font-bold text-slate-800">{totalRooms}</p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Ubicación</p>
+          <p className="mt-2 text-sm font-semibold text-slate-700">
+            {latitude !== null && longitude !== null ? "Definida" : "Pendiente"}
+          </p>
+        </div>
+      </section>
+
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)]">
+          <div className="space-y-5">
+            <div>
+              <label htmlFor="hotelName" className="mb-2 block text-sm font-semibold text-slate-700">Nombre de la propiedad</label>
+              <input
+                id="hotelName"
+                type="text"
+                value={hotelName}
+                onChange={(e) => setHotelName(e.target.value)}
+                placeholder="Ej: Heron III"
+                className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-500"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="floors" className="mb-2 block text-sm font-semibold text-slate-700">Número de pisos</label>
+              <input
+                id="floors"
+                type="text"
+                inputMode="numeric"
+                value={floors !== null ? floors.toString() : ""}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const numberVal = val === "" ? 0 : Number(val);
+                  handleFloorsChange(numberVal);
+                }}
+                onBlur={() => {
+                  if (!floors || floors < 1) {
+                    handleFloorsChange(1);
+                  }
+                }}
+                placeholder="Ej: 5"
+                className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-500"
+              />
+            </div>
+
+            {floors !== null && (
+              <div className="space-y-2 rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Habitaciones por piso</p>
+                <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
+                  {roomsPerFloor.map((rooms, index) => (
+                    <div key={index} className="rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm">
+                      <button
+                        type="button"
+                        className="flex w-full items-center justify-between"
+                        onClick={() => toggleExpand(index)}
+                      >
+                        <span className="text-sm font-semibold text-slate-800">Piso {index + 1}</span>
+                        {expanded === index ? (
+                          <ChevronUp className="h-5 w-5 text-slate-500" />
+                        ) : (
+                          <ChevronDown className="h-5 w-5 text-slate-500" />
+                        )}
+                      </button>
+
+                      {expanded === index && (
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={rooms.toString()}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            const newRooms = [...roomsPerFloor];
+                            newRooms[index] = val === "" ? 0 : Number(val);
+                            setRoomsPerFloor(newRooms);
+                          }}
+                          onBlur={() => {
+                            const newRooms = [...roomsPerFloor];
+                            if (!newRooms[index] || Number.isNaN(newRooms[index]) || newRooms[index] < 1) {
+                              newRooms[index] = 1;
+                              setRoomsPerFloor(newRooms);
+                            }
+                          }}
+                          className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-slate-500"
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="flex flex-wrap justify-end gap-3 pt-2">
+              <button
+                onClick={handleSaveHotel}
+                disabled={!isFormValid || loading}
+                className={`h-11 rounded-xl px-5 text-sm font-semibold transition ${
+                  isFormValid
+                    ? "bg-slate-900 text-white hover:bg-slate-700"
+                    : "cursor-not-allowed bg-slate-200 text-slate-400"
+                }`}
+              >
+                {loading ? "Guardando..." : "Guardar propiedad"}
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Ubicación de la propiedad</p>
+            <div className="h-[460px] overflow-hidden rounded-2xl border border-slate-200">
+              <Map
+                onMapClick={handleMapClick}
+                initialLatitude={latitude !== null ? latitude : 4.711}
+                initialLongitude={longitude !== null ? longitude : -74.0721}
+              />
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+              {latitude !== null && longitude !== null ? (
+                <span>
+                  Coordenadas seleccionadas: <strong>{latitude.toFixed(6)}</strong>, <strong>{longitude.toFixed(6)}</strong>
+                </span>
+              ) : (
+                <span>Haz clic en el mapa para definir la ubicación del hotel.</span>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 };

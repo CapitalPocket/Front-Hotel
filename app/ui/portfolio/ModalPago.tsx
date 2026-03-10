@@ -18,7 +18,10 @@ const ModalPago: React.FC<ModalPagoProps> = ({ isOpen, onClose, employee }) => {
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [cleaningData, setCleaningData] = useState<CleaningData[]>([]);
-  const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pockiaction.xyz';
+  const base =
+    process.env.NEXT_PUBLIC_API_BASE_URL ||
+    process.env.NEXT_PUBLIC_BACK_LINK ||
+    'http://localhost:8080';
 
   const fetchCleaningData = async () => {
     if (!startDate || !endDate) return;

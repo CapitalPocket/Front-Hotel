@@ -3,47 +3,56 @@ import React, { useState } from "react";
 import dynamic from "next/dynamic";
 import axios from "axios";
 import { CreateHotel } from "../tickets/buttons";
-// Carga dinámica del mapa para evitar errores en SSR (Next.js)
+import { AppToastContainer, notifyError, notifySuccess } from "@/app/utils/toast";
+
 const MapComponent = dynamic(() => import("@/app/ui/Map"), { ssr: false });
 
 const Invoices: React.FC = () => {
     const [latitude, setLatitude] = useState<number | null>(null);
     const [longitude, setLongitude] = useState<number | null>(null);
     const [hotelName, setHotelName] = useState("");
+    const [isSaving, setIsSaving] = useState(false);
 
-    // Función para manejar el clic en el mapa y actualizar coordenadas
     const handleMapClick = (lat: number, lng: number) => {
         setLatitude(lat);
         setLongitude(lng);
     };
 
-    // Enviar datos del nuevo hotel al backend
     const handleSaveHotel = async () => {
-        if (!hotelName || latitude === null || longitude === null) {
-            alert("Por favor, ingrese un nombre y seleccione una ubicación.");
+        if (isSaving) return;
+        const trimmedHotelName = hotelName.trim();
+        if (!trimmedHotelName || latitude === null || longitude === null) {
+            notifyError("Ingresa un nombre y selecciona una ubicación.");
             return;
         }
 
+        setIsSaving(true);
         try {
-            const response = await axios.post(`/api/hotel/createHotel`, {
-                name: hotelName,
+            await axios.post(`/api/hotel/createHotel`, {
+                name: trimmedHotelName,
                 latitude,
                 longitude,
             });
-
-            alert("Hotel guardado correctamente");
-            console.log(response.data);
+            notifySuccess("Hotel guardado correctamente.");
+            setHotelName("");
         } catch (error) {
-            console.error("Error al guardar el hotel:", error);
-            alert("Hubo un error al guardar el hotel.");
+            if (axios.isAxiosError(error)) {
+                const backendMessage =
+                    typeof error.response?.data?.message === "string" ? error.response.data.message : null;
+                notifyError(backendMessage || "Hubo un error al guardar el hotel.");
+            } else {
+                notifyError("Hubo un error al guardar el hotel.");
+            }
+        } finally {
+            setIsSaving(false);
         }
     };
 
     return (
         <div className="w-full flex flex-col items-center p-6">
+            <AppToastContainer />
             <h1 className="text-2xl font-bold my-4 text-center">Registrar Nuevo Hotel</h1>
 
-            {/* Input para el nombre del hotel */}
             <input
                 type="text"
                 value={hotelName}
@@ -52,7 +61,6 @@ const Invoices: React.FC = () => {
                 className="border-2 border-gray-300 rounded-lg p-2 mb-4 w-full max-w-md"
             />
 
-            {/* Mapa interactivo */}
             <div className="w-full h-[500px] mb-4">
                 <MapComponent 
                     onMapClick={handleMapClick} 
@@ -61,20 +69,21 @@ const Invoices: React.FC = () => {
                 />
             </div>
 
-            {/* Mostrar coordenadas seleccionadas */}
             {latitude !== null && longitude !== null && (
                 <p className="text-lg">
                     Ubicación seleccionada: <strong>{latitude}, {longitude}</strong>
                 </p>
             )}
 
-            {/* Botón para guardar */}
             <div className="flex gap-4 mt-4">
                 <button
                     onClick={handleSaveHotel}
-                    className="bg-black text-white px-6 py-2 rounded-lg hover:bg-black transition"
+                    disabled={isSaving}
+                    className={`px-6 py-2 rounded-lg text-white transition ${
+                        isSaving ? "cursor-not-allowed bg-slate-400" : "bg-black hover:bg-slate-900"
+                    }`}
                 >
-                    Guardar Hotel
+                    {isSaving ? "Guardando..." : "Guardar Hotel"}
                 </button>
                 <CreateHotel grupo="Buen Comienzo"/>
                 </div>

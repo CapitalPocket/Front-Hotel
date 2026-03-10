@@ -16,3 +16,188 @@ input[type='number']::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.schedule-calendar .fc-toolbar.fc-header-toolbar {
+  margin-bottom: 1rem;
+  gap: 0.5rem;
+}
+
+.schedule-calendar .fc-toolbar-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: rgb(30 41 59);
+}
+
+.schedule-calendar .fc-button {
+  border: 1px solid rgb(226 232 240);
+  background: rgb(248 250 252);
+  color: rgb(51 65 85);
+  border-radius: 0.7rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  box-shadow: none;
+}
+
+.schedule-calendar .fc-button:hover {
+  background: rgb(241 245 249);
+  border-color: rgb(203 213 225);
+  color: rgb(30 41 59);
+}
+
+.schedule-calendar .fc-button-primary:not(:disabled).fc-button-active,
+.schedule-calendar .fc-button-primary:not(:disabled):active {
+  background: rgb(51 65 85);
+  border-color: rgb(51 65 85);
+  color: #fff;
+}
+
+.schedule-calendar .fc-col-header-cell {
+  background: rgb(248 250 252);
+}
+
+.schedule-calendar .fc-col-header-cell-cushion {
+  padding: 0.7rem 0.2rem;
+  color: rgb(51 65 85);
+  font-weight: 600;
+}
+
+.schedule-calendar .fc-daygrid-day-frame {
+  min-height: 7rem;
+}
+
+.schedule-calendar .fc-daygrid-day.fc-day-today {
+  background: rgb(239 246 255);
+}
+
+.schedule-calendar .fc-event {
+  border: 0;
+  background: transparent;
+}
+
+.schedule-calendar .fc-scroller {
+  scrollbar-width: thin;
+}
+
+.schedule-date-picker .rdp-root {
+  --rdp-accent-color: rgb(15 23 42);
+  --rdp-accent-background-color: rgb(226 232 240);
+  --rdp-day-height: 46px;
+  --rdp-day-width: 46px;
+  --rdp-day_button-border-radius: 999px;
+  margin: 0;
+  width: 100%;
+}
+
+.schedule-date-picker .rdp-months {
+  width: 100%;
+  justify-content: center;
+  gap: 0;
+}
+
+.schedule-date-picker .rdp-month {
+  border: 1px solid rgb(226 232 240);
+  border-radius: 1.25rem;
+  background: #fff;
+  padding: 1rem;
+  width: min(100%, 28rem);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+  position: relative;
+  overflow: hidden;
+}
+
+.schedule-date-picker .rdp-month_caption {
+  color: rgb(30 41 59);
+  font-weight: 700;
+  font-size: 0.98rem;
+  margin-bottom: 0.4rem;
+  padding-right: 4.5rem;
+  min-height: 2rem;
+  display: flex;
+  align-items: center;
+}
+
+.schedule-date-picker .rdp-nav {
+  position: absolute;
+  top: 0.9rem;
+  right: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  z-index: 2;
+}
+
+.schedule-date-picker .rdp-nav_button {
+  width: 2rem;
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid rgb(203 213 225);
+  background: rgb(248 250 252);
+  color: rgb(51 65 85);
+  border-radius: 0.6rem;
+}
+
+.schedule-date-picker .rdp-chevron {
+  width: 1rem;
+  height: 1rem;
+}
+
+.schedule-date-picker .rdp-nav_button:hover {
+  background: rgb(241 245 249);
+  border-color: rgb(148 163 184);
+}
+
+.schedule-date-picker .rdp-weekday {
+  color: rgb(100 116 139);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.schedule-date-picker .rdp-day_button {
+  font-weight: 600;
+  color: rgb(51 65 85);
+  transition: all 0.15s ease;
+}
+
+.schedule-date-picker .rdp-day_button:hover {
+  background: rgb(241 245 249);
+  transform: translateY(-1px);
+}
+
+.schedule-date-picker .rdp-selected .rdp-day_button {
+  background: linear-gradient(135deg, rgb(15 23 42), rgb(30 41 59));
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.35);
+}
+
+.schedule-date-picker .rdp-today:not(.rdp-selected) .rdp-day_button {
+  border: 1px solid rgb(100 116 139);
+  background: rgb(248 250 252);
+}
+
+.schedule-date-picker .rdp-day_hasEvents:not(.rdp-selected) .rdp-day_button {
+  background: rgb(219 234 254);
+  color: rgb(30 64 175);
+}
+
+.schedule-date-picker .rdp-disabled .rdp-day_button {
+  color: rgb(203 213 225);
+  background: transparent;
+  cursor: not-allowed;
+}
+
+.schedule-date-picker .rdp-disabled .rdp-day_button:hover {
+  transform: none;
+  background: transparent;
+}

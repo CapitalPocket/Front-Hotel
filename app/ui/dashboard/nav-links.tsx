@@ -2,16 +2,15 @@
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import clsx from 'clsx';
-
-// ✅ Aseguramos que los íconos se importan como componentes de React
 import { FaRegCalendarAlt, FaHotel, FaMoneyBillWave, FaUsers, FaUserCheck } from 'react-icons/fa';
 import { LiaHotelSolid } from "react-icons/lia";
 import { GrAction } from "react-icons/gr";
+
 export const links = [
   {
     name: 'Horarios',
     href: '/dashboard/invoices',
-    icon: FaRegCalendarAlt, // ✅ Guardamos la referencia del componente (sin JSX aquí)
+    icon: FaRegCalendarAlt,
     roles: ['administrador', 'marketing'],
   },
   {
@@ -42,7 +41,7 @@ export const links = [
     name: "Ingreso/Salida",
     href: "/dashboard/graphs-sales",
     icon: GrAction,
-    roles: ['administrador'],
+    roles: ['administrador', 'marketing'],
   },
   {
     name: "Asignaciones",
@@ -50,30 +49,36 @@ export const links = [
     icon: FaUserCheck,
     roles: ['administrador'],
   },
-  
 ];
 
 export default function NavLinks({ rol }: { rol: string }) {
   const pathname = usePathname();
 
   return (
-    <nav className="flex flex-col gap-2 w-full px-4">
+    <nav className="flex flex-col gap-2 w-full">
       {links
         .filter((link) => link.roles.includes(rol))
         .map((link) => {
-          const Icon = link.icon; // ✅ Convertimos el icono en un componente válido
+          const Icon = link.icon;
           return (
             <Link
               key={link.name}
               href={link.href}
               className={clsx(
-                'flex items-center gap-3 p-3 rounded-lg transition-all duration-300 text-gray-300 hover:bg-gray-800 hover:text-white',
+                'group flex items-center gap-3 rounded-xl px-3 py-3 transition-all duration-300 text-slate-300 hover:bg-slate-800/70 hover:text-white',
                 {
-                  'bg-gray-700 text-white font-semibold': pathname === link.href,
+                  'bg-gradient-to-r from-slate-700 to-slate-600 text-white font-semibold shadow-md': pathname === link.href,
                 }
               )}
             >
-              <Icon className="text-lg" /> {/* ✅ Renderizamos el icono como componente */}
+              <span
+                className={clsx(
+                  'flex h-9 w-9 items-center justify-center rounded-lg bg-slate-800/70 text-base transition-colors',
+                  { 'bg-white/20': pathname === link.href }
+                )}
+              >
+                <Icon />
+              </span>
               <p className="text-sm">{link.name}</p>
             </Link>
           );

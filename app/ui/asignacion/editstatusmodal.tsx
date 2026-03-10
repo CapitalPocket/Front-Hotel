@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from "react";
+import axios from "axios";
+import { notifyError, notifySuccess } from "@/app/utils/toast";
 
 interface Assignment {
   assignment_id: number;
@@ -8,7 +10,7 @@ interface Assignment {
 interface EditStatusModalProps {
   assignment: Assignment;
   onClose: () => void;
-  onUpdated?: () => void;
+  onUpdated?: () => Promise<void>;
 }
 
 const statusColors: { [key: string]: string } = {
@@ -31,74 +33,97 @@ const statusColors: { [key: string]: string } = {
   'N/A': '#9E9E9E'        // Gris neutro
 };
 
+const sanitizeEnv = (rawValue: string | undefined) =>
+  typeof rawValue === "string" ? rawValue.replace(/[`'"\s]/g, "").trim() : "";
+
 const EditStatusModal: React.FC<EditStatusModalProps> = ({ assignment, onClose, onUpdated }) => {
   const [status, setStatus] = useState(assignment.status);
   const [loading, setLoading] = useState(false);
+  const endpoint = "/api/hotel/updateRoomStatus";
+  const headers = useMemo(() => {
+    const rawApiKey = process.env.NEXT_PUBLIC_API_KEY || process.env.NEXT_PUBLIC_REMINDERS_API_KEY || "";
+    const apiKey = sanitizeEnv(rawApiKey);
+    return apiKey
+      ? {
+          "x-api-key": apiKey,
+          Authorization: `Api-Key ${apiKey}`,
+        }
+      : undefined;
+  }, []);
+
+  const payload = {
+    assignment_id: assignment.assignment_id,
+    status,
+  };
+
+  const updateStatus = async () => {
+    try {
+      await axios.put(endpoint, payload, headers ? { headers } : undefined);
+      return;
+    } catch (error: any) {
+      if (error?.response?.status === 404 || error?.response?.status === 405) {
+        await axios.post(endpoint, payload, headers ? { headers } : undefined);
+        return;
+      }
+      throw error;
+    }
+  };
 
   const handleSave = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/hotel/updateRoomStatus`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          assignment_id: assignment.assignment_id,
-          status,
-        }),
-      });
-
-      if (!res.ok) {
-        throw new Error('Error al actualizar el estado');
+      await updateStatus();
+      if (onUpdated) {
+        await onUpdated();
       }
-
-      if (onUpdated) onUpdated();
+      notifySuccess("Estado de habitación actualizado correctamente.");
       onClose();
-    } catch (err) {
-      console.error(err);
-      alert('No se pudo actualizar el estado');
+    } catch {
+      notifyError("No se pudo actualizar el estado de la habitación.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-      <div className="bg-gray-800 rounded-xl p-6 shadow-xl w-full max-w-md">
-        <h2 className="text-2xl font-semibold text-gray-100 mb-6">Editar Estado</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
+        <h2 className="text-xl font-semibold text-slate-800">Editar estado de habitación</h2>
+        <p className="mt-1 text-sm text-slate-500">
+          Asignación #{assignment.assignment_id}
+        </p>
 
-        <div className="mb-4">
-          <label className="block mb-2 text-sm font-medium text-gray-400">Nuevo estado:</label>
+        <div className="mt-5">
+          <label className="mb-2 block text-sm font-semibold text-slate-700">Nuevo estado</label>
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            className="w-full p-3 bg-gray-700 border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 text-gray-100"
+            className="h-11 w-full rounded-xl border border-slate-300 px-3 text-sm text-slate-700 outline-none transition focus:border-slate-500"
           >
             {Object.keys(statusColors).map((key) => (
-              <option
-                key={key}
-                value={key}
-                style={{ backgroundColor: statusColors[key], color: '#fff' }}
-              >
+              <option key={key} value={key} style={{ backgroundColor: statusColors[key], color: "#fff" }}>
                 {key}
               </option>
             ))}
           </select>
         </div>
 
-        <div className="flex justify-end gap-3 mt-6">
+        <div className="mt-6 flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-md bg-gray-600 hover:bg-gray-500 text-white font-medium transition-all duration-200"
+            className="h-10 rounded-xl border border-slate-300 px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
             disabled={loading}
           >
             Cancelar
           </button>
           <button
             onClick={handleSave}
-            className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-all duration-200"
+            className={`h-10 rounded-xl px-4 text-sm font-semibold text-white transition ${
+              loading ? "cursor-not-allowed bg-slate-300" : "bg-slate-900 hover:bg-slate-700"
+            }`}
             disabled={loading}
           >
-            {loading ? 'Guardando...' : 'Guardar'}
+            {loading ? "Guardando..." : "Guardar cambios"}
           </button>
         </div>
       </div>
